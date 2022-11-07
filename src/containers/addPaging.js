@@ -7,7 +7,7 @@ import _ from 'lodash'
 import { Row, Col, Button, ButtonGroup, Form, FormGroup, Input, Label, Table } from 'reactstrap'
 import localforage from 'localforage'
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
-import { Link } from 'react-router-dom' 
+import { Link } from 'react-router-dom'
 import ReactTable from 'react-table'
 import FoldableTableHOC from "react-table/lib/hoc/foldableTable";
 import 'react-table/react-table.css'
@@ -15,162 +15,164 @@ import { success, warning } from '../components/toastAlerts'
 
 const FoldableTable = FoldableTableHOC(ReactTable);
 
-
 const initialState = {
-    unsortedList: [],
-    add: [],
-    pick: [],
-    checked: [],
-    count: 0,
-    loading: false,
-    searchObject: [],
-    additionalBarcodes: [],
-    liftHeight: 0,
-    sorted: [],
-    initial: true
-}
+  unsortedList: [],
+  add: [],
+  pick: [],
+  checked: [],
+  count: 0,
+  loading: false,
+  searchObject: [],
+  additionalBarcodes: [],
+  liftHeight: 0,
+  sorted: [],
+  initial: true
+};
 
 const addPagingReducer = (state, action) => {
-    switch(action.type){
-
+  switch (action.type) {
     case 'UPDATE_LIFTHEIGHT':
-        return{
-            ...state,
-            liftHeight: action.liftHeight
-        }
-    case 'LOCAL_DATA': 
-        return{
-            ...state,
-            add: action.unsortedList.concat(state.add),
-            count: action.count,
-        }    
+      return {
+          ...state,
+          liftHeight: action.liftHeight
+      };
+    case 'LOCAL_DATA':
+      return {
+          ...state,
+          add: action.unsortedList.concat(state.add),
+          count: action.count,
+      };
     case 'UPDATE_LOADING':
-        return{
-            ...state,
-            loading: action.loading
-        }    
+      return {
+        ...state,
+        loading: action.loading
+      };
     case 'UPDATE_UNSORTED':
-        return{
-            ...state,
-            unsortedList: action.unsortedList.concat(state.unsortedList),
-            count: action.count,
-            initial: false
-        }    
+      return {
+        ...state,
+        unsortedList: action.unsortedList.concat(state.unsortedList),
+        count: action.count,
+        initial: false
+      };
     case 'UPDATE_DATA':
-        return{
-            ...state,
-            add: action.add,
-            count: action.count,
-            initial: false
-        }
+      return {
+        ...state,
+        add: action.add,
+        count: action.count,
+        initial: false
+      };
     case 'RESET_ADD':
-        return{
-            ...state,
-            add: [],
-            initial: false
-        }
+      return {
+        ...state,
+        add: [],
+        initial: false
+      };
     case 'UPDATE_PICK':
-        return{
-            ...state,
-            pick: action.pick.concat(state.pick)
-        }  
+      return {
+        ...state,
+        pick: action.pick.concat(state.pick)
+      };
     case 'FILTER_PICK':
-        return{
-            ...state,
-            pick: action.pick
-        }    
+      return {
+        ...state,
+        pick: action.pick
+      };
     case 'UPDATE_CHECKED':
-        return{
-            ...state,
-            checked: action.checked
-        }      
+      return {
+        ...state,
+        checked: action.checked
+      };
     case 'UPDATE_SEARCHOBJECT':
-        return{
-            ...state,
-            searchObject: action.searchObject
-        }    
+      return {
+        ...state,
+        searchObject: action.searchObject
+      };
     case 'UPDATE_SORTED':
-        return{
-            ...state,
-            sorted: action.sorted
-        }    
-    default: 
-        return state
+      return {
+        ...state,
+        sorted: action.sorted
+      };
+    default:
+      return state;
     }
-}
+  };
 
-function AddPaging(props){
+function AddPaging(props) {
+    const [data, dispatch] = useReducer(addPagingReducer, initialState);
 
-    const [data, dispatch] = useReducer(addPagingReducer, initialState)
-
-    console.log(data)
+    console.log(data);
     useEffect(() => {
-        const getLocalItems = async () => {
-            const local = await handleLocalStorage('add') || []
-            const paging = await handleLocalStorage('paging') || []
-            dispatch({ type: "LOCAL_DATA", unsortedList: local, count: local.length})  
-            dispatch({ type: "UPDATE_PICK", pick: paging })
-        }
-        getLocalItems()
-    }, [])
-
-    useEffect(() => {
-        if(props){
-            const getLocalSettings = async () => {
-                const { settings } = props || ''
-                let liftHeight = 0
-                if(settings !== ''){
-                    Object.keys(settings).map(items => {
-                        if(settings[items].type === 'lift_height'){
-                            liftHeight = parseInt(settings[items].value)
-                        }
-                    })
-                    dispatch({ type: 'UPDATE_LIFTHEIGHT', liftHeight: liftHeight})
-                }  
-            }
-            getLocalSettings()
-        }      
-    },[props])
+      const getLocalItems = async () => {
+          const local = await handleLocalStorage('add') || []
+          const paging = await handleLocalStorage('paging') || []
+          dispatch({ type: "LOCAL_DATA", unsortedList: local, count: local.length})
+          dispatch({ type: "UPDATE_PICK", pick: paging })
+      };
+      getLocalItems();
+    }, []);
 
     useEffect(() => {
-        if(data.initial !== true){
-            localforage.setItem('add', data.add)
-        }
-    }, [data.add])
+      if(props){
+        const getLocalSettings = async () => {
+          const { settings } = props || '';
+          let liftHeight = 0;
+          if (settings !== '') {
+            Object.keys(settings).map(items => {
+              if (settings[items].type === 'lift_height') {
+                liftHeight = parseInt(settings[items].value);
+              }
+            });
+            dispatch({ type: 'UPDATE_LIFTHEIGHT', liftHeight: liftHeight});
+          }
+        };
+        getLocalSettings();
+      }
+    },[props]);
 
     useEffect(() => {
-        if(data.unsortedList.length > 0){
-            order()
-        }
-    }, [data.unsortedList])
+      if (data.initial !== true) {
+        localforage.setItem('add', data.add);
+      }
+    }, [data.add]);
 
     useEffect(() => {
-        if(data.pick.length > 0){
-            pickOrder()
-            inProcess()
-        }
-    }, [data.pick])
+      if (data.unsortedList.length > 0) {
+        order();
+      }
+    }, [data.unsortedList]);
 
+    useEffect(() => {
+      if (data.pick.length > 0) {
+        pickOrder();
+        inProcess();
+      }
+    }, [data.pick]);
 
-
-        //Pulls local storage data by key
+    // Pulls local storage data by key
     const handleLocalStorage = async (key) => {
-        const results = await localforage.getItem(key)
-        return results
-    }
+      const results = await localforage.getItem(key);
+      return results;
+    };
 
     const getPagingSlips = async (e, day) => {
-        dispatch({ type: 'UPDATE_LOADING', loading: true })
-        // const add = data.add
-        const search = await ContentSearch.pagingSlips(day)
-        search.filter(n => n)
-        if(search && search.length > 0){
-            dispatch({ type: "UPDATE_UNSORTED", unsortedList: search, count: data.unsortedList.length + search.length})  
-        } else {
-            dispatch({ type: 'UPDATE_LOADING', loading: false })
-            warning('Could not find any paging slips')
-        }
-    }
+      dispatch({ type: 'UPDATE_LOADING', loading: true });
+      // const add = data.add
+      const search = await ContentSearch.pagingSlips(day)
+      search.filter(n => n)
+      if (search && search.length > 0) {
+          dispatch({
+            type: "UPDATE_UNSORTED",
+            unsortedList: search,
+            count: data.unsortedList.length + search.length
+          });
+      } else {
+        dispatch({
+          type: 'UPDATE_LOADING',
+          loading: false
+        });
+        warning('Could not find any paging slips');
+      }
+    };
 
     const handleOptions = (e, option) => {
         const list = data.add
@@ -185,13 +187,13 @@ function AddPaging(props){
                 const lift = _.filter(list, {height: 'lift'})
                 let remainingFloor = _.filter(list, _.conforms({'height': _.partial(_.includes, ['floor', 'none'])}))
                 handlePickList(lift, 'Lift')
-                handleAddUpdate(remainingFloor) 
+                handleAddUpdate(remainingFloor)
             break
             case 'onlyNone':
                 const none = _.filter(list, {height: 'none'})
                 let remaining = _.filter(list, _.conforms({'height': _.partial(_.includes, ['floor', 'lift'])}))
                 handlePickList(none, 'No Location')
-                handleAddUpdate(remaining) 
+                handleAddUpdate(remaining)
             break
             case 'addAll':
                 handlePickList(list, 'All')
@@ -201,7 +203,7 @@ function AddPaging(props){
                 dispatch({ type: "RESET_ADD" })
             break
         }
-    }  
+    }
 
     const handlePickList = (set, type) => {
         let checked = data.checked
@@ -218,14 +220,14 @@ function AddPaging(props){
         }
         // const setPush = set.filter(item => !data.pick.includes(item.barcode));
 
-        // const setPush = Object.keys(data.pick).map(items => 
+        // const setPush = Object.keys(data.pick).map(items =>
         //     Object.keys(set).map(setList =>{
         //         if(data.pick[items].barcode !== set[setList].barcode){
         //             console.log
         //             return set[setList]
-        //         }    
+        //         }
         //     }
-        //     )    
+        //     )
         // )
 
 
@@ -235,7 +237,7 @@ function AddPaging(props){
     }
 
     const handleAddUpdate = (items) => {
-        dispatch({ type: "UPDATE_DATA", add: items, count: items.length})  
+        dispatch({ type: "UPDATE_DATA", add: items, count: items.length})
         // dispatch({ type: 'UPDATE_LOADING', loading: true })
     }
 
@@ -262,7 +264,7 @@ function AddPaging(props){
         })
         if(search && search[0] !== false){
             dispatch({ type: "UPDATE_SEARCHOBJECT", searchObject: []})
-            dispatch({ type: "UPDATE_UNSORTED", unsortedList: search, count: data.unsortedList.length + search.length})  
+            dispatch({ type: "UPDATE_UNSORTED", unsortedList: search, count: data.unsortedList.length + search.length})
         } else {
             warning('Unable to match barcode')
             dispatch({ type: 'UPDATE_LOADING', loading: false })
@@ -277,9 +279,9 @@ function AddPaging(props){
             removePick(values, index)
             removeChecked(values, index)
         }
-    }   
+    }
 
-    const addPick = (items, index) => { 
+    const addPick = (items, index) => {
         dispatch({ type: "UPDATE_PICK", pick: [items]})
         success(`Added ${items.barcode} to paging list`)
     }
@@ -337,7 +339,7 @@ function AddPaging(props){
     const sort = (target, order) => {
         const list = data.add
         const item = _.orderBy(list, target, [order])
-        dispatch({ type: "UPDATE_DATA", add: item, count: item.length})  
+        dispatch({ type: "UPDATE_DATA", add: item, count: item.length})
     }
 
     const inProcess = async () => {
@@ -347,11 +349,11 @@ function AddPaging(props){
                 barcode: data.pick[items].barcode.replace(/\D/g,'') ,
                 status: "In process"
             })
-        })     
+        })
         await Load.inProcessPaging(list)
-    }    
+    }
 
-    
+
     return(
         <div style={{marginTop: "30px"}}>
             <OptionGroup
@@ -362,13 +364,13 @@ function AddPaging(props){
             />
             <Row>
                 <Col md="2">
-                    <RequestForm 
+                    <RequestForm
                         add={data.add}
                         handleBarcodeAdd={handleBarcodeAdd}
                         processNewBarcodes={getRecords}
                         searchObject={data.searchObject}
-                    /> 
-                    
+                    />
+
                 </Col>
                 <Col>
                     <SlipDisplay
@@ -381,7 +383,7 @@ function AddPaging(props){
                         sorted={data.sorted}
                     />
                 </Col>
-            </Row> 
+            </Row>
         </div>
     )
 }
@@ -427,27 +429,27 @@ export default AddPaging
 
 //     // getPagingSlips = async (e, day) => {
 //     //     e.preventDefault()
-//     //     this.setState({ loading: true }) 
+//     //     this.setState({ loading: true })
 //     //     const add = {...this.state.add}
 //     //     const search = await ContentSearch.pagingSlips(day)
 //     //     if(search){
-//     //         Object.keys(search).map(items => 
+//     //         Object.keys(search).map(items =>
 //     //             add[search[items].barcode] = search[items]
 //     //         )
 //     //     }
 //     //     this.order(add)
 //     //   }
 
-    
+
 //     handleChange = (e, values, index) => {
 //         if(e.target.checked === true) {
 //             this.addPick(values)
 //         } else {
 //             this.removePick(values, index)
 //         }
-//     } 
+//     }
 
-//     addPick = (items) => { 
+//     addPick = (items) => {
 //         const pick = {...this.state.pick}
 //         pick[items.barcode] = items
 //         this.setState({
@@ -458,7 +460,7 @@ export default AddPaging
 //         })
 //     }
 
-  
+
 
 
 //     removePick = (values, index) => {
@@ -490,13 +492,13 @@ export default AddPaging
 //     //             const lift = _.filter(list, {height: 'lift'})
 //     //             let remainingFloor = _.filter(list, _.conforms({'height': _.partial(_.includes, ['floor', 'none'])}))
 //     //             this.handlePickList(lift, 'Lift')
-//     //             this.handleAddUpdate(remainingFloor) 
+//     //             this.handleAddUpdate(remainingFloor)
 //     //         break
 //     //         case 'onlyNone':
 //     //             const none = _.filter(list, {height: 'none'})
 //     //             let remaining = _.filter(list, _.conforms({'height': _.partial(_.includes, ['floor', 'lift'])}))
 //     //             this.handlePickList(none, 'No Location')
-//     //             this.handleAddUpdate(remaining) 
+//     //             this.handleAddUpdate(remaining)
 //     //         break
 //     //         case 'addAll':
 //     //             this.handlePickList(list, 'All')
@@ -506,7 +508,7 @@ export default AddPaging
 //     //             this.setState({ add: []}, () => localforage.setItem('add', this.state.add))
 //     //         break
 //     //     }
-//     // }  
+//     // }
 
 //     handlePickList = (set, type) => {
 //         let pick = {...this.state.pick}
@@ -524,7 +526,7 @@ export default AddPaging
 //     handleAddUpdate= (items) => {
 //         this.setState({ add: []}, () => {
 //         const add = {...this.state.add}
-//         Object.keys(items).map(set => 
+//         Object.keys(items).map(set =>
 //             add[items[set].barcode] = items[set]
 //         )
 //         this.order(add)
@@ -536,26 +538,26 @@ export default AddPaging
 //         const item = _.orderBy(list,
 //             ['row', 'ladder', 'shelf_number'],
 //             ['asc', 'asc', 'asc'])
-//         this.setState({ 
+//         this.setState({
 //             pick: item
 //         }, () => {
 //             localforage.setItem('paging', this.state.pick)
-//         })  
+//         })
 //     }
 
 //     order = (data) => {
 //         const item = _.orderBy(data,
 //           ['call_number'],
 //           ['asc']);
-//         this.setState({ 
-//             add: item, 
-//             count: item.length, 
+//         this.setState({
+//             add: item,
+//             count: item.length,
 //             loading: false
 //         }, () => {
 //             localforage.setItem('add', this.state.add)
 //         })
 //     }
-    
+
 //     sort = (target, order) => {
 //          const list = this.state.add
 //          const item = _.orderBy(list, target, [order])
@@ -578,14 +580,14 @@ export default AddPaging
 //         }
 //     }
 
-  
+
 //       getRecords = async () => {
 //         const add = {...this.state.add}
 //         const unique = new Set(this.state.searchObject)
 //         const uniqueArray = [...unique]
 //         const search = await ContentSearch.recordData(uniqueArray.join(','))
 //         if(search && search[0] !== false){
-//             Object.keys(search).map(items => 
+//             Object.keys(search).map(items =>
 //                 add[search[items].barcode] = search[items]
 //             )
 //             this.setState({
@@ -620,13 +622,13 @@ export default AddPaging
 //             />
 //             <Row>
 //                 <Col md="2">
-//                     <RequestForm 
+//                     <RequestForm
 //                         add={this.state.add}
 //                         handleBarcodeAdd={this.handleBarcodeAdd}
 //                         processNewBarcodes={this.getRecords}
 //                         searchObject={searchObject}
-//                     /> 
-                    
+//                     />
+
 //                 </Col>
 //                 <Col>
 //                     <SlipDisplay
@@ -638,7 +640,7 @@ export default AddPaging
 //                         sorted={sorted}
 //                     />
 //                 </Col>
-//             </Row> 
+//             </Row>
 //             </div>
 //         )
 //     }
@@ -662,9 +664,9 @@ const OptionGroup = ({ getPagingSlips, handleOptions, pagingCount, add }) => {
         </Col>
         <Col>
             <div className="d-flex justify-content-end">
-                <Link className="btn btn-primary" to="/paging-display">Paging Display ({Object.keys(pagingCount).map(items => items).length})</Link> 
-            </div>    
-        </Col>    
+                <Link className="btn btn-primary" to="/paging-display">Paging Display ({Object.keys(pagingCount).map(items => items).length})</Link>
+            </div>
+        </Col>
     </Row>
     )
 }
@@ -678,8 +680,8 @@ const TableHead = ({ }) => (
             <th>Call Number</th>
             <th>Shelf</th>
             <th>Row</th>
-        </tr>  
-    </thead> 
+        </tr>
+    </thead>
 )
 
 const TableBody = ({ items, idx, handleChange }) => {
@@ -699,12 +701,12 @@ const TableBody = ({ items, idx, handleChange }) => {
                 <input type="checkbox" onClick={(e) => handleChange(e, items, items.barcode)}/>
             </div>
         </td>
-        <td>{items.barcode ? items.barcode : ''}</td> 
+        <td>{items.barcode ? items.barcode : ''}</td>
         <td>{heightDisplay}</td>
         <td>{items.call_number ? items.call_number : ''}</td>
-        <td>{items.shelf_number ? items.shelf_number : ''}</td>    
-        <td>{items.row ? items.row : ''}</td>    
-    </tr> 
+        <td>{items.shelf_number ? items.shelf_number : ''}</td>
+        <td>{items.row ? items.row : ''}</td>
+    </tr>
     )
 }
 
@@ -717,7 +719,7 @@ const TableBodySkeleton = () => (
         <td><Skeleton /></td>
         <td><Skeleton /></td>
     </tr>
-    )    
+    )
 )
 
 const SlipDisplay = ({ data , sort, handleChange, loading , onSortedChange, sorted, checked}) => (
@@ -730,7 +732,7 @@ const SlipDisplay = ({ data , sort, handleChange, loading , onSortedChange, sort
                 sortable: false,
                 filterable: false,
                 width: 100,
-                Cell: function(props){ 
+                Cell: function(props){
                         return (
                             <Button color={checked[props.original.barcode] ? 'danger' : "primary"} onClick={(e) => handleChange(e, props.original, props.original.barcode, checked[props.original.barcode] ? 'remove' : 'add')}>{checked[props.original.barcode] ? 'Remove' : 'Add'}</Button>
                             // <input checked={checkedItem[props.index]} type="checkbox" onChange={(e) => handleChange(e, props.original, props.index)}/>
@@ -771,21 +773,21 @@ const SlipDisplay = ({ data , sort, handleChange, loading , onSortedChange, sort
         filterable={true}
         onSortedChange={onSortedChange}
         sorted={sorted}
-    />  
+    />
 )
 
 const RequestForm = ({ add, handleBarcodeAdd, processNewBarcodes, searchObject }) => {
-    const inputValue = searchObject.includes(',') ? searchObject.split(',') : searchObject
-    return(
+  const inputValue = searchObject.includes(',') ? searchObject.split(',') : searchObject;
+  return (
     <div>
-    <p style={{marginLeft: '20px'}}>Number of items <strong>{add ? Object.keys(add).length : 0}</strong></p>  
+    <p style={{marginLeft: '20px'}}>Number of items <strong>{add ? Object.keys(add).length : 0}</strong></p>
     <Form>
         <FormGroup>
             <Label for="barcodes">Barcodes</Label>
             <Input type="textarea" rows="15" name="barcodes" value={inputValue} onChange={(e) => handleBarcodeAdd(e)}  />
         </FormGroup>
         <Button color="primary" onClick={(e) => processNewBarcodes(e)}>Add</Button>
-    </Form>      
-    </div> 
-    )
-}
+    </Form>
+    </div>
+  );
+};

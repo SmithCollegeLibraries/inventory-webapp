@@ -28,7 +28,7 @@ const initialState = {
         email: '',
         locked: false,
         disable: false
-}  
+}
 
 const trayReducer = (state, action) => {
     switch (action.type){
@@ -82,15 +82,15 @@ const trayReducer = (state, action) => {
             }
         case 'LOCK_COLLECTION':
             return {
-                ...state, 
-                locked: !state.locked  
-            } 
+                ...state,
+                locked: !state.locked
+            }
         case 'DISABLE_VERIFY':
             return {
                 ...state,
                 disable: !state.disable
-            }    
-        default: 
+            }
+        default:
             return state
     }
 }
@@ -111,28 +111,28 @@ const Tray = (props) => {
     }, [])
 
     useEffect(() => {
-        if(props){
+        if (props) {
             const { settings } = props || ''
             let trayLength = 8
-            if(settings !== ''){
-            Object.keys(settings).map(items => {
-                if(settings[items].type === 'tray_barcode_length'){
-                    trayLength = parseInt(settings[items].value)
-                }
-            })
+            if (settings !== '') {
+                Object.keys(settings).map(items => {
+                    if(settings[items].type === 'tray_barcode_length'){
+                        trayLength = parseInt(settings[items].value)
+                    }
+                })
             }
             dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength})
-        }    
+        }
     },[props])
 
     useEffect(() => {
         if(debouncedSearchTerm && debouncedSearchTerm.length > 0){
             const barcodeVerify = debouncedSearchTerm.split('\n')
             barcodeVerify.map(items => {
-                if(items !== '' && items.length === 15 && items.startsWith('3101')) { 
+                if(items !== '' && items.length === 15 && items.startsWith('3101')) {
                     handleBarcodeVerify(items)
                 }
-            })  
+            })
         }
     },[debouncedSearchTerm])
 
@@ -148,8 +148,8 @@ const Tray = (props) => {
                     if(items.length < 15 || items.length > 15){
                         warning(`${items} meeds to be 15 characters long. You currently have ${items.length}`)
                     }
-                }    
-            })  
+                }
+            })
         }
     },[debouncedSearchTerm])
 
@@ -164,7 +164,7 @@ const Tray = (props) => {
         // handleAlephRecordVerify(e)
         let value = e.target.value
         if(e.target.name === 'tray'){
-            value = e.target.value.replace(/\D/g,'') 
+            value = e.target.value.replace(/\D/g,'')
         }
         if(data.disable){
             const original = data.original
@@ -180,7 +180,7 @@ const Tray = (props) => {
         }
     }
 
-    const handleBarcodeVerify = async (barcode) => {        
+    const handleBarcodeVerify = async (barcode) => {
             const data = {
                 barcodes: barcode
             }
@@ -210,9 +210,9 @@ const Tray = (props) => {
                     }
                 })
                 }
-            }, 2000) 
+            }, 2000)
             return () => clearTimeout(timeout)
-        }       
+        }
     }
 
     const handleOriginalSubmit = e => {
@@ -220,7 +220,7 @@ const Tray = (props) => {
         const { original, trayLength } = data
         if(handleErrors() !== true){
             dispatch({ type: 'CHANGE_FORM', form: 'verify'})
-        } 
+        }
     }
 
     const handleErrors = () => {
@@ -233,14 +233,14 @@ const Tray = (props) => {
             failure(`Tray barcode must be ${trayLength} characters`)
             return true
         }
-    } 
+    }
 
     const handleVerify = e => {
         e.preventDefault()
         const verify = data.verify
         let value = e.target.value
         if(e.target.name === 'tray'){
-            value = e.target.value.replace(/\D/g,'') 
+            value = e.target.value.replace(/\D/g,'')
         }
         verify[e.target.name] = value
         dispatch({ type: 'ADD_VERIFY', verify: verify})
@@ -288,7 +288,7 @@ const Tray = (props) => {
                 removeItem(items)
             } else {
                 failure(`${load.barcode} in tray ${load.boxbarcode} was already added on ${load.added}`)
-            } 
+            }
          }
       )
     }
@@ -318,8 +318,8 @@ const Tray = (props) => {
           form.elements[index + 1].focus();
           event.preventDefault();
         }
-    }   
-    
+    }
+
     const lockCollection = e => {
         dispatch({ type: 'LOCK_COLLECTION' })
     }
@@ -348,7 +348,7 @@ const Tray = (props) => {
                     <Col md="4">
                         <Card>
                             <CardBody>
-                            <TrayFormOriginal 
+                            <TrayFormOriginal
                                 handleOriginal={handleOriginal}
                                 collections={props.collections}
                                 handleOriginalSubmit={handleOriginalSubmit}
@@ -378,19 +378,19 @@ const Tray = (props) => {
                                 handleEnter={handleEnter}
                             />
                             </CardBody>
-                        </Card>    
+                        </Card>
                     </Col>
                     : ''}
                     <Col>
-                        <Display 
+                        <Display
                             data={data.verified}
                             collections={props.collections}
                             handleDisplayChange={handleDisplayChange}
                             removeItem={removeItem}
                         />
                     </Col>
-                </Row> 
-            </div>   
+                </Row>
+            </div>
             </Fragment>
     )
 }
@@ -442,7 +442,7 @@ export default Tray
 //         this.handleAlephRecordVerify(e)
 //         let value = e.target.value
 //         if(e.target.name === 'tray'){
-//             value = e.target.value.replace(/\D/g,'') 
+//             value = e.target.value.replace(/\D/g,'')
 //         }
 //         const original = this.state.original
 //         original[e.target.name] = value
@@ -468,7 +468,7 @@ export default Tray
 //                 return Alerts.error(error)
 //                 })
 //             }
-//             }, 2000) 
+//             }, 2000)
 //         }
 //     }
 
@@ -486,13 +486,13 @@ export default Tray
 //                         const error = {
 //                             name: "Aleph record missing",
 //                             message: `Unable to locate Aleph record.  Please verify record exists before submitting this barcode`
-//                         }  
+//                         }
 //                         return Alerts.error(error)
 //                     }
 //                 })
 //                 }
-//             }, 2000) 
-//         }       
+//             }, 2000)
+//         }
 //     }
 
 //     handleOriginalSubmit = e => {
@@ -501,8 +501,8 @@ export default Tray
 //         if(this.handleErrors() !== true){
 //         this.setState({
 //             form: 'verify'
-//         }) 
-//         } 
+//         })
+//         }
 //     }
 
 //     handleErrors = () => {
@@ -523,14 +523,14 @@ export default Tray
 //             Alerts.error(error)
 //             return true
 //         }
-//     } 
+//     }
 
 //     handleVerify = e => {
 //         e.preventDefault()
 //         const verify = this.state.verify
 //         let value = e.target.value
 //         if(e.target.name === 'tray'){
-//             value = e.target.value.replace(/\D/g,'') 
+//             value = e.target.value.replace(/\D/g,'')
 //         }
 //         verify[e.target.name] = value
 //         this.setState({
@@ -557,7 +557,7 @@ export default Tray
 //             }
 //             localforage.setItem('tray', verified)
 //             this.setState({
-//                 verified, 
+//                 verified,
 //                 form: "original",
 //                 original: {
 //                     collection: '',
@@ -606,7 +606,7 @@ export default Tray
 //                     message: `${load.barcode} in tray ${load.boxbarcode} was already added on ${load.added}`
 //                 }
 //                 Alerts.error(errorMessage)
-//             } 
+//             }
 //          }
 //       )
 //     }
@@ -637,15 +637,15 @@ export default Tray
 //           form.elements[index + 1].focus();
 //           event.preventDefault();
 //         }
-//     }    
-    
+//     }
+
 //     render(){
 //         const { original, verify, verified, form, trayLength } = this.state || {}
 //         return(
 //             <div style={{marginTop: "50px"}}>
 //                 <Row>
 //                     <Col md="2">
-//                         <TrayFormOriginal 
+//                         <TrayFormOriginal
 //                             handleOriginal={this.handleOriginal}
 //                             collections={this.props.collections}
 //                             handleOriginalSubmit={this.handleOriginalSubmit}
@@ -670,15 +670,15 @@ export default Tray
 //                     </Col>
 //                     : ''}
 //                     <Col>
-//                         <Display 
+//                         <Display
 //                             data={verified}
 //                             collections={this.props.collections}
 //                             handleDisplayChange={this.handleDisplayChange}
 //                             removeItem={this.removeItem}
 //                         />
 //                     </Col>
-//                 </Row> 
-//             </div>    
+//                 </Row>
+//             </div>
 //         )
 //     }
 
@@ -696,9 +696,9 @@ const TrayFormVerify = props => (
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray
-        {props.verify.tray.replace(/\D/g,'').length === props.trayLength ? 
+        {props.verify.tray.replace(/\D/g,'').length === props.trayLength ?
             <Badge color="success">{props.trayLength}</Badge>
-            : 
+            :
             <Badge color="danger">{props.verify.tray.replace(/\D/g,'').length}</Badge>
           }
       </Label>
@@ -709,7 +709,7 @@ const TrayFormVerify = props => (
       <Input type="textarea" rows="10" value={props.verify.barcodes} onChange={(e) => props.handleVerify(e)} name="barcodes" />
     </FormGroup>
         <Button onClick={(e) => props.handleVerifySubmit(e)} color="success">Verify</Button>
-    </Form>     
+    </Form>
 )
 
 const TrayFormOriginal = props => (
@@ -727,9 +727,9 @@ const TrayFormOriginal = props => (
         </FormGroup>
         <FormGroup>
         <Label for="tray">Tray{ ' ' }
-        {props.original.tray.replace(/\D/g,'').length === props.trayLength ? 
+        {props.original.tray.replace(/\D/g,'').length === props.trayLength ?
             <Badge color="success">{props.trayLength}</Badge>
-            : 
+            :
             <Badge color="danger">{props.original.tray.replace(/\D/g,'').length}</Badge>
           }
         </Label>
@@ -740,8 +740,8 @@ const TrayFormOriginal = props => (
           <Input type="textarea" value={props.original.barcodes} rows="10" onChange={(e) => props.handleOriginal(e)} name="barcodes" />
         </FormGroup>
         {props.original.tray.replace(/\D/g,'').length === props.trayLength ?
-            props.disable 
-                ? <Button onClick={(e) => props.handleVerifySubmit(e)} color="success">Submit</Button> 
+            props.disable
+                ? <Button onClick={(e) => props.handleVerifySubmit(e)} color="success">Submit</Button>
                 : <Button onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Submit</Button>
         :   <Button onClick={e => (e.preventDefault)} color="secondary">Submit</Button>
         }
@@ -751,8 +751,8 @@ const TrayFormOriginal = props => (
             <ProcessForm
                 processRequests={props.processRequests}
             />
-        : ''}   
-    </div> 
+        : ''}
+    </div>
 )
 
 const ProcessForm = props => (
@@ -771,33 +771,33 @@ const Display = props => (
                     <dt className="col-sm-3">Tray Barcode</dt>
                         <dd className="col-sm-9">
                             {props.data[items].tray}
-                            {/* <input 
-                                type="numbers" 
-                                className="form-control" 
-                                value={data[items].tray} 
-                                name="tray" 
+                            {/* <input
+                                type="numbers"
+                                className="form-control"
+                                value={data[items].tray}
+                                name="tray"
                                 placeholder="Tray Barcode"
-                                onChange={(e) => handleDisplayChange(e, items)} 
+                                onChange={(e) => handleDisplayChange(e, items)}
                             /> */}
                         </dd>
                         <dt className="col-sm-3">Barcodes</dt>
                             <dd className="col-sm-9">
                                 {props.data[items].barcodes}
-                                {/* <textarea 
-                                    className="form-control" 
-                                    name="barcodes" 
-                                    value={data[items].barcodes} 
-                                    onChange={(e) => handleDisplayChange(e, items)} 
+                                {/* <textarea
+                                    className="form-control"
+                                    name="barcodes"
+                                    value={data[items].barcodes}
+                                    onChange={(e) => handleDisplayChange(e, items)}
                                 >
                                 </textarea> */}
                             </dd>
                         <dt className="col-sm-3">Collection</dt>
                         <dd className="col-sm-9">
                             {props.data[items].collection}
-                            {/* <select className="form-control" 
-                                value={data[items].collection} 
+                            {/* <select className="form-control"
+                                value={data[items].collection}
                                 name="collection"
-                                onChange={(e) => handleDisplayChange(e, items)} 
+                                onChange={(e) => handleDisplayChange(e, items)}
                             >
                             <option>Select Collection</option>
                             {collections ? Object.keys(collections).map((items, idx) => (
@@ -809,7 +809,7 @@ const Display = props => (
                 <Button color="danger" onClick={() => props.removeItem(items)}>Delete</Button>
 
             </CardBody>
-        </Card>  
+        </Card>
         )
-    })    
+    })
 )

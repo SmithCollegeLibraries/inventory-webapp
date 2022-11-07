@@ -1,9 +1,8 @@
 
-const base = "https://libtools.smith.edu/sis-webapp/backend/web/"
+const base = "http://localhost:8888/"
 
 
 export const account = `${base}user/`
-export const accountType = `${base}account-type/`
 export const settings = `${base}settings/`
 export const trayAPI = `${base}tray-api/`
 export const collections = `${base}collection-api/`

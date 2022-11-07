@@ -1,10 +1,10 @@
-import { 
-    inserttrays, 
-    managetrayupdate, 
-    shelfmanagementupdate, 
-    insertshelf, 
-    collections, 
-    internalrequests, 
+import {
+    inserttrays,
+    managetrayupdate,
+    shelfmanagementupdate,
+    insertshelf,
+    collections,
+    internalrequests,
     internalrequestscomments ,
     history,
     account,
@@ -13,16 +13,14 @@ import {
     trayAPI,
     shelfAPI,
     deleteMultipleBarcodes,
-    accountType,
-    inProcess
-} 
-from '../config/endpoints'
-import Alerts from '../components/alerts'
-import { getFormattedDate } from '../util/date'
+    inProcess,
+  } from '../config/endpoints';
+import Alerts from '../components/alerts';
+import { getFormattedDate } from '../util/date';
 
 const settings = {
-    serverToken: "bhsUa3Beimd1AXtujKB2WQv6zlQ7Mxr9"
-}
+  serverToken: "bhsUa3Beimd1AXtujKB2WQv6zlQ7Mxr9",
+};
 
 
 class Load {
@@ -32,39 +30,34 @@ class Load {
     */
 
     createAccount = async (data) => {
-        const create = await this.handleAccount(`${account}create-account/`, 'POST', data)
-        return create
-    }
+      const create = await this.handleAccount(`${account}create-account/`, 'POST', data);
+      return create;
+    };
 
     getAccount = async (data) => {
-        const get = await this.handleAccount(`${account}login/`, 'POST', data)
-        return get
-    }
+      const get = await this.handleAccount(`${account}login/`, 'POST', data);
+      return get;
+    };
 
     verifyAccount = async (data) => {
-        const get = await this.handleAccount(`${account}account-exists/`, 'POST', data)
-        return get
-    }
+      const get = await this.handleAccount(`${account}account-exists/`, 'POST', data);
+      return get;
+    };
 
     getUsers = async (data) => {
-        const get = await this.handleUpdate(`${account}get-users/`, 'GET', data)
-        return get
-    }
-
-    accountTypes = async (data) => {
-        const get = await this.handleUpdate(`${accountType}`, 'GET')
-        return get
-    }
+      const get = await this.handleUpdate(`${account}get-users/`, 'GET', data);
+      return get;
+    };
 
     accountDelete = async (data) => {
-        const get = await this.handleUpdate(`${account}delete-users/`, 'POST', data)
-        return get
-    }
+      const get = await this.handleUpdate(`${account}delete-users/`, 'POST', data);
+      return get;
+    };
 
     accountUpdate = async (data) => {
-        const get = await this.handleUpdate(`${account}update-account/`, 'POST', data)
-        return get  
-    }
+      const get = await this.handleUpdate(`${account}update-account/`, 'POST', data);
+      return get;
+    };
 
     /**
         * @desc Tray
@@ -126,12 +119,12 @@ class Load {
 
     inProcessPaging = async (data) => {
         return await this.handleUpdate(`${inProcess}create`, 'POST', data)
-    }    
+    }
 
     /**
         * @desc Collection management
     */
-    
+
     loadCollections = async (id, data) => {
         const update = await this.handleUpdate(`${collections}update/${id}`, 'PUT', data)
         return update
@@ -167,7 +160,7 @@ class Load {
         const deleteShelf = await this.handleUpdate(`${shelfAPI}delete-individual-items`, 'POST', data)
         return deleteShelf
     }
-   
+
 
     // createNewCollection = async (data) => {
     //     const values = {
@@ -280,7 +273,7 @@ class Load {
         const update = this.handleUpdate(`${internalrequestscomments}create/`, 'POST', data)
         return update
     }
-    
+
     archiveInternalRequests = async (id) => {
         const values = {
             completed: 'true'
@@ -310,7 +303,7 @@ class Load {
            return this.responseHandling(response)
         } catch(e) {
             this.catchError('', e)
-        }   
+        }
     }
 
     handleUpdate = async (string, method, data) => {
@@ -336,7 +329,7 @@ class Load {
 
     responseHandling = async response => {
         switch(response.status){
-            case 200: 
+            case 200:
             case 201:
             case 304:
                 return await response.json()
@@ -344,7 +337,7 @@ class Load {
             case 204:
                 return {}
             case 400:
-                this.catchError('Bad Request', response.statusText)    
+                this.catchError('Bad Request', response.statusText)
             break;
             case 401:
             case 403:
@@ -353,7 +346,7 @@ class Load {
             case 404:
                 this.catchError("Doesn't exist", response.statusText)
             break;
-            case 405: 
+            case 405:
                 this.catchError('Method not allowed', response.statusText)
             break;
             case 422:
@@ -363,7 +356,7 @@ class Load {
                 this.catchError('Internal Server error', response.statusText)
             break;
             default:
-                this.catchError('There was an error.  Check your internet connection', '')                      
+                this.catchError('There was an error.  Check your internet connection', '')
         }
     }
 
@@ -375,5 +368,6 @@ class Load {
         Alerts.error(error)
     }
 }
-const load = new Load()
-export default load
+
+const load = new Load();
+export default load;
