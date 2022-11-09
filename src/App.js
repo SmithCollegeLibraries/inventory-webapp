@@ -4,16 +4,16 @@ import './css/bootstrap.css'
 import './css/index.css'
 import 'react-s-alert/dist/s-alert-default.css'
 import {
-  Trays,
-  Shelf,
-  TrayManagement,
-  AddPaging,
-  PagingDisplay,
-  Reports,
-  History,
-  Search,
+  // Trays,
+  // Shelf,
+  // TrayManagement,
+  // AddPaging,
+  // PagingDisplay,
+  // Reports,
+  // History,
+  // Search,
   CollectionManagement,
-  ShelfManagement,
+  // ShelfManagement,
   UserManagement
 } from './containers'
 import Header from './components/header'
@@ -27,7 +27,7 @@ import { createBrowserHistory } from 'history';
 import { ToastContainer } from 'react-toastify';
 import { failure } from './components/toastAlerts'
 
-const history = createBrowserHistory();
+// const history = createBrowserHistory();
 
 export default class Main extends Component {
 
@@ -82,13 +82,13 @@ export default class Main extends Component {
   }
 
   handleLoginSubmit = async e => {
-    e.preventDefault()
+    e.preventDefault();
     const data = {
       email: this.state.email,
       password: this.state.password
-    }
-    const account = await Load.getAccount(data)
-    const { name, access_token, level } = account || ''
+    };
+    const account = await Load.getAccount(data);
+    const { name, access_token, level } = account || '';
     if(account && account.access_token){
       this.setState({
         loggedIn: true,
@@ -96,12 +96,11 @@ export default class Main extends Component {
         access_key: access_token,
         level: level
       }, () => {
-        sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }))
-        this.collections()
-        history.push("/sis-webapp/trays")
+        sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
+        this.collections();
       })
     } else {
-      failure('There was a problem with your username or password')
+      failure('There was a problem with your username or password');
     }
   }
 
@@ -113,7 +112,7 @@ export default class Main extends Component {
   }
 
   render() {
-    const { loggedIn, name, createAccount, settings} = this.state;
+    const { loggedIn, settings} = this.state;
     return (
       <div>
         <ToastContainer />
@@ -125,7 +124,7 @@ export default class Main extends Component {
           {sessionStorage.getItem('account') || loggedIn === true ?
             <div className="container-fluid">
               <Switch>
-                <Route exact path="/" render={() => (
+                {/* <Route exact path="/" render={() => (
                   <Trays
                     collections={this.state.collections}
                     settings={settings}
@@ -153,12 +152,6 @@ export default class Main extends Component {
                     collections={this.state.collections}
                   />
                 )}/>
-                <Route path="/collection-management" render={() => (
-                  <CollectionManagement
-                    collections={this.state.collections}
-                    newCollections={this.collections}
-                  />
-                )}/>
                 <Route path="/paging-add" render={() => (
                   <AddPaging
                     settings={settings}
@@ -182,6 +175,12 @@ export default class Main extends Component {
                 <Route path="/search" render={() => (
                   <Search
                     settings={settings}
+                  />
+                )}/> */}
+                <Route path="/collection-management" render={() => (
+                  <CollectionManagement
+                    collections={this.state.collections}
+                    newCollections={this.collections}
                   />
                 )}/>
                 <Route path="/users" render={() => (

@@ -116,12 +116,6 @@ class Load {
     * @desc Collection management
   */
 
-  loadCollections = async (id, data) => {
-    const update = await this.handleUpdate(`${collections}update/${id}`, 'PUT', data)
-    return update
-  }
-
-
   createNewCollection = async (data) => {
     const create = await this.handleUpdate(`${collections}new-collection/`, 'POST', data)
     return create

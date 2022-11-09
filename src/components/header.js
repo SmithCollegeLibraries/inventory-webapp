@@ -34,7 +34,7 @@ export default class Header extends Component {
   render() {
     const storage = JSON.parse(sessionStorage.getItem('account'));
     const { account } = storage || '';
-    const { name, level } = account || '';
+    const { level } = account || '';
     return (
       <div>
         <Navbar color="dark" dark expand="md">
@@ -61,9 +61,6 @@ export default class Header extends Component {
                     <DropdownItem>
                       <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/shelf-management">Shelf</NavLink>
                     </DropdownItem>
-                    <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/collection-management">Collection</NavLink>
-                    </DropdownItem>
                   </DropdownMenu>
                 </UncontrolledDropdown>
                 <UncontrolledDropdown nav inNavbar>
@@ -89,6 +86,9 @@ export default class Header extends Component {
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/reports">Reports</NavLink>
                 </NavItem>
                 */}
+                <NavItem>
+                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/collection-management">Collection</NavLink>
+                </NavItem>
                 {level >= 100 ?
                   <NavItem>
                     <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/users">Users</NavLink>
