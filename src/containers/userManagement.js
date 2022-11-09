@@ -66,17 +66,19 @@ function UserManagement() {
 
   const handleDelete = (e, index) => {
     e.preventDefault();
-    const data = users[index];
-    const deleteAccount = Load.accountDelete(data);
-    if (deleteAccount) {
-        Alerts.success('Account successfully deleted');
-        getUsers();
-    } else {
-      const errors = {
-        name: 'Error deleting account',
-        message: "There was an error deleting this account",
+    if (window.confirm("Delete this user? This action can only be undone by the database administrator.")) {
+      const data = users[index];
+      const deleteAccount = Load.accountDelete(data);
+      if (deleteAccount) {
+          Alerts.success('Account successfully deleted');
+          getUsers();
+      } else {
+        const errors = {
+          name: "Error deleting account",
+          message: "There was an error deleting this account",
+        }
+        Alerts.error(errors);
       }
-      Alerts.error(errors);
     }
   };
 
@@ -130,6 +132,7 @@ const UserUpdate = ({ users, updatePassword, updateLevel, handleSubmit, handleDe
           <th>Email</th>
           <th>Password</th>
           <th>Level</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -139,8 +142,10 @@ const UserUpdate = ({ users, updatePassword, updateLevel, handleSubmit, handleDe
             <td>{users[items].email}</td>
             <td><Input type="password" name="password" value={users[items].password} onChange={e => updatePassword(e, index)} /></td>
             <td><Input type="number" name="level" value={users[items].level} min="0" max="100" onChange={e => updateLevel(e, index)} /></td>
-            <td><Button color="primary" onClick={(e) => handleSubmit(e, index)}>Update</Button></td>
-            <td><Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button></td>
+            <td>
+              <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"margin-right": "10px"}}>Update</Button>
+              <Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button>
+            </td>
           </tr>
         ) : null}
       </tbody>
