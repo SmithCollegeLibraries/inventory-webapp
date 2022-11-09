@@ -143,7 +143,7 @@ const UserUpdate = ({ users, updatePassword, updateLevel, handleSubmit, handleDe
             <td><Input type="password" name="password" value={users[items].password} onChange={e => updatePassword(e, index)} /></td>
             <td><Input type="number" name="level" value={users[items].level} min="0" max="100" onChange={e => updateLevel(e, index)} /></td>
             <td>
-              <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"margin-right": "10px"}}>Update</Button>
+              <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"marginRight": "10px"}}>Update</Button>
               <Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button>
             </td>
           </tr>
@@ -199,14 +199,18 @@ const UserCreation = () => {
       }});
   };
 
-  const handleAccountCreationSubmit = async e => {
+  const handleAccountCreationSubmit = async (e) => {
     e.preventDefault();
     const data = {
       email: state.createNewAccount.email,
     };
     const account = await Load.verifyAccount(data);
     if (account) {
-      Alerts.success('This account already exists');
+      const error = {
+        name: 'Account creation',
+        message: "An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.",
+      };
+      Alerts.error(error);
     } else {
       const create = await Load.createAccount(state.createNewAccount);
       if (create) {
@@ -215,7 +219,7 @@ const UserCreation = () => {
       } else {
         const error = {
           name: 'Account creation',
-          message: "There was a problem creating your account.",
+          message: "There was a problem creating your account",
         };
         Alerts.error(error);
       }
