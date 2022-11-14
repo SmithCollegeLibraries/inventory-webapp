@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useReducer } from 'react';
-import { Table,
+import { Button,
+    Form,
+    FormGroup,
     Input,
-    Button,
-    TabContent,
-    TabPane,
+    Label,
     Nav,
     NavItem,
     NavLink,
+    TabContent,
+    TabPane,
+    Table,
   } from 'reactstrap';
 import Load from '../util/load';
-import Alerts from '../components/alerts';
+import { success, failure } from '../components/toastAlerts';
 import classnames from 'classnames';
-import { CreateAccount } from '../components/login';
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -42,13 +44,9 @@ function UserManagement() {
     users[index].password = "";
     setPassword("");
     if (update) {
-      Alerts.success("Account successfully updated");
+      success("Account successfully updated");
     } else {
-      const errors = {
-        name: "Error updating account",
-        message: "There was an error updating this account",
-      };
-      Alerts.error(errors);
+      failure("There was an error updating this account. Please make sure that the level is between 0 and 100.");
     }
   };
 
@@ -70,14 +68,10 @@ function UserManagement() {
       const data = users[index];
       const deleteAccount = Load.accountDelete(data);
       if (deleteAccount) {
-          Alerts.success('Account successfully deleted');
+          success('Account successfully deleted');
           getUsers();
       } else {
-        const errors = {
-          name: "Error deleting account",
-          message: "There was an error deleting this account",
-        }
-        Alerts.error(errors);
+        failure("There was an error deleting this account");
       }
     }
   };
@@ -206,32 +200,42 @@ const UserCreation = () => {
     };
     const account = await Load.verifyAccount(data);
     if (account) {
-      const error = {
-        name: 'Account creation',
-        message: "An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.",
-      };
-      Alerts.error(error);
+      failure("An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.");
     } else {
       const create = await Load.createAccount(state.createNewAccount);
       if (create) {
-        dispatch({ type: 'RESET', payload: {}});
-        Alerts.success('Account successfully created');
+        dispatch({
+          type: 'RESET',
+          payload: {}
+        });
+        success('Account successfully created');
       } else {
-        const error = {
-          name: 'Account creation',
-          message: "There was a problem creating your account",
-        };
-        Alerts.error(error);
+        failure("There was a problem creating this account");
       }
     }
   };
 
   return (
     <div>
-      <CreateAccount
-        handleAccountCreationSubmit={handleAccountCreationSubmit}
-        handleCreationChange={handleCreationChange}
-      />
+      <Form className="form-signin">
+        <FormGroup>
+          <Label for="email">Email address</Label>
+          <Input type="email" value={state.createNewAccount.email} pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/" name="email" onChange={(e) => handleCreationChange(e)} required autoFocus />
+        </FormGroup>
+        <FormGroup>
+          <Label for="password">Password</Label>
+          <Input type="password" name="password" value={state.createNewAccount.password} onChange={(e) => handleCreationChange(e)} required />
+        </FormGroup>
+        <FormGroup>
+          <Label for="name">Name</Label>
+          <Input type="text" name="name" value={state.createNewAccount.name} onChange={(e) => handleCreationChange(e)} required />
+        </FormGroup>
+        <FormGroup>
+          <Label for="level">Level</Label>
+          <Input type="number" name="level" min="0" max="100" value={state.createNewAccount.level} onChange={e => handleCreationChange(e)} required />
+        </FormGroup>
+        <Button color="primary" className="btn-block" onClick={(e) => handleAccountCreationSubmit(e)} type="submit">Create account</Button>
+      </Form>
     </div>
   );
 }

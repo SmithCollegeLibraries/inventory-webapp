@@ -1,13 +1,11 @@
-import React, { Component } from 'react'
-
+import React, { Component } from 'react';
 
 export default class Return extends Component {
-
-    render(){
-        return(
-            <div>
-                Return
-            </div>    
-        )
-    }
-}
+  render () {
+    return(
+      <div>
+        Return
+      </div>
+    );
+  }
+};

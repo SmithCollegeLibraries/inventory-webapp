@@ -6,8 +6,6 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import localforage from 'localforage'
 import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { success, failure, warning } from '../components/toastAlerts'
 
 const initialState = {
@@ -343,7 +341,6 @@ const Tray = (props) => {
             <Button color="warning" onClick={(e) => clearDisplayGrid(e)}>Clear All</Button>
         </div>
             <div style={{marginTop: "50px"}}>
-            <ToastContainer />
                 <Row>
                     <Col md="4">
                         <Card>

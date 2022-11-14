@@ -23,27 +23,3 @@ export const LoginPage = ({ handleLoginChange, handleLoginSubmit, state }) => (
   </Form>
   </div>
 )
-
-export const CreateAccount = ({ handleAccountCreationSubmit, handleCreationChange, loginPage }) => (
-  <div>
-  <Form className="form-signin">
-    <FormGroup>
-      <Label for="email">Email address</Label>
-      <Input type="email" pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/" name="email" onChange={(e) => handleCreationChange(e)} required autoFocus />
-    </FormGroup>
-    <FormGroup>
-      <Label for="password">Password</Label>
-      <Input type="password" name="password" onChange={(e) => handleCreationChange(e)} required />
-    </FormGroup>
-    <FormGroup>
-      <Label for="name">Name</Label>
-      <Input type="text" name="name" onChange={(e) => handleCreationChange(e)} required />
-    </FormGroup>
-    <FormGroup>
-      <Label for="level">Level</Label>
-      <Input type="number" name="level" min="0" max="100" onChange={e => handleCreationChange(e)} required />
-    </FormGroup>
-    <Button color="primary" className="btn-block" onClick={(e) => handleAccountCreationSubmit(e)} type="submit">Create account</Button>
-  </Form>
-  </div>
-)

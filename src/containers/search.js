@@ -45,9 +45,9 @@ export default class Search extends Component {
         } else {
             this.removePick(values, index)
         }
-    } 
+    }
 
-    addPick = (items) => { 
+    addPick = (items) => {
         const pick = {...this.state.pick}
         pick[items.barcode] = items
         this.setState({
@@ -78,39 +78,39 @@ export default class Search extends Component {
         const item = _.orderBy(list,
             ['row', 'ladder', 'shelf_number'],
             ['asc', 'asc', 'asc'])
-        this.setState({ 
+        this.setState({
             pick: item
         }, () => {
             localforage.setItem('paging', this.state.pick)
-        })  
+        })
     }
 
 
     handleSearch = async (e) => {
         e.preventDefault()
         const { searchValue } = this.state
-        this.setState({ searchResults: [], loading: true }) 
+        this.setState({ searchResults: [], loading: true })
         let search
         switch(this.state.searchDisplay){
             case 'title':
-                search = await ContentSearch.ill('title', searchValue) 
+                search = await ContentSearch.ill('title', searchValue)
                 if(search && !search.length){ Alerts.info('No search results found')}
             break;
-            case 'single' : 
+            case 'single' :
                 search = await ContentSearch.searchAleph(`barcode=${searchValue}`)
                 if(search && !search.length){ Alerts.info('No search results found')}
-            break    
+            break
             case 'multi':
                 await this.getRecords()
             break
             case 'tray':
                 search = await ContentSearch.traySearch(searchValue)
                 if(search && !search.length){ Alerts.info('No search results found')}
-            break   
+            break
             case 'shelf':
                 search = await ContentSearch.shelfmanagement(searchValue)
             default:
-            break;  
+                break;
         }
         if(this.state.searchDisplay !== 'multi'){
         this.setState({
@@ -140,9 +140,9 @@ export default class Search extends Component {
           } else {
             Alerts.info('Unable to match barcode')
             this.setState({loading: false})
-          }   
+          }
       }
-  
+
 
       handleDisplay = display => {
           this.setState({
@@ -173,7 +173,7 @@ export default class Search extends Component {
         console.log(searchResults)
         return(
             <div>
-                <SearchForm 
+                <SearchForm
                     handleSearch={this.handleSearch}
                     searchDisplay={this.state.searchDisplay}
                     handleDisplay={this.handleDisplay}
@@ -212,7 +212,7 @@ const SearchForm = ({ handleSearch, searchDisplay, handleDisplay, handleChange, 
         </FormGroup>
         }
       <Button>Submit</Button>
-  </Form>   
+  </Form>
 )
 
 const Display = ({ data, loading, handleSelection }) => (
@@ -222,7 +222,7 @@ const Display = ({ data, loading, handleSelection }) => (
         [{
             Header: '',
             accessor: 'select',
-            Cell: function(props){ 
+            Cell: function(props){
                     return <input type="checkbox" onClick={(e) => handleSelection(e, props.original, props.index)}/>
             },
             maxWidth: 50
@@ -278,8 +278,8 @@ const TableHead = ({ }) => (
             <th>Collection</th>
             <th>Call Number</th>
             <th>Options</th>
-        </tr>  
-    </thead> 
+        </tr>
+    </thead>
 )
 
 const TableBody = ({ list, idx, addToPaging }) => (
@@ -307,32 +307,32 @@ const TableBodySkeleton = () => (
         <td><Skeleton /></td>
         <td><Skeleton /></td>
     </tr>
-    )    
+    )
 )
 
 const SearchDisplay = ({ data, addToPaging, loading }) => (
     <Table responsive stripped>
         <TableHead />
         <tbody>
-        {loading === false 
-            ? 
-            Object.keys(data).length 
-                ? Object.keys(data).map((items,idx) => 
+        {loading === false
+            ?
+            Object.keys(data).length
+                ? Object.keys(data).map((items,idx) =>
                     <TableBody
                         list={data[items]}
                         key={idx}
                         addToPaging={addToPaging}
                      />
-                    ) 
-                :   <NoResults />   
+                    )
+                :   <NoResults />
             : <TableBodySkeleton />
         }
-        </tbody> 
+        </tbody>
     </Table>
 )
 
 const NoResults = () => (
     <tr>
         <td>No Results</td>
-    </tr>    
+    </tr>
 )

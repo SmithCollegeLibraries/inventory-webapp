@@ -3,7 +3,6 @@ import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import ContentSearch from '../util/search';
 import { Row, Col, Form, Button, Input, Alert, Card, CardBody } from 'reactstrap';
-import { ToastContainer } from 'react-toastify';
 
 const initialState = {
   collections: [],

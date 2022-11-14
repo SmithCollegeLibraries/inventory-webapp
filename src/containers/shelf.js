@@ -4,7 +4,6 @@ import Load from '../util/load'
 import Alerts from '../components/alerts'
 import { Button, Form, FormGroup, Label, Input, Card, CardBody, Row } from 'reactstrap'
 import localforage from 'localforage'
-import { ToastContainer, toast } from 'react-toastify';
 
 const initialState = {
     form: {
@@ -22,7 +21,7 @@ const initialState = {
 }
 
 const shelfReducer = (state, action) => {
-    switch (action.type){  
+    switch (action.type){
         case 'UPDATE_FORM':
         return{
             ...state,
@@ -41,7 +40,7 @@ const shelfReducer = (state, action) => {
             case 'UPDATE_TRAY_LENGTH':
                 return {
                     ...state, trayLength: action.trayLength
-                }    
+                }
         case 'RESET':
             return {
                 ...state,
@@ -52,8 +51,8 @@ const shelfReducer = (state, action) => {
                     shelf_position: 0
                 },
                 value: ''
-            }    
-        default: 
+            }
+        default:
             return state
     }
 }
@@ -82,7 +81,7 @@ function Shelf(props){
             })
             }
             dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength})
-        }    
+        }
     },[props])
 
 
@@ -169,7 +168,7 @@ function Shelf(props){
                 removeItem(items)
             } else {
                 failure(`There was an error adding ${data.shelfData[items].tray} to ${data.shelfData[items].shelf}`)
-            } 
+            }
            }
         )
         } else {
@@ -197,7 +196,7 @@ function Shelf(props){
           form.elements[index + 1].focus();
           event.preventDefault();
         }
-    }   
+    }
 
 
 
@@ -210,7 +209,7 @@ function Shelf(props){
             closeOnClick: true,
         });
     }
-    
+
     const failure = message => {
         toast.error(message, {
             position: "top-right",
@@ -225,14 +224,13 @@ function Shelf(props){
             position: "top-right",
             autoClose: 10000,
             hideProgressBar: false,
-            closeOnClick: true,  
+            closeOnClick: true,
         })
     }
 
 
     return(
         <div className="container-fluid" style={{marginTop: "50px"}}>
-        <ToastContainer />
         <div className="row">
             <div className="col-md-4">
                 <div className="card">
@@ -250,15 +248,15 @@ function Shelf(props){
                 </div>
             </div>
             <div className="col">
-                <Display 
+                <Display
                     data={data.shelfData}
                     handleChange={handleChange}
                     shelfPositions={data.shelfPositions}
                     removeItem={removeItem}
                 />
             </div>
-        </div>    
-        </div>   
+        </div>
+        </div>
     )
 }
 
@@ -381,7 +379,7 @@ export default Shelf
 //             this.setState({
 //                 suggestions: search
 //             })
-//         }    
+//         }
 //       }
 
 //       onSuggestionsClearRequested = () => {
@@ -424,7 +422,7 @@ export default Shelf
 //                     message: `There was an error adding ${this.state.data[items].tray} to ${this.state.data[items].shelf}`
 //                 }
 //                 Alerts.error(errorMessage)
-//             } 
+//             }
 //            }
 //         )
 //         } else {
@@ -457,9 +455,9 @@ export default Shelf
 //           form.elements[index + 1].focus();
 //           event.preventDefault();
 //         }
-//     }   
-    
-    
+//     }
+
+
 //     render(){
 //         const { data, form, suggestions, value, shelfPositions  } = this.state || {}
 //         const inputProps = {
@@ -496,25 +494,25 @@ export default Shelf
 //                         />
 //                     </div>
 //                     <div className="col">
-//                         <Display 
+//                         <Display
 //                             data={data}
 //                             handleChange={this.handleChange}
 //                             shelfPositions={shelfPositions}
 //                             removeItem={this.removeItem}
 //                         />
 //                     </div>
-//                 </div>    
-//             </div>    
+//                 </div>
+//             </div>
 //         )
 //     }
 
 // }
 
 
-const ShelfForm = ({ 
-    handleFormChange, 
-    handleFormSubmit, 
-    formData, 
+const ShelfForm = ({
+    handleFormChange,
+    handleFormSubmit,
+    formData,
     processRequests,
     shelfPositions,
     handleEnter,
@@ -542,27 +540,27 @@ const ShelfForm = ({
         <FormGroup>
           <Label for="position">Position</Label>
             <Input type="select" onKeyDown={handleEnter} value={formData.shelf_position} onChange={(e) => handleFormChange(e)} name="shelf_position">
-              <option value="">Select position</option>  
+              <option value="">Select position</option>
             {[...Array(shelfPositions)].map((x, i) =>
                         <option key={i} value={i + 1}>{i + 1}</option>
             )}
           </Input>
         </FormGroup>
         <Button color="primary" onClick={(e) => handleFormSubmit(e)}>Submit</Button>{ ' ' }
-    </Form>    
+    </Form>
     <br />
     {Object.keys(shelfData).map(items => items).length ?
             <ProcessForm
                 processRequests={processRequests}
             />
-        : ''}   
+        : ''}
     </div>
 )
 
 const ProcessForm = ({ processRequests }) => (
     <Form>
         <Button color="success" onClick={(e) => processRequests(e)}>Process Requests</Button>
-    </Form>    
+    </Form>
 )
 
 const Display = ({ data, removeItem  }) => {
@@ -574,21 +572,21 @@ const Display = ({ data, removeItem  }) => {
                 <dt className="col-sm-3">Tray Barcode</dt>
                 <dd className="col-sm-9">
                     {data[items].tray}
-                    {/* <input 
-                        value={data[items].tray} 
-                        className="form-control" 
-                        name="tray" 
-                        placeholder="Tray Barcode" 
+                    {/* <input
+                        value={data[items].tray}
+                        className="form-control"
+                        name="tray"
+                        placeholder="Tray Barcode"
                         onChange={(e) => handleChange(e, data[items].tray)} /> */}
                 </dd>
                 <dt className="col-sm-3">Shelf Barcode</dt>
-                <dd className="col-sm-9">  
+                <dd className="col-sm-9">
                     {data[items].shelf}
-                    {/* <input 
-                        value={data[items].shelf} 
-                        className="form-control" 
-                        name="shelf" 
-                        placeholder="Shelf Barcode" 
+                    {/* <input
+                        value={data[items].shelf}
+                        className="form-control"
+                        name="shelf"
+                        placeholder="Shelf Barcode"
                         onChange={(e) => handleChange(e, data[items].tray)} /> */}
                 </dd>
                 <dt className="col-sm-3">Shelf Depth</dt>
@@ -613,8 +611,8 @@ const Display = ({ data, removeItem  }) => {
             </dl>
             <Button color="danger" onClick={() => removeItem(items)}>Delete</Button>
         </CardBody>
-     </Card>   
+     </Card>
     ))
     : 'No local shelf data found'
     )
-}    
+}

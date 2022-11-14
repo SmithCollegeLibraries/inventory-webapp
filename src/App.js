@@ -25,6 +25,7 @@ import Alerts from './components/alerts'
 import localforage from 'localforage'
 import { createBrowserHistory } from 'history';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { failure } from './components/toastAlerts'
 
 // const history = createBrowserHistory();
