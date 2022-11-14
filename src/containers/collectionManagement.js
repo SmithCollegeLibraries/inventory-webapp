@@ -53,12 +53,12 @@ function CollectionManagement(props) {
       'name' : data.collection
     };
     const results = await Load.createNewCollection(updateData);
-    if (results && results.code === 200) {
+    if (results) {
       success("New collection successfully created");
       collections();
       props.newCollections();
     } else {
-      failure(results.message);
+      failure("Unable to create collection");
     }
   };
 
@@ -69,54 +69,62 @@ function CollectionManagement(props) {
   };
 
   const handleUpdateSubmit = async(e, key) => {
-    const update = await Load.updateCollection(data.collections[key]);
-    if (update) {
-      success('Collections updated');
-      props.newCollections();
-    } else {
-      failure("There was a problem updating this collection");
+    if (window.confirm('This will update all items in this collection. Are you sure you want to update?')) {
+      const update = await Load.updateCollection(data.collections[key]);
+      if (update) {
+        success('Collections updated');
+      } else {
+        failure("There was a problem updating this collection");
+      }
     }
+    collections();
+    props.newCollections();
   };
 
   const handleDeleteSubmit = async(e, data) => {
     e.preventDefault();
-    const set = await Load.deleteCollection(data);
-    if (set && set.code === 200) {
-      success('Collection removed');
-      collections();
-      props.newCollections();
+    const hasItems = await Load.collectionHasItems(data);
+    if (hasItems) {
+      failure("This collection cannot be deleted because it has items tied to it");
     } else {
-      failure(set.message);
+      if (window.confirm("Delete this collection? This action can only be undone by the database administrator.")) {
+        const set = await Load.deleteCollection({id: data.id});
+        if (set) {
+          success('Collection removed');
+        } else {
+          failure('Collection could not be removed');
+        }
+      }
     }
+    collections();
+    props.newCollections();
   };
 
   return (
     <div>
-      <ToastContainer />
-      <br />
-        <Alert color="warning">Changing any of the collection names below can adversely impact the records.  Collection name changes will change all records that are using that collection name.  Please use caution when making updates as changes cannot be reversed.</Alert>
-        <div style={{backgroundColor: "#fff", padding: '20px', textAlign: "middle", marginTop: "20px"}}>
-          <DisplayForm
-            handleFormChange={handleFormChange}
-            handleFormSubmit={handleFormSubmit}
-          />
-        </div>
-        <Card>
-          <CardBody>
-            {Object.keys(data.collections).map((items, idx) => {
-              return (
-                <Display
-                  data={data.collections[items]}
-                  index={idx}
-                  key={idx}
-                  handleUpdateSubmit={handleUpdateSubmit}
-                  handleUpdateFormChange={handleUpdateFormChange}
-                  handleDeleteSubmit={handleDeleteSubmit}
-                />
-              );
-            })}
-          </CardBody>
-        </Card>
+      <div style={{backgroundColor: "#fff", padding: '20px', textAlign: "middle", marginTop: "20px"}}>
+        <DisplayForm
+          handleFormChange={handleFormChange}
+          handleFormSubmit={handleFormSubmit}
+          collection={data.collection}
+        />
+      </div>
+      <Card>
+        <CardBody>
+          {Object.keys(data.collections).map((items, idx) => {
+            return (
+              <Display
+                data={data.collections[items]}
+                index={idx}
+                key={idx}
+                handleUpdateSubmit={handleUpdateSubmit}
+                handleUpdateFormChange={handleUpdateFormChange}
+                handleDeleteSubmit={handleDeleteSubmit}
+              />
+            );
+          })}
+        </CardBody>
+      </Card>
     </div>
   );
 
@@ -124,11 +132,11 @@ function CollectionManagement(props) {
 
 export default CollectionManagement;
 
-const DisplayForm = ({ handleFormChange, handleFormSubmit }) => (
+const DisplayForm = ({ handleFormChange, handleFormSubmit, collection }) => (
   <Form onSubmit={(e) => handleFormSubmit(e)}>
     <Row>
       <Col md="8">
-        <Input type="text" onChange={(e) => handleFormChange(e)} name="collection" placeholder="Add a new collection..." />
+        <Input type="text" value={collection} onChange={(e) => handleFormChange(e)} name="collection" placeholder="Add a new collection..." />
       </Col>
       <Col md="2">
         <Button color="primary">Submit</Button>
@@ -145,8 +153,8 @@ const Display = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, hand
           <Input type="text" onChange={(e) => handleUpdateFormChange(e, index)} value={data.name} name="name" />
         </Col>
         <Col>
-          <Button color="primary" onClick={(e) => {if(window.confirm('Warning! This will update all items in this collection. Are you sure you want to update?')){handleUpdateSubmit(e, index)}}}>Update</Button>{' '}
-          <Button color="danger" onClick={(e) => {if(window.confirm('Warning! You cannot delete collections that have records tied to them. Are you sure you want to delete this collection?')) {handleDeleteSubmit(e, data)}}}>Delete</Button>
+          <Button color="primary" style={{"marginRight": "10px"}} onClick={(e) => {handleUpdateSubmit(e, index)}}>Update</Button>
+          <Button color="danger" onClick={(e) => {handleDeleteSubmit(e, data)}}>Delete</Button>
         </Col>
       </Row>
     </div>

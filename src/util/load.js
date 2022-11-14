@@ -31,7 +31,7 @@ class Load {
   };
 
   verifyAccount = async (data) => {
-    const get = await this.handleAccount(`${account}account-exists/`, 'POST', data);
+    const get = await this.handleAccount(`${account}account-exists/`, 'GET', data);
     return get;
   };
 
@@ -117,18 +117,28 @@ class Load {
   */
 
   createNewCollection = async (data) => {
-    const create = await this.handleUpdate(`${collections}new-collection/`, 'POST', data)
-    return create
+    const create = await this.handleUpdate(`${collections}new-collection/`, 'POST', data);
+    return create;
+  }
+
+  collectionHasItems = async (data) => {
+    const get = await this.handleUpdate(`${collections}collection-has-items/`, 'GET', data);
+    return get;
+  }
+
+  collectionExists = async (data) => {
+    const get = await this.handleUpdate(`${collections}collection-exists/`, 'GET', data);
+    return get;
   }
 
   updateCollection = async (data) => {
-    const update = await this.handleUpdate(`${collections}update-collection/`, 'POST', data)
-    return update
+    const update = await this.handleUpdate(`${collections}update-collection/`, 'POST', data);
+    return update;
   }
 
   deleteCollection = async (data) => {
-    const deleteCollection = await this.handleUpdate(`${collections}delete-collection/`, 'POST', data)
-    return deleteCollection
+    const deleteCollection = await this.handleUpdate(`${collections}delete-collection/`, 'POST', data);
+    return deleteCollection;
   }
 
   getHistory = async (data, page='') => {
