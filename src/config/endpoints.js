@@ -1,4 +1,4 @@
-const base = "http://localhost:8888/"
+const base = "https://libtools.smith.edu/sis/backend/web/"
 
 
 export const account = `${base}user/`

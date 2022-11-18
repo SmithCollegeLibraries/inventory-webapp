@@ -1,27 +1,27 @@
 {
   "files": {
-    "main.css": "/sis-webapp/static/css/main.95b1a89a.chunk.css",
-    "main.js": "/sis-webapp/static/js/main.e49ab1c0.chunk.js",
-    "main.js.map": "/sis-webapp/static/js/main.e49ab1c0.chunk.js.map",
-    "runtime-main.js": "/sis-webapp/static/js/runtime-main.64ee3d3c.js",
-    "runtime-main.js.map": "/sis-webapp/static/js/runtime-main.64ee3d3c.js.map",
-    "static/css/2.489a4055.chunk.css": "/sis-webapp/static/css/2.489a4055.chunk.css",
-    "static/js/2.863b067d.chunk.js": "/sis-webapp/static/js/2.863b067d.chunk.js",
-    "static/js/2.863b067d.chunk.js.map": "/sis-webapp/static/js/2.863b067d.chunk.js.map",
-    "index.html": "/sis-webapp/index.html",
-    "precache-manifest.153814f32fb2f86b97a68509d46da123.js": "/sis-webapp/precache-manifest.153814f32fb2f86b97a68509d46da123.js",
-    "service-worker.js": "/sis-webapp/service-worker.js",
-    "static/css/2.489a4055.chunk.css.map": "/sis-webapp/static/css/2.489a4055.chunk.css.map",
-    "static/css/main.95b1a89a.chunk.css.map": "/sis-webapp/static/css/main.95b1a89a.chunk.css.map",
-    "static/js/2.863b067d.chunk.js.LICENSE.txt": "/sis-webapp/static/js/2.863b067d.chunk.js.LICENSE.txt",
-    "static/js/main.e49ab1c0.chunk.js.LICENSE.txt": "/sis-webapp/static/js/main.e49ab1c0.chunk.js.LICENSE.txt",
-    "static/media/sis-logo.png": "/sis-webapp/static/media/sis-logo.d4646eab.png"
+    "main.css": "/sis/static/css/main.95b1a89a.chunk.css",
+    "main.js": "/sis/static/js/main.7e65a792.chunk.js",
+    "main.js.map": "/sis/static/js/main.7e65a792.chunk.js.map",
+    "runtime-main.js": "/sis/static/js/runtime-main.c4a20040.js",
+    "runtime-main.js.map": "/sis/static/js/runtime-main.c4a20040.js.map",
+    "static/css/2.489a4055.chunk.css": "/sis/static/css/2.489a4055.chunk.css",
+    "static/js/2.863b067d.chunk.js": "/sis/static/js/2.863b067d.chunk.js",
+    "static/js/2.863b067d.chunk.js.map": "/sis/static/js/2.863b067d.chunk.js.map",
+    "index.html": "/sis/index.html",
+    "precache-manifest.aa573454001d7e33792ba503acb79c44.js": "/sis/precache-manifest.aa573454001d7e33792ba503acb79c44.js",
+    "service-worker.js": "/sis/service-worker.js",
+    "static/css/2.489a4055.chunk.css.map": "/sis/static/css/2.489a4055.chunk.css.map",
+    "static/css/main.95b1a89a.chunk.css.map": "/sis/static/css/main.95b1a89a.chunk.css.map",
+    "static/js/2.863b067d.chunk.js.LICENSE.txt": "/sis/static/js/2.863b067d.chunk.js.LICENSE.txt",
+    "static/js/main.7e65a792.chunk.js.LICENSE.txt": "/sis/static/js/main.7e65a792.chunk.js.LICENSE.txt",
+    "static/media/sis-logo.png": "/sis/static/media/sis-logo.d4646eab.png"
   },
   "entrypoints": [
-    "static/js/runtime-main.64ee3d3c.js",
+    "static/js/runtime-main.c4a20040.js",
     "static/css/2.489a4055.chunk.css",
     "static/js/2.863b067d.chunk.js",
     "static/css/main.95b1a89a.chunk.css",
-    "static/js/main.e49ab1c0.chunk.js"
+    "static/js/main.7e65a792.chunk.js"
   ]
 }

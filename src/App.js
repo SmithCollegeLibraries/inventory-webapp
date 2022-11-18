@@ -115,7 +115,7 @@ export default class Main extends Component {
     return (
       <div>
         <ToastContainer />
-        <Router basename="/sis-webapp">
+        <Router basename="/sis">
           <Header
             name={this.state.name}
             level={this.state.level}

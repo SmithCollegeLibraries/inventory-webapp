@@ -260,9 +260,9 @@ const NewTray = (props) => {
     // TODO: Do a diff on the original and verify so that it's clear which
     // barcode is the problem
     if (data.original.tray.trim() !== data.verify.tray.trim()) {
-      warning('Mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
+      failure('Mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
     } else if (data.original.barcodes.trim() !== data.verify.barcodes.trim()) {
-      warning('Mismatch! \n Original barcodes: \n' + data.original.barcodes + ' \n Verify barcodes: \n' + data.verify.barcodes);
+      failure('Mismatch! \n Original barcodes: \n' + data.original.barcodes + ' \n Verify barcodes: \n' + data.verify.barcodes);
     } else {
       let verified = data.verified;
       verified[Date.now()] = {
