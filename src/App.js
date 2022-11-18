@@ -1,29 +1,27 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import './css/bootstrap.css'
-import './css/index.css'
-import 'react-s-alert/dist/s-alert-default.css'
+import './css/bootstrap.css';
+import './css/index.css';
+import 'react-s-alert/dist/s-alert-default.css';
 import {
-  // Trays,
+  NewTray,
   // Shelf,
-  // TrayManagement,
   // AddPaging,
   // PagingDisplay,
   // Reports,
   // History,
   // Search,
-  CollectionManagement,
-  // ShelfManagement,
-  UserManagement
-} from './containers'
-import Header from './components/header'
-import Alert from 'react-s-alert'
-import ContentSearch from './util/search'
-import { LoginPage } from './components/login'
-import Load from './util/load'
-import Alerts from './components/alerts'
-import localforage from 'localforage'
-import { createBrowserHistory } from 'history';
+  ManageCollections,
+  // ManageTrays,
+  // ManageShelves,
+  ManageUsers
+} from './containers';
+import Header from './components/header';
+import ContentSearch from './util/search';
+import { LoginPage } from './components/login';
+import Load from './util/load';
+import localforage from 'localforage';
+// import { createBrowserHistory } from 'history';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { failure } from './components/toastAlerts'
@@ -41,46 +39,46 @@ export default class Main extends Component {
     type: '',
     name: '',
     settings: {},
-  }
+  };
 
   componentDidMount = async () => {
-    if(sessionStorage.getItem('account') || this.state.loggedIn === true ) {
-      this.collections()
-      this.settings()
+    if (sessionStorage.getItem('account') || this.state.loggedIn === true ) {
+      this.collections();
+      this.settings();
     }
-  }
+  };
 
   localStorage = async (key) => {
-    const results = await localforage.getItem(key)
-    return results
-  }
+    const results = await localforage.getItem(key);
+    return results;
+  };
 
   collections = async () => {
-    const search = await ContentSearch.collections()
-    this.setState({ collections: search })
-  }
+    const search = await ContentSearch.collections();
+    this.setState({ collections: search });
+  };
 
   settings = async () => {
-    let settings = await this.localStorage('settings')
-    if(!settings){
-      settings = await ContentSearch.setting()
-      localforage.setItem('settings', settings)
+    let settings = await this.localStorage('settings');
+    if (!settings) {
+      settings = await ContentSearch.setting();
+      localforage.setItem('settings', settings);
     }
 
-    this.setState({ settings: settings })
+    this.setState({ settings: settings });
   }
 
   handleCreateNewPage = () => {
     this.setState({
       createAccount: true
-    })
-  }
+    });
+  };
 
   handleLoginChange = e => {
     this.setState({
       [e.target.name]: e.target.value
-    })
-  }
+    });
+  };
 
   handleLoginSubmit = async e => {
     e.preventDefault();
@@ -90,7 +88,7 @@ export default class Main extends Component {
     };
     const account = await Load.getAccount(data);
     const { name, access_token, level } = account || '';
-    if(account && account.access_token){
+    if (account && account.access_token) {
       this.setState({
         loggedIn: true,
         name: name,
@@ -109,8 +107,8 @@ export default class Main extends Component {
   loginPage = () => {
     this.setState({
       createAccount: false
-    })
-  }
+    });
+  };
 
   render() {
     const { loggedIn, settings} = this.state;
@@ -125,13 +123,13 @@ export default class Main extends Component {
           {sessionStorage.getItem('account') || loggedIn === true ?
             <div className="container-fluid">
               <Switch>
-                {/* <Route exact path="/" render={() => (
-                  <Trays
+                <Route path="/new-tray" render={() => (
+                  <NewTray
                     collections={this.state.collections}
                     settings={settings}
                   />
                 )}/>
-                <Route path="/trays" render={() => (
+                {/* <Route exact path="/" render={() => (
                   <Trays
                     collections={this.state.collections}
                     settings={settings}
@@ -143,13 +141,13 @@ export default class Main extends Component {
                     settings={settings}
                   />
                 )}/>
-                <Route path="/tray-management" render={() => (
-                  <TrayManagement
+                <Route path="/manage-trays" render={() => (
+                  <ManageTrays
                     collections={this.state.collections}
                   />
                 )}/>
-                <Route path="/shelf-management" render={() => (
-                  <ShelfManagement
+                <Route path="/manage-shelves" render={() => (
+                  <ManageShelves
                     collections={this.state.collections}
                   />
                 )}/>
@@ -178,14 +176,14 @@ export default class Main extends Component {
                     settings={settings}
                   />
                 )}/> */}
-                <Route path="/collection-management" render={() => (
-                  <CollectionManagement
+                <Route path="/manage-collections" render={() => (
+                  <ManageCollections
                     collections={this.state.collections}
                     newCollections={this.collections}
                   />
                 )}/>
                 <Route path="/users" render={() => (
-                  <UserManagement
+                  <ManageUsers
                     settings={settings}
                   />
                 )}/>

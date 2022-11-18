@@ -11,7 +11,7 @@ import 'react-table/react-table.css'
 
 const FoldableTable = FoldableTableHOC(ReactTable);
 
-export default class ShelfManagement extends Component {
+export default class ManageShelves extends Component {
     state = {
         loading: false,
         data: [],
@@ -63,9 +63,9 @@ export default class ShelfManagement extends Component {
       } else {
         failure(`There was an error updating shelf ${data.shelf}` )
       }
-    //   
+    //
     }
-    
+
     handleDelete = (e, index, value ) =>{
         this.setState((prevState) => ({
           data: prevState.data.filter((_, i) => i != index)
@@ -75,7 +75,7 @@ export default class ShelfManagement extends Component {
             success(`${value.original.boxbarcode} was succesfully deleted from ${value.original.shelf}`)
           } else {
             failure(`There was an error deleting shelf ${value.original.boxbarcode} from ${value.original.shelf}` )
-          }  
+          }
       })
     }
 
@@ -114,7 +114,7 @@ const ShelfForm = ({ handleSearch, handleFormChange, shelf }) => (
     </Form>
 )
 
-const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, handleDelete }) => (   
+const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, handleDelete }) => (
     <FoldableTable
         data={data}
         columns={
@@ -122,14 +122,14 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
             Header: "Tray Barcode",
             accessor: "boxbarcode",
             id: "boxbarcode",
-            foldable: true, 
+            foldable: true,
             Cell: function(props){
                 return(
                 <FormGroup>
                     <Input value={props.value} onChange={(e) => handleShelfUpdateChange(e, props.index)} type="text" name="boxbarcode" />
                 </FormGroup>
                 )
-            }  
+            }
         },{
             Header: "Shelf Barcode",
             accessor: "shelf",
@@ -165,7 +165,7 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
             id: "shelf_position",
             foldable: true,
             Cell: function(props){
-                return(        
+                return(
                     <FormGroup>
                         <Input type="select" value={props.value} onChange={(e) => handleShelfUpdateChange(e, props.index)} name="shelf_position">
                         {[...Array(12)].map((x, i) =>
@@ -174,7 +174,7 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
                         </Input>
                     </FormGroup>
                 )
-            }        
+            }
         },{
             Header: "Added",
             accessor: "added",
@@ -189,7 +189,7 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
             Header: 'Options',
             accessor: 'button',
             foldable: true,
-            Cell: function(props){ 
+            Cell: function(props){
                     return (
                         <span>
                             <Button color="warning" onClick={(e) => updateItem(e, props.index)}>Update</Button>{' '}
@@ -204,7 +204,7 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
     pageSize={data.length}
     filterable={true}
     loading={loading}
-/>   
+/>
 )
 
 class ShelfAllSearch extends Component {
@@ -213,8 +213,8 @@ class ShelfAllSearch extends Component {
         e.preventDefault();
         this.props.handleShelfSearch(this.shelf.value.trim())
     }
-  
-  
+
+
     render(){
       return(
         <form id="search_shelf" name="search_shelf"
@@ -249,7 +249,7 @@ class ShelfAllEdit extends Component {
     updateItem = (key, id, index) => {
         this.props.updateItem(key, id, index)
     }
-  
+
     renderDisplay = (key, index) => {
       const data = this.props.data[key]
       let options = []
@@ -265,7 +265,7 @@ class ShelfAllEdit extends Component {
                 <input className="form-control" disabled value={data.id}
                   name="id" placeholder="ID"
                   onChange={(e) => this.handleChange(e, key, index)}/>
-              </dd>            
+              </dd>
               <dt className="col-sm-3">Tray Barcode</dt>
               <dd className="col-sm-9">
                 <input className="form-control" value={data.boxbarcode}
@@ -311,11 +311,11 @@ class ShelfAllEdit extends Component {
             </dd>
           </dl>
         </div>
-       </div>     
+       </div>
       )
     }
-  
-  
+
+
     render(){
       const data = this.props.data
       return(

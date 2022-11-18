@@ -31,7 +31,7 @@ const collectionReducer = (state, action) => {
   }
 };
 
-function CollectionManagement(props) {
+function ManageCollections(props) {
   const [data, dispatch] = useReducer(collectionReducer, initialState);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ function CollectionManagement(props) {
 
 }
 
-export default CollectionManagement;
+export default ManageCollections;
 
 const DisplayForm = ({ handleFormChange, handleFormSubmit, collection }) => (
   <Form onSubmit={(e) => handleFormSubmit(e)}>

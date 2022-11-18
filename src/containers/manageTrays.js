@@ -44,49 +44,49 @@ const reducer = (state, action) => {
             return {
                 ...state,
                 tray: action.payload
-            }     
+            }
         case 'UPDATE_FIELDS':
             return {
                 ...state,
                 fields: action.payload.data,
                 rawData: action.payload.rawData
-            }   
+            }
         case 'AUTO_COMPLETE':
             return {
                 ...state,
                 value: action.payload
-            }    
+            }
         case 'UPDATE_SUGGESTIONS':
             return {
                 ...state,
                 suggestions: action.payload.suggestion,
                 tray: action.payload.tray
-            }   
+            }
         case 'CLEAR_SUGGESTIONS':
             return {
                 ...state,
                 suggestions: action.payload
-            }      
-            
+            }
+
         case 'SELECT_SUGGESTION':
             return {
                 ...state,
                 tray: action.payload
-            }    
-        case 'UPDATE_FORM': 
+            }
+        case 'UPDATE_FORM':
             const data = state.fields
             data[action.payload.field] = action.payload.value
             return{
                 ...state,
-                fields: data  
-            }   
+                fields: data
+            }
         case 'UPDATE_DATA':
             const rawData = state.rawData
             rawData[action.payload.key][action.payload.name] = action.payload.value
             return {
                 ...state,
                 rawData
-            } 
+            }
         case 'UPDATE_NEW_TRAY':
             const newTray = state.newTray
             newTray[action.payload.name] = action.payload.value
@@ -108,7 +108,7 @@ const reducer = (state, action) => {
             return {
                 ...state,
                 barcodesToDelete: action.payload
-            }    
+            }
         case 'UPDATE_LOADING':
             return{
                 ...state,
@@ -139,12 +139,12 @@ const reducer = (state, action) => {
                 value: '',
                 barcodesToDelete: []
             }
-        default: 
-            throw new Error()      
+        default:
+            throw new Error()
     }
 }
 
-function TrayManagement(props){
+function ManageTrays(props){
     const [ state, dispatch ] = useReducer(reducer, initialState)
     const [activeTab, setActiveTab ] = useState('entire_tray')
     const theme = {
@@ -224,28 +224,28 @@ function TrayManagement(props){
             dispatch({ type: 'UPDATE_FIELDS', payload: { data: data, rawData: search}})
         } else {
             warning('No results found')
-        } 
+        }
     }
 
-    const handleTrayUpdate = async e => {
-        e.preventDefault()
-        const data = {
-            tray: state.fields.trayBarcode,
-            newTrayBarcode: state.fields.newTrayBarcode,
-            collection: state.fields.trayStream,
-            shelf: state.fields.shelf,
-            shelf_position: state.fields.shelf_position,
-            shelf_depth: state.fields.shelf_depth
-        }
-        const load = await Load.updateEntireTrays(data)
-        if(load && load["code"] === 200){
-            success(load["data"])
-            dispatch({ type: 'RESET', payload: ''})
+    // const handleTrayUpdate = async e => {
+    //     e.preventDefault()
+    //     const data = {
+    //         tray: state.fields.trayBarcode,
+    //         newTrayBarcode: state.fields.newTrayBarcode,
+    //         collection: state.fields.trayStream,
+    //         shelf: state.fields.shelf,
+    //         shelf_position: state.fields.shelf_position,
+    //         shelf_depth: state.fields.shelf_depth
+    //     }
+    //     const load = await Load.updateEntireTrays(data)
+    //     if(load && load["code"] === 200){
+    //         success(load["data"])
+    //         dispatch({ type: 'RESET', payload: ''})
 
-        } else {
-            failure(load["message"])
-        }
-    } 
+    //     } else {
+    //         failure(load["message"])
+    //     }
+    // }
 
     const handleTrayDelete = async (e, id) => {
         const data = {
@@ -315,8 +315,8 @@ function TrayManagement(props){
     const handleTrayTransferProcess =  async (e) => {
         const data = {
             originalTray: state.tray,
-            newTray: state.newTray,  
-            newBarcodes: state.newTray.barcodes       
+            newTray: state.newTray,
+            newBarcodes: state.newTray.barcodes
         }
         const load = await Load.transfer(data)
         if(load && load["code"] === 200){
@@ -327,16 +327,16 @@ function TrayManagement(props){
         }
         // if(load === true){
         //     Alerts.success(`Barcodes transferred successfully`)
-           
+
         // } else {
         //     const errorMessage = {
         //         name: 'Error',
         //         message: `There was an error transferring the barcodes`
         //     }
         //     Alerts.error(errorMessage)
-        // } 
+        // }
     }
-    
+
     const handleBarcodeTransfer = () => {
         dispatch({ type: 'TRANSFER_BARCODES', payload: { value: state.fields.barcodes }})
     }
@@ -356,7 +356,7 @@ function TrayManagement(props){
             dispatch({ type: 'RESET', payload: '' })
         } else {
             failure(`There was an error deleting the barcodes`)
-        } 
+        }
     }
 
 
@@ -364,7 +364,7 @@ function TrayManagement(props){
         <div>
         <div className="container-fluid" style={{backgroundColor: '#fff', marginTop: "50px", padding: "20px"}}>
             <div style={{paddingBottom: '50px'}}>
-            <SearchForm 
+            <SearchForm
                 tray={state.tray}
                 handleSearch={handleSearch}
                 onChange={onChange}
@@ -416,7 +416,7 @@ function TrayManagement(props){
             <br />
             <TabContent activeTab={activeTab}>
                 <TabPane tabId="entire_tray">
-                    <EntireTray 
+                    <EntireTray
                         fields={state.fields}
                         trayBarcode={state.tray}
                         loading={state.loading}
@@ -439,12 +439,12 @@ function TrayManagement(props){
                 <TabPane tabId='transfer_items'>
                     <Transfer
                         rawData={state.rawData}
-                        trayBarcode={state.fields.trayBarcode} 
-                        trayStream={state.fields.trayStream} 
-                        barcodes={state.fields.barcodes} 
+                        trayBarcode={state.fields.trayBarcode}
+                        trayStream={state.fields.trayStream}
+                        barcodes={state.fields.barcodes}
                         handleTrayChange={handleTrayChange}
                         handleNewTrayChange={handleNewTrayChange}
-                        handleTrayTransfer={handleTrayTransfer} 
+                        handleTrayTransfer={handleTrayTransfer}
                         trayTransferForm={trayTransferForm}
                         handleTrayUpdate={handleTrayUpdate}
                         handleTrayTransferProcess={handleTrayTransferProcess}
@@ -454,7 +454,7 @@ function TrayManagement(props){
                     />
                 </TabPane>
                 <TabPane tabId="delete_items">
-                    <DeleteItems 
+                    <DeleteItems
                         handleBarcodeDeletes={handleBarcodeDeletes}
                         handleBarcodeDeleteProcess={handleBarcodeDeleteProcess}
                         barcodesToDelete={state.barcodesToDelete}
@@ -462,7 +462,7 @@ function TrayManagement(props){
                 </TabPane>
             </TabContent>
         </div>
-    </div>   
+    </div>
     )
 }
 
@@ -485,10 +485,10 @@ const SearchForm = ({ tray, handleSearch, onChange}) => {
             /> */}
             <Button color="primary">Search</Button>
         </FormGroup>
-    </Form>   
-    </div> 
-    )  
-}  
+    </Form>
+    </div>
+    )
+}
 
 const EntireTray = ({
     fields,
@@ -546,16 +546,16 @@ const EntireTray = ({
                     <Button color="warning" onClick={(e) => handleTrayUpdate(e)}>Update Tray</Button>{ ' ' }
                     <Button color="danger" onClick={(e) => {if(window.confirm('Are you sure you want to delete this item?')) {handleTrayDelete(e, trayBarcode)}}}>Delete Tray and Items</Button>{ ' ' }
                     <Button color="danger" onClick={(e) => {if(window.confirm('Are you sure you want to delete this item and remove it from the shelf?')) {handleTrayDeleteAndUnlink(e, trayBarcode)}}}>Delete Tray/Items unlink from shelf</Button>
-                </Form>        
+                </Form>
             </Col>
         </Row>
     )
 }
 
-const IndividualItems = ({ 
-    rawData, 
-    handleIndividualTrayUpdate, 
-    handleTrayUpdateChange, 
+const IndividualItems = ({
+    rawData,
+    handleIndividualTrayUpdate,
+    handleTrayUpdateChange,
     handleIndividualTrayDelete,
     collections
 }) => {
@@ -580,29 +580,29 @@ const IndividualItems = ({
                         </Input>
                     </FormGroup>
                     <FormGroup>
-                        <Label for="barcodes">Barcodes</Label>    
+                        <Label for="barcodes">Barcodes</Label>
                         <Input type="textarea" value={rawData[items].barcode} onChange={(e) => handleTrayUpdateChange(e, idx)} name="barcode" />
                     </FormGroup>
                         <Button color="danger" onClick={(e) => {if(window.confirm('Are you sure you want to delete this item?')) {handleIndividualTrayDelete(e, rawData[items], idx)}}}>Delete</Button>{ ' ' }
                         <Button color="warning" onClick={(e) => handleIndividualTrayUpdate(e, idx, 'update')}>Update Tray</Button>
                     </CardBody>
-                    </Card>  
+                    </Card>
                     )}
-                </Form>      
+                </Form>
             </Col>
-        </Row> 
+        </Row>
     )
 }
 
-const Transfer = ({ 
-    rawData, 
-    trayBarcode, 
-    trayStream, 
-    barcodes, 
-    handleTrayChange, 
-    handleNewTrayChange, 
-    handleTrayTransfer, 
-    trayTransferForm, 
+const Transfer = ({
+    rawData,
+    trayBarcode,
+    trayStream,
+    barcodes,
+    handleTrayChange,
+    handleNewTrayChange,
+    handleTrayTransfer,
+    trayTransferForm,
     handleTrayUpdate,
     handleTrayTransferProcess ,
     handleBarcodeTransfer,
@@ -620,15 +620,15 @@ const Transfer = ({
                         <Input type="text" disabled value={trayBarcode} onChange={(e) => handleTrayChange(e)} name="trayBarcode" />
                     </FormGroup>
                     <FormGroup>
-                        <Label for="stream">Stream</Label>   
+                        <Label for="stream">Stream</Label>
                         <Input type="text" disabled value={trayStream} onChange={(e) => handleTrayChange(e)} name="trayStream" />
                     </FormGroup>
                     <FormGroup>
-                        <Label for="barcodes">Barcodes</Label>    
+                        <Label for="barcodes">Barcodes</Label>
                         <Input type="textarea" disabled rows="20" value={barcodeDisplay} onChange={(e) => handleTrayChange(e)} name="barcodes" />
                     </FormGroup>
                     <Button color="primary" onClick={(e) => handleBarcodeTransfer(e)}>Transfer all Barcodes</Button>
-                </Form>        
+                </Form>
             </Col>
             <Col>
             <Form>
@@ -637,7 +637,7 @@ const Transfer = ({
                         <Input type="text" value={newTray.trayBarcode}  onChange={(e) => handleNewTrayChange(e)} name="trayBarcode" />
                     </FormGroup>
                     <FormGroup>
-                        <Label for="stream">New Stream</Label>   
+                        <Label for="stream">New Stream</Label>
                         <Label for="collections">Collections</Label>
                         <Input type="select" value={newTray.trayStream} onChange={(e) => handleNewTrayChange(e)} name="trayStream">
                         <option value=''>Select collection...</option>
@@ -647,13 +647,13 @@ const Transfer = ({
                         </Input>
                     </FormGroup>
                     <FormGroup>
-                        <Label for="barcodes">New Barcodes</Label>    
+                        <Label for="barcodes">New Barcodes</Label>
                         <Input type="textarea" value={newBarcodeDisplay} rows="20" onChange={(e) => handleNewTrayChange(e)} name="barcodes" />
                     </FormGroup>
                     <Button color="success" onClick={(e) => handleTrayTransferProcess(e)}>Save</Button>{ ' ' }
-                </Form>   
+                </Form>
             </Col>
-        </Row> 
+        </Row>
     )
 }
 
@@ -662,420 +662,33 @@ const DeleteItems = ({handleBarcodeDeletes, handleBarcodeDeleteProcess, barcodes
     <Col>
         <Form>
             <FormGroup>
-                <Label for="barcodes">Delete the following barcodes</Label>    
+                <Label for="barcodes">Delete the following barcodes</Label>
                 <Input type="textarea" rows="20" value={barcodesToDelete} onChange={(e) => handleBarcodeDeletes(e)} name="barcodes" />
             </FormGroup>
             <Button color="danger" onClick={(e) => {if(window.confirm('Are you sure you want to delete these barcodes?')) {handleBarcodeDeleteProcess(e)}}}>Delete barcodes</Button>{ ' ' }
-        </Form>      
+        </Form>
     </Col>
-</Row> 
+</Row>
 )
 
-export default TrayManagement
+export default ManageTrays
 
-// export default class TrayManagement extends Component {
-
-//     state = {   
-//         display: 'entire_tray',
-//         tray: '',
-//         rawData: [],
-//         trayBarcode: '',
-//         trayStream: '',
-//         shelf: '',
-//         shelf_number: 0,
-//         shelf_position: 0,
-//         shelf_depth: '',
-//         barcodes: [],
-//         newTray: {
-//             trayBarcode: '',
-//             trayStream: '',
-//             barcodes: []
-//         },
-//         trayTransferForm: false,
-//         suggestions: [],
-//         value: ''
-//     }
-
-//     componentDidMount(){
-
-//     }
-
-//     handleDisplayChange = e => {
-//         this.setState({
-//             display: e.target.value
-//         })
-//     }
-
-//     handleFormChange = e => {
-//         this.setState({
-//             tray: e.target.value
-//         })
-//     }
-
-//     onSuggestionsFetchRequested = async ({ value }) => {
-//         const search = await ContentSearch.autocomplete(value)
-//         if(search){
-//             this.setState({
-//                 suggestions: search,
-//                 tray: value
-//             })
-//         }    
-//       }
-
-//       onSuggestionsClearRequested = () => {
-//         this.setState({
-//           suggestions: []
-//         });
-//       };
-
-//       renderSuggestion = suggestion => {
-//         return (
-//           <div className="result">
-//             <div>{suggestion.boxbarcode}</div>
-//           </div>
-//         )
-//       }
-
-//       onChange = (event, { newValue }) => {
-//         this.setState({ value: newValue })
-//       }
-
-//       onSuggestionSelected = (event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
-//           this.setState({
-//             tray: suggestion.boxbarcode
-//           })
-//       }
-
-//     handleSearch = async (e) => {
-//         e.preventDefault()
-//         const search = await ContentSearch.traymanagement(this.state.tray)
-
-//         if(search && search[0]){
-//             const data = search
-//             let barcodes = []
-//             let trayBarcode = search[0].tray_barcode
-//             let trayStream = search[0].collection
-//             let shelf = search[0].shelf
-//             let shelf_number = search[0].shelf_number
-//             let shelf_position = search[0].shelf_position
-//             let shelf_depth = search[0].shelf_depth
-//             Object.keys(search).map((items, idx) => {
-//                 barcodes.push(search[items].barcode)
-//             })
-//             this.setState({
-//                 rawData: search,
-//                 trayBarcode: trayBarcode,
-//                 trayStream: trayStream,
-//                 shelf: shelf,
-//                 shelf_number: shelf_number,
-//                 shelf_position: shelf_position,
-//                 shelf_depth: shelf_depth,
-//                 barcodes: barcodes
-//             })
-//         } else {
-//             const errorMessage = {
-//                 name: 'No results',
-//                 message: "No results found from your search"
-//             }
-//             Alerts.error(errorMessage)
-//         }
-//     }
-
-//     handleTrayChange = e => {
-//         this.setState({
-//             [e.target.name]: e.target.value
-//         }, () => console.log(this.state))
-//     }
-
-//     handleNewTrayChange = e => {
-//         const newTray = this.state.newTray
-//         newTray[e.target.name] = e.target.value
-//         this.setState({
-//             newTray
-//         })
-//     }
-
-//     handleTrayTransfer = () => {
-//         this.setState({
-//             trayTransferForm: true
-//         })
-//     }
-
-//     handleTrayUpdate = async e => {
-//         e.preventDefault()
-//         const data = {
-//             tray: this.state.trayBarcode,
-//             collection: this.state.trayStream,
-//             shelf: this.state.shelf,
-//             shelf_position: this.state.shelf_position,
-//             shelf_depth: this.state.shelf_depth
-
-//         }
-//         const load = await Load.updateEntireTrays(data)
-//         if(load === true){
-//             Alerts.success(`Tray update successful`)
-//             this.clear()
-//         } else {
-//             const errorMessage = {
-//                 name: 'Error',
-//                 message: `There was an error updating tray`
-//             }
-//             Alerts.error(errorMessage) 
-//         }
-//     }
-
-//     handleErrors = () => {
-//         const { form } = this.state
-//         const { shelf_depth, tray, shelf, shelf_position } = form
-//         if(shelf_depth === ''){
-//             let error = {name: 'Empty form field', message: "Please add a shelf depth"}
-//             return error
-//         }
-//         if(tray === ''){
-//             let error = {name: 'Empty form field', message: "Please add a tray"}
-//             return error
-//         }
-//         if(shelf === ''){
-//             let error = {name: 'Empty form field', message: "Please add a shelf"}
-//             return error
-//         }
-//         if(shelf_position === 0){
-//             let error = {name: 'Invalid form field', message: "Please add a valid shelf position"}
-//             return error
-//         }
-//     }
-
-
-
-//     handleTrayTransferProcess =  async (e) => {
-//         e.preventDefault()
-//         const { trayBarcode, newTray } = this.state
-//         const data = {
-//             originalTray: this.state.trayBarcode,
-//             newTray: this.state.newTray,  
-//             newBarcodes: newTray.barcodes       
-//         }
-//         const load = await Load.transfer(data)
-//         if(load === true){
-//             Alerts.success(`Barcodes transferred successfully`)
-//             this.clear()
-//         } else {
-//             const errorMessage = {
-//                 name: 'Error',
-//                 message: `There was an error transferring the barcodes`
-//             }
-//             Alerts.error(errorMessage)
-//         } 
-//     }
-
-//     handleTrayDelete = async (e, id) => {
-//         const data = {
-//             tray: id
-//         }
-//         const deleteTray = await Load.deleteTrayAndItems(data)
-//         if(deleteTray === true){
-//             Alerts.success(`Tray and items deleted successfully`)  
-//             this.clear()   
-//         } else {
-//             const errorMessage = {
-//                 name: 'Error',
-//                 message: `There was an error deleting the tray`
-//             }
-//             Alerts.error(errorMessage) 
-//         }
-//     }
-
-//     handleTrayDeleteAndUnlink = async (e, id) => {
-//         const data = {
-//             tray: id
-//         }
-//         const deleteTray = await Load.deleteTrayAndUnlink(data)
-//         if(deleteTray === true){
-//             Alerts.success(`Tray deleted successfully and unlinked from shelf`)  
-//             this.clear()
-//         } else {
-//             const errorMessage = {
-//                 name: 'Error',
-//                 message: `There was an error deleting the tray`
-//             }
-//             Alerts.error(errorMessage) 
-//         }
-//     }
-
-//     clear = () => {
-//         this.setState({
-//             tray: '',
-//             rawData: {},
-//             trayBarcode: '',
-//             trayStream: '',
-//             shelf: '',
-//             shelf_depth: 0,
-//             shelf_position: 0,
-//             barcodes: [],
-//             newTray: {
-//                 trayBarcode: '',
-//                 trayStream: '',
-//                 barcodes: []
-//             },
-//             trayTransferForm: false,
-//             suggestions: [],
-//             value: '' 
-//         })
-//     }
-
-//     handleBarcodeTransfer = () => {
-//         const newTray = this.state.newTray
-//         newTray['barcodes'] = this.state.barcodes
-//         this.setState({
-//             newTray
-//         })
-//     }
-
-//     handleTrayUpdateChange = (e, key) => {
-//         const rawData = this.state.rawData
-//         const values = {
-//             ...rawData[key],
-//             [e.currentTarget.name]: e.currentTarget.value,
-//         }
-
-//         rawData[key] = values
-//         this.setState({
-//             rawData
-//         })
-//     }
-
-//     handleIndividualTrayUpdate = (e, type) => {
-//         e.preventDefault()
-//         Object.keys(this.state.rawData).map(async (items, idx) => {
-//             const load = await Load.updateIndividualTrayItems(this.state.rawData[items])
-//         })
-//         Alerts.success("Finished updating") 
-//     }
-
-//     handleIndividualTrayDelete = async (e, item, key) => {
-//         e.preventDefault()
-//         const deleteItem = await Load.deleteIndividualTrayItems(item)
-//         if(deleteItem){
-//             Alerts.success(`${item.barcode} was deleted from tray ${item.boxbarcode}`)
-//             this.setState((prevState) => ({
-//                 rawData: prevState.rawData.filter((_, i) => i != key)
-//             }))
-//         } else {
-//             const message = {
-//                 name: "Delete problem",
-//                 message: "There was a problem deleting this item"
-//             }
-//             Alerts.error(message)
-//         }
-//     }
-
-//     render(){
-//         const { 
-//             display, 
-//             rawData, 
-//             trayBarcode, 
-//             trayStream,
-//             shelf,
-//             shelf_depth,
-//             shelf_number,
-//             shelf_position,
-//             barcodes, 
-//             trayTransferForm, 
-//             value, 
-//             suggestions, 
-//             newTray 
-//         } = this.state
-//         const inputProps = {
-//             value,
-//             onChange: this.onChange
-//           };
-
-//           const theme = {
-//             container: 'autocomplete',
-//             input: 'form-control',
-//             suggestionsContainer: 'dropdownList',
-//             suggestionsList: `dropdown-menu ${suggestions.length ? 'show' : ''}`,
-//             suggestion: 'dropdown-item',
-//             suggestionHighlighted: 'active'
-//           };
-//         return(
-//             <div>
-//                 <div className="container-fluid" style={{backgroundColor: '#fff', marginTop: "50px", padding: "20px"}}>
-//                     <div className="col-md-6">
-//                     <FormGroup>
-//                         <Label for="management">Tray Management Options</Label>
-//                         <Input type="select" onChange={(e) => this.handleDisplayChange(e)} name="management">
-//                         <option>Select tray management</option>
-//                         <option value="entire_tray">Entire Tray</option>
-//                         <option value="individual_items">Individual items</option>
-//                         <option value="transfer_items">Transfer items</option>
-//                         </Input>
-//                     </FormGroup>
-//                     </div>
-//                 </div>
-//                 <div className="container-fluid" style={{backgroundColor: '#fff', padding: "40px", marginTop: "40px"}}>
-//                     <div style={{paddingBottom: '40px'}}>
-//                     <SearchForm 
-//                         handleFormChange={this.handleFormChange}
-//                         handleSearch={this.handleSearch}
-//                         theme={theme}
-//                         inputProps={inputProps}
-//                         suggestions={suggestions}
-//                         onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-//                         onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-//                         renderSuggestion={this.renderSuggestion}
-//                         onSuggestionSelected={this.onSuggestionSelected}
-//                     />
-//                     </div>
-//                     <div>
-//                         <Display 
-//                             display={display}
-//                             rawData={rawData}
-//                             trayBarcode={trayBarcode}
-//                             trayStream={trayStream}
-//                             shelf={shelf}
-//                             shelf_depth={shelf_depth}
-//                             shelf_number={shelf_number}
-//                             shelf_position={shelf_position}
-//                             barcodes={barcodes}
-//                             trayTransferForm={trayTransferForm}
-//                             handleTrayChange={this.handleTrayChange}
-//                             handleNewTrayChange={this.handleNewTrayChange}
-//                             handleTrayTransfer={this.handleTrayTransfer}
-//                             handleTrayUpdate={this.handleTrayUpdate}
-//                             handleTrayTransferProcess={this.handleTrayTransferProcess}
-//                             collections={this.props.collections}
-//                             handleTrayDelete={this.handleTrayDelete}
-//                             handleTrayDeleteAndUnlink={this.handleTrayDeleteAndUnlink}
-//                             handleBarcodeTransfer={this.handleBarcodeTransfer}
-//                             newTray={newTray}
-//                             handleTrayUpdateChange={this.handleTrayUpdateChange}
-//                             handleIndividualTrayUpdate={this.handleIndividualTrayUpdate}
-//                             handleIndividualTrayDelete={this.handleIndividualTrayDelete}
-//                         />
-//                     </div>
-//                 </div>
-//             </div>    
-//         )
-//     }
-// }
-
-const Display = ({ 
-    display, 
-    rawData, 
-    trayBarcode, 
-    trayStream, 
+const Display = ({
+    display,
+    rawData,
+    trayBarcode,
+    trayStream,
     shelf,
     shelf_depth,
     shelf_number,
     shelf_position,
-    barcodes, 
-    handleTrayChange, 
-    handleNewTrayChange, 
-    handleTrayTransfer, 
-    trayTransferForm, 
+    barcodes,
+    handleTrayChange,
+    handleNewTrayChange,
+    handleTrayTransfer,
+    trayTransferForm,
     handleTrayUpdate,
-    handleTrayTransferProcess, 
+    handleTrayTransferProcess,
     collections,
     handleTrayDelete,
     handleTrayDeleteAndUnlink,
@@ -1088,7 +701,7 @@ const Display = ({
     switch(display){
         case 'entire_tray':
             return (
-                <EntireTray 
+                <EntireTray
                     rawData={rawData}
                     trayBarcode={trayBarcode}
                     trayStream={trayStream}
@@ -1103,10 +716,10 @@ const Display = ({
                     handleTrayDelete={handleTrayDelete}
                     handleTrayDeleteAndUnlink={handleTrayDeleteAndUnlink}
                 />
-            )    
+            )
         break
         case 'individual_items':
-            return <IndividualItems 
+            return <IndividualItems
             rawData={rawData}
             trayBarcode={trayBarcode}
             trayStream={trayStream}
@@ -1121,7 +734,7 @@ const Display = ({
             />
         break
         case 'transfer_items':
-            return <Transfer 
+            return <Transfer
             rawData={rawData}
             trayBarcode={trayBarcode}
             trayStream={trayStream}
@@ -1139,19 +752,19 @@ const Display = ({
         break
         default:
             return <IndividualItems />
-        break                 
+        break
     }
 }
 
-// const SearchForm = ({ 
-//     handleFormChange, 
+// const SearchForm = ({
+//     handleFormChange,
 //     handleSearch,
-//     theme, 
-//     inputProps, 
-//     suggestions, 
-//     onSuggestionsClearRequested, 
-//     onSuggestionsFetchRequested, 
-//     renderSuggestion, 
+//     theme,
+//     inputProps,
+//     suggestions,
+//     onSuggestionsClearRequested,
+//     onSuggestionsFetchRequested,
+//     renderSuggestion,
 //     onSuggestionSelected
 // }) => {
 //     return(
@@ -1170,9 +783,9 @@ const Display = ({
 //                         theme={theme}
 //                     />
 //                     <Button color="primary">Search</Button>
-//                  </FormGroup>   
-//             </Form>   
-//         </div>    
+//                  </FormGroup>
+//             </Form>
+//         </div>
 //     )
 // }
 

@@ -522,11 +522,11 @@ const ShelfForm = ({
     <Form>
         <FormGroup>
           <Label for="tray">Tray</Label>
-            <Input type="text" required onKeyDown={handleEnter} name="tray" value={formData.tray} onChange={(e) => handleFormChange(e)} placeholder="Tray barcode.." />
+            <Input type="text" required onKeyDown={handleEnter} name="tray" value={formData.tray} onChange={(e) => handleFormChange(e)} placeholder="Tray barcode" />
         </FormGroup>
         <FormGroup>
           <Label for="shelf">Shelf</Label>
-          <Input type="text" required onKeyDown={handleEnter} name="shelf" value={formData.shelf} onChange={(e) => handleFormChange(e)} placeholder="Shelf barcode.." />
+          <Input type="text" required onKeyDown={handleEnter} name="shelf" value={formData.shelf} onChange={(e) => handleFormChange(e)} placeholder="Shelf barcode" />
         </FormGroup>
         <FormGroup>
           <Label for="depth">Depth</Label>

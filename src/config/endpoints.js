@@ -1,4 +1,3 @@
-
 const base = "http://localhost:8888/"
 
 
@@ -6,13 +5,10 @@ export const account = `${base}user/`
 export const settings = `${base}settings/`
 export const trayAPI = `${base}tray-api/`
 export const collections = `${base}collection-api/`
-export const shelfAPI = `${base}/shelf-api/`
+export const shelfAPI = `${base}shelf-api/`
+export const itemAPI = `${base}item-api/`
 
-export const trayTransfer = `${base}tray-api/transfer-tray-items/`
-export const updateEntireTray = `${base}tray-api/update-entire-tray/`
-
-
-export const inserttrays = base + "tray-api/barcode-insert/"
+export const newtray = base + "tray-api/new-tray/"
 export const insertshelf = base + "shelf-api/shelf-insert/"
 export const searchaleph = base + "tray-api/search-barcode/"
 export const searchalephpost = base + "tray-api/search-barcode-post/"

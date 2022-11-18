@@ -1,13 +1,14 @@
 import {
-    inserttrays,
+    newtray,
     managetrayupdate,
     insertshelf,
     collections,
     history,
     account,
-    updateEntireTray,
+    // updateEntireTray,
     trayAPI,
     shelfAPI,
+    itemAPI,
     inProcess,
   } from '../config/endpoints';
 import Alerts from '../components/alerts';
@@ -54,63 +55,71 @@ class Load {
     * @desc Tray
   */
 
-  insertTrays = async (data) => {
-    const insert = await this.handleUpdate(`${trayAPI}barcode-insert/`, 'POST', data)
-    return insert
-  }
+  newTray = async (data) => {
+    const insert = await this.handleUpdate(`${trayAPI}new-tray/`, 'POST', data);
+    return insert;
+  };
 
-  barcodeVerify = async (data) => {
-    const verify = await this.handleUpdate(`${trayAPI}verify-barcode/`, 'POST', data)
-    return verify
-  }
+  /**
+    * @desc Item
+  */
 
-  alephVerify = async (data) => {
-    const verify = await this.handleUpdate(`${trayAPI}verify-aleph-record/`, 'POST', data)
-    return verify
-  }
+  itemSearch = async (data) => {
+    const search = await this.handleUpdate(`${itemAPI}search/`, 'POST', data);
+    return search;
+  };
+
+  // Returns a simple true/false whether an item is in FOLIO
+  itemInFolio = async (barcode) => {
+    const data = {
+      "barcode": barcode
+    };
+    const verify = await this.handleUpdate(`${itemAPI}check-folio/`, 'POST', data);
+    return verify;
+  };
 
   /**
     * @desc Tray management
   */
 
-  transfer = async (data) => {
-    const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
-    return transfer
-  }
+  // transfer = async (data) => {
+  //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
+  //   return transfer
+  // }
 
-  updateEntireTrays = async (data, id) => {
-    const update = await this.handleUpdate(updateEntireTray, 'POST', data)
-    return update
-  }
+  // updateEntireTrays = async (data, id) => {
+  //   const update = await this.handleUpdate(updateEntireTray, 'POST', data)
+  //   return update
+  // }
 
-  deleteTrayAndItems = async (data) => {
-    const deleteTray = await this.handleUpdate(`${trayAPI}handle-tray-delete/`, 'POST', data)
-    return deleteTray
-  }
+  // deleteTrayAndItems = async (data) => {
+  //   const deleteTray = await this.handleUpdate(`${trayAPI}handle-tray-delete/`, 'POST', data)
+  //   return deleteTray
+  // }
 
-  deleteTrayAndUnlink = async (data) => {
-    const deleteUnlink = await this.handleUpdate(`${trayAPI}handle-tray-delete-and-unlink/`, 'POST', data)
-    return deleteUnlink
-  }
+  // deleteTrayAndUnlink = async (data) => {
+  //   const deleteUnlink = await this.handleUpdate(`${trayAPI}handle-tray-delete-and-unlink/`, 'POST', data)
+  //   return deleteUnlink
+  // }
 
-  updateIndividualTrayItems = async (data) => {
-    const update = await this.handleUpdate(`${trayAPI}update-individual-items/`, 'POST', data)
-    return update
-  }
+  // updateIndividualTrayItems = async (data) => {
+  //   const update = await this.handleUpdate(`${trayAPI}update-individual-items/`, 'POST', data)
+  //   return update
+  // }
 
-  deleteIndividualTrayItems = async (data) => {
-    const deleteItem = await this.handleUpdate(`${trayAPI}delete-individual-items/`, 'POST', data)
-    return deleteItem
-  }
+  // deleteIndividualTrayItems = async (data) => {
+  //   const deleteItem = await this.handleUpdate(`${trayAPI}delete-individual-items/`, 'POST', data)
+  //   return deleteItem
+  // }
 
-  deleteMultiple = async (data) => {
-    const deleteMultiple = await this.handleUpdate(`${trayAPI}delete-multiple-barcodes/`, 'POST', data)
-    return deleteMultiple
-  }
+  // deleteMultiple = async (data) => {
+  //   const deleteMultiple = await this.handleUpdate(`${trayAPI}delete-multiple-barcodes/`, 'POST', data)
+  //   return deleteMultiple
+  // }
 
-  inProcessPaging = async (data) => {
-    return await this.handleUpdate(`${inProcess}create`, 'POST', data)
-  }
+  // inProcessPaging = async (data) => {
+  //   return await this.handleUpdate(`${inProcess}create`, 'POST', data)
+  // }
 
   /**
     * @desc Collection management
@@ -156,8 +165,8 @@ class Load {
     return deleteShelf
   }
 
-  insertTrays = async (data) => {
-    return await this.handleUpdate(inserttrays, 'POST', data)
+  newTray = async (data) => {
+    return await this.handleUpdate(newtray, 'POST', data)
   }
 
   deleteTrays = async (data, id) => {

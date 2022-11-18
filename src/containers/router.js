@@ -3,55 +3,55 @@ import React, { Route, Switch } from 'react'
 import {
     Trays,
     Shelf,
-    TrayManagement,
     AddPaging,
     PagingDisplay,
     Reports,
     History,
     Search,
-    CollectionManagement,
-    ShelfManagement,
-    UserManagement
+    ManageCollections,
+    ManageTrays,
+    ManageShelves,
+    ManageUsers
   } from './containers'
 
 
 export const Routes = () => (
   <Switch>
-    <Route exact path="/" render={() => (
+    {/* <Route exact path="/" render={() => (
+      <Trays
+        collections={this.state.collections}
+        settings={this.state.settings}
+      />
+    )}/> */}
+    <Route path="/new-tray" render={() => (
       <Trays
         collections={this.state.collections}
         settings={this.state.settings}
       />
     )}/>
-    <Route path="/trays" render={() => (
-      <Trays
-        collections={this.state.collections}
-        settings={this.state.settings}
-      />
-    )}/>
-    <Route path="/shelf" render={() => (
+    {/* <Route path="/shelf" render={() => (
       <Shelf
         collections={this.state.collections}
         settings={this.state.settings}
       />
     )}/>
-    <Route path="/tray-management" render={() => (
-      <TrayManagement
+    <Route path="/manage-trays" render={() => (
+      <ManageTrays
         collections={this.state.collections}
       />
     )}/>
-    <Route path="/shelf-management" render={() => (
-      <ShelfManagement
+    <Route path="/manage-shelves" render={() => (
+      <ManageShelves
         collections={this.state.collections}
       />
-    )}/>
-    <Route path="/collection-management" render={() => (
-      <CollectionManagement
+    )}/> */}
+    <Route path="/manage-collections" render={() => (
+      <ManageCollections
         collections={this.state.collections}
         newCollections={this.collections}
       />
     )}/>
-    <Route path="/paging-add" render={() => (
+    {/* <Route path="/paging-add" render={() => (
       <AddPaging
         settings={this.state.settings}
       />
@@ -75,9 +75,9 @@ export const Routes = () => (
       <Search
         settings={this.state.settings}
       />
-    )}/>
+    )}/> */}
     <Route path="/users" render={() => (
-      <UserManagement
+      <ManageUsers
         settings={this.state.settings}
       />
     )}/>

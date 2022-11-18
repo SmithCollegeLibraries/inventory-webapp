@@ -10,7 +10,7 @@ import { Row, Col, Table, Navbar, Button, Badge, Form, FormGroup, Label, Input ,
 import localforage from 'localforage'
 import { success, failure } from '../components/toastAlerts'
 import ReactTable from 'react-table'
-import { Link } from 'react-router-dom' 
+import { Link } from 'react-router-dom'
 import 'react-table/react-table.css'
 
 //New Section
@@ -37,27 +37,27 @@ const pagingReducer = (state, action) => {
                 ...state,
                 results: [],
                 count: 0
-            }  
+            }
         case 'RESET_SORT':
             return{
                 ...state,
                 sort: []
-            }    
-        case 'UPDATE_DATA': 
+            }
+        case 'UPDATE_DATA':
             return{
                 ...state,
                 results: action.results
-            }     
+            }
         case 'UPDATE_COUNT':
             return{
                 ...state,
                 count: action.count
-            }   
+            }
         case 'UPDATE_SORT':
             return{
                 ...state,
                 sorted: action.sorted
-            }    
+            }
         case 'UPDATE_ALL':
             return{
                 ...state,
@@ -65,8 +65,8 @@ const pagingReducer = (state, action) => {
                 loading: action.loading,
                 count: action.count,
                 pickBackup: action.pickBackup
-            }      
-        default: 
+            }
+        default:
         return state
     }
 }
@@ -97,7 +97,7 @@ function PagingDisplay(props){
     }
 
     const clearLocal = () => {
-        dispatch({ type: 'RESET' })       
+        dispatch({ type: 'RESET' })
         localforage.setItem('paging', [])
     }
 
@@ -117,8 +117,8 @@ function PagingDisplay(props){
     }
 
     const handleSort = (e) => {
-        if(e.target.value === 'reset') { 
-          order() 
+        if(e.target.value === 'reset') {
+          order()
         } else {
          const list = data.results
          const item = _.orderBy(list, [e.target.value], ['asc'])
@@ -131,21 +131,21 @@ function PagingDisplay(props){
         const item = _.orderBy(list,
           ['row', 'ladder', 'shelf_number'],
           ['asc', 'asc', 'asc'])
-        dispatch({ 
-            type: 'UPDATE_ALL', 
+        dispatch({
+            type: 'UPDATE_ALL',
             results: item,
             count: item.length,
             loading: false,
             pickBackup: item
         })
       }
-    
+
     const handleMarkAll = e => {
         const item  = data.results.map((items, index) => {
             return {...items, 'status': e.target.value}
         })
         dispatch({ type: 'UPDATE_DATA', results: item})
-    }  
+    }
 
     const resetSort = () => {
         dispatch({ type: 'RESET_SORT'})
@@ -165,7 +165,7 @@ function PagingDisplay(props){
     return(
         <div className="main-paging">
             <div className="main-paging-options" style={{padding: "20px"}}>
-                <Options 
+                <Options
                     count={data.count}
                     clearLocal={clearLocal}
                     getBarcodes={getBarcodes}
@@ -174,20 +174,20 @@ function PagingDisplay(props){
                     resetSort={resetSort}
                     data={data.results}
                 />
-            </div>      
+            </div>
             <div className="main-paging-display" style={{backgroundColor: "#fff"}}>
                 <Card>
                     <CardBody>
-                        <Display 
+                        <Display
                             data={data}
                             count={data.count}
                             onSortedChange={onSortedChange}
                             handleStatusUpdate={handleStatusUpdate}
                         />
                     </CardBody>
-                </Card>        
-            </div>    
-        </div>   
+                </Card>
+            </div>
+        </div>
     )
 }
 
@@ -232,14 +232,14 @@ export default PagingDisplay
 //     //     const item  = this.state.data.map((items, index) => {
 //     //         return {...items, 'status': e.target.value}
 //     //     })
-//     //     this.setState({data: item})    
+//     //     this.setState({data: item})
 //     // }
 
 //     handleDelete = (e, key, barcode) =>{
 //         const data = this.state.pick
 //         this.setState((prevState) => ({
 //           pick: prevState.pick.filter((_, i) => i != key)
-//         }), () => 
+//         }), () =>
 //         this.order()
 //       );
 //     }
@@ -255,8 +255,8 @@ export default PagingDisplay
 
 
 //     // handleSort = (e) => {
-//     //   if(e.target.value === 'reset') { 
-//     //     this.order() 
+//     //   if(e.target.value === 'reset') {
+//     //     this.order()
 //     //   } else {
 //     //    const list = this.state.data
 //     //    const item = _.orderBy(list, [e.target.value], ['asc'])
@@ -269,10 +269,10 @@ export default PagingDisplay
 //     //   const item = _.orderBy(list,
 //     //     ['row', 'ladder', 'shelf_number'],
 //     //     ['asc', 'asc', 'asc'])
-//     //   this.setState({ 
-//     //       data: item, 
-//     //       count: item.length, 
-//     //       loading: false, 
+//     //   this.setState({
+//     //       data: item,
+//     //       count: item.length,
+//     //       loading: false,
 //     //       pickBackup: item
 //     //     })
 //     // }
@@ -311,7 +311,7 @@ export default PagingDisplay
 //     //     })
 //     // }
 
-  
+
 //     //   getBarcodes = () => {
 //     //       const { data } = this.state
 //     //       Object.keys(data).map(async (items, idx) => {
@@ -319,7 +319,7 @@ export default PagingDisplay
 //     //             const set = {
 //     //                 'tray': data[items].tray_id,
 //     //                 'status': data[items].status
-//     //             }  
+//     //             }
 //     //             const results = await Load.processBarcodes(set)
 //     //             if(results){
 //     //                 Alerts.success(`${data[items].barcode.trim()} status updated successfully`)
@@ -327,8 +327,8 @@ export default PagingDisplay
 //     //                 this.setState({
 //     //                     count: 0
 //     //                 })
-//     //             } 
-//     //          }  
+//     //             }
+//     //          }
 //     //       })
 //     //   }
 
@@ -346,7 +346,7 @@ export default PagingDisplay
 //         return(
 //             <div className="main-paging">
 //                 <div className="main-paging-options" style={{padding: "20px"}}>
-//                     <Options 
+//                     <Options
 //                         count={count}
 //                         clearLocal={this.clearLocal}
 //                         getBarcodes={this.getBarcodes}
@@ -355,16 +355,16 @@ export default PagingDisplay
 //                         resetSort={this.resetSort}
 //                         data={data}
 //                     />
-//                 </div>      
+//                 </div>
 //                 <div className="main-paging-display" style={{backgroundColor: "#fff"}}>
-//                     <Display 
+//                     <Display
 //                         state={this.state}
 //                         count={count}
 //                         onSortedChange={this.onSortedChange}
 //                         handleStatusUpdate={this.handleStatusUpdate}
 //                     />
-//                 </div>    
-//             </div>    
+//                 </div>
+//             </div>
 //         )
 //     }
 // }
@@ -385,7 +385,7 @@ const TableHead = ({ }) => (
             <th>Call Number</th>
             <th className="timestamp">Last Update</th>
         </tr>
-    </thead> 
+    </thead>
 )
 
 const TableData = ({ list, index }) => (
@@ -407,7 +407,7 @@ const TableData = ({ list, index }) => (
 )
 
 const TablePrint = ({ data }) => (
-    Object.keys(data).map((list, idx) => 
+    Object.keys(data).map((list, idx) =>
         <TableData
             list={data[list]}
             key={idx}
@@ -436,7 +436,7 @@ const Display = props => (
                             </Input>
                         </FormGroup>
                         )
-                    }    
+                    }
                 },{
                     Header: "Height",
                     accessor: "height",
@@ -499,7 +499,7 @@ const Options = ({ count, getBarcodes, print, handleSort, handleMarkAll, clearLo
          {/* <Button color="info" onClick={() => window.print()}>Print</Button>{' '} */}
          <Button color="danger" onClick={() => {if(window.confirm('This will clear all the records from your display. You will not be able to recover these once they are cleared. Are you sure you want to continue?')) {clearLocal()}}}>Clear</Button>{ ' ' }
          <Button color="warning" onClick={() => resetSort()}>Reset Sort</Button>{' '}
-         <Link className="btn btn-primary" to="/paging-add">Paging Add</Link> 
+         <Link className="btn btn-primary" to="/paging-add">Paging Add</Link>
          </Col>
          <Col xs="auto">
          <select className="form-control pickDisplaySort" onChange={(e) => handleMarkAll(e)}>
@@ -509,7 +509,7 @@ const Options = ({ count, getBarcodes, print, handleSort, handleMarkAll, clearLo
          </select>
          </Col>
     </Navbar>
- </div>   
+ </div>
     )
 }
 
@@ -534,9 +534,9 @@ class TableToPrint extends React.Component {
             <th>Call Number</th>
             <th className="timestamp">Last Update</th>
             </tr>
-        </thead> 
+        </thead>
           <tbody>
-          {Object.keys(data).map((list, idx) => 
+          {Object.keys(data).map((list, idx) =>
           <tr key={idx}>
         <td>
             {data[list].status}

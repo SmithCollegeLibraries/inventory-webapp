@@ -15,7 +15,7 @@ import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import classnames from 'classnames';
 
-function UserManagement() {
+function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [level, setLevel] = useState(0);
   const [password, setPassword] = useState("");
@@ -240,4 +240,4 @@ const UserCreation = () => {
   );
 }
 
-export default UserManagement;
+export default ManageUsers;
