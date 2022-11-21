@@ -1,4 +1,4 @@
-const base = "https://libtools.smith.edu/sis/backend/web/"
+const base = "https://libtools2.smith.edu/sis/backend/web/"
 
 
 export const account = `${base}user/`
