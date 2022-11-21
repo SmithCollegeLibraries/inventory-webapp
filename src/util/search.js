@@ -1,27 +1,37 @@
-import {
-  collections,
-  managetray,
-  pagingslips,
-  searchaleph,
-  shelfsearchall,
-  statistics,
-  titlesearch,
-  oclcsearch,
-  callnumbersearch,
-  traysearch,
-  internalrequests,
-  history,
-  shelfmanagement,
-  settings,
-  trayAPI,
-  searchalephpost
-  } from '../config/endpoints';
+import { base } from '../config/endpoints';
 import Alerts from '../components/alerts';
+
+// const account = `${base}user/`
+const settings = `${base}settings/`
+const trayAPI = `${base}tray-api/`
+const collectionAPI = `${base}collection-api/`
+// const shelfAPI = `${base}shelf-api/`
+// const itemAPI = `${base}item-api/`
+
+// const newtray = base + "tray-api/new-tray/"
+// const insertshelf = base + "shelf-api/shelf-insert/"
+const searchaleph = base + "tray-api/search-barcode/"
+const searchalephpost = base + "tray-api/search-barcode-post/"
+const traysearch  = base + "tray-api/search-tray/"
+// const shelfsearch = base + "shelf-api/search-shelf/"
+const shelfsearchall = base + "shelf-api/search-all-shelf/"
+const titlesearch = base + "tray-api/search-title/"
+const oclcsearch = base + "tray-api/search-oclc/"
+const callnumbersearch = base + "tray-api/search-call/"
+const managetray = base + "/tray-api/search-tray-id/"
+// const managetrayupdate = base + "tray-api/tray-status-update/"
+const shelfmanagement = base + "shelf-api/search-shelf-id/"
+// const shelfmanagementupdate = base + "shelf-api/"
+const pagingslips = base + 'tray-api/paging-slips/'
+const statistics = base + 'statistics/'
+const history = base + 'history/'
+// const inProcess = base + 'in-process/'
+
 
 class ContentSearch {
 
   collections = async () => {
-    let search = await this.search(`${collections}`)
+    let search = await this.search(`${collectionAPI}`)
     return search
   }
 
