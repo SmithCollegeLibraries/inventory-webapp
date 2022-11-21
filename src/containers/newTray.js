@@ -50,7 +50,7 @@ const trayReducer = (state, action) => {
         ...state,
         verify: action.verify
       };
-    case 'ADD_VERIFIED':
+    case 'UPDATE_VERIFIED':
       return {
         ...state,
         verified: action.verified
@@ -70,12 +70,6 @@ const trayReducer = (state, action) => {
         ...state,
         trayLength: action.trayLength
       };
-    case 'REMOVE_ITEM':
-      const remove = action.verified.filter((_, i) => i !== action.id);
-      return {
-        ...state,
-        verified: remove
-      }
     case 'RESET':
       return {
         ...state,
@@ -265,13 +259,14 @@ const NewTray = (props) => {
       failure('Mismatch! \n Original barcodes: \n' + data.original.barcodes + ' \n Verify barcodes: \n' + data.verify.barcodes);
     } else {
       let verified = data.verified;
+      let barcodesAsArray = data.original.barcodes.trim().split('\n');
       verified[Date.now()] = {
         collection: data.original.collection,
         tray: data.verify.tray,
-        barcodes: data.verify.barcodes
+        barcodes: barcodesAsArray
       };
       localforage.setItem('tray', verified);
-      dispatch({ type: 'ADD_VERIFIED', verified: verified});
+      dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
       dispatch({ type: "RESET" });
     }
   };
@@ -285,36 +280,33 @@ const NewTray = (props) => {
 
     verified[key] = values;
     localforage.setItem('tray', verified);
-    dispatch({ type: 'ADD_VERIFIED', verified: verified});
+    dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
   };
 
   const handleProcess = async (e) => {
     e.preventDefault();
     Object.keys(data.verified).map(async (items, idx) => {
-      const load = await Load.newTray(data.verified[items]);
-      if (load === true) {
+      const response = await Load.newTray(data.verified[items]);
+      if (response) {
         success(`${data.verified[items].tray} successfully added`);
         removeItem(items);
       } else {
-        failure(`${load.barcode} in tray ${load.boxbarcode} was already added on ${load.added}`);
+        failure(`Unable to add tray ${data.verified[items].tray}. Please check that the tray does not already exist.`);
       }
     })
   };
 
   const removeItem = (index) => {
-    if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-      dispatch({ type: 'REMOVE_ITEM', id: index});
-      // Create list of verified trays staged for submission,
-      // without the tray that was just removed
-      const filtered = Object.keys(data.verified)
-        .filter(key => key !== index)
-        .reduce((obj, key) => {
-          obj[key] = data.verified[key];
-          return obj;
-        }, {});
-      dispatch({ type: 'ADD_VERIFIED', verified: filtered});
-      localforage.setItem('tray', filtered);
-    }
+    // Create list of verified trays staged for submission,
+    // without the tray that was just removed
+    const filtered = Object.keys(data.verified)
+      .filter(key => key !== index)
+      .reduce((obj, key) => {
+        obj[key] = data.verified[key];
+        return obj;
+      }, {});
+    dispatch({ type: 'UPDATE_VERIFIED', verified: filtered});
+    localforage.setItem('tray', filtered);
   };
 
   const handleEnter = (event) => {
@@ -333,7 +325,7 @@ const NewTray = (props) => {
   const clearDisplayGrid = e => {
     if (window.confirm('Are you sure you want to clear all currently staged trays? This action cannot be undone.')) {
       dispatch({ type: "RESET" });
-      dispatch({ type: 'ADD_VERIFIED', verified: []});
+      dispatch({ type: 'UPDATE_VERIFIED', verified: []});
       localforage.setItem('tray', {});
     }
   };
@@ -428,50 +420,43 @@ const TrayFormVerify = props => (
 
 const TrayFormOriginal = props => (
   <div>
-  <Form className="sticky-top">
-    <FormGroup>
-      <Label for="collections">Collections
-    </Label>
-      <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
-      <option>Select Collection</option>
-      { props.collections
-        ? Object.keys(props.collections).map((items, idx) => (
-            <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-          ))
-        : <option></option>
+    <Form className="sticky-top">
+      <FormGroup>
+        <Label for="collections">Collections
+      </Label>
+        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
+        <option>Select Collection</option>
+        { props.collections
+          ? Object.keys(props.collections).map((items, idx) => (
+              <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+            ))
+          : <option></option>
+        }
+        </Input>
+      </FormGroup>
+      <FormGroup>
+      <Label for="tray">Tray{ ' ' }
+      { props.original.tray.length === props.trayLength
+        ? <Badge color="success">{props.trayLength}</Badge>
+        : <Badge color="danger">{props.original.tray.length}</Badge>
       }
-      </Input>
-    </FormGroup>
-    <FormGroup>
-    <Label for="tray">Tray{ ' ' }
-    { props.original.tray.length === props.trayLength
-      ? <Badge color="success">{props.trayLength}</Badge>
-      : <Badge color="danger">{props.original.tray.length}</Badge>
-    }
-    </Label>
-      <Input type="text" name="tray" onKeyDown={props.handleEnter} value={props.original.tray} onChange={(e) => props.handleOriginalOnChange(e)}  placeholder="Tray barcode" />
-    </FormGroup>
-    <FormGroup>
-      <Label for="tray">Barcodes</Label>
-      <Input type="textarea" value={props.original.barcodes} rows="10" onChange={(e) => props.handleOriginalOnChange(e)} name="barcodes" />
-    </FormGroup>
-    { props.original.tray.length === props.trayLength
-      ? <Button onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Submit</Button>
-      : <Button onClick={e => (e.preventDefault)} color="secondary">Submit</Button>
-    }
-  </Form>
-  <br />
-  { Object.keys(props.verified).map(items => items).length
-    ? <ProcessForm processRequests={props.processRequests} />
-    : ''
-  }
+      </Label>
+        <Input type="text" name="tray" onKeyDown={props.handleEnter} value={props.original.tray} onChange={(e) => props.handleOriginalOnChange(e)}  placeholder="Tray barcode" />
+      </FormGroup>
+      <FormGroup>
+        <Label for="tray">Barcodes</Label>
+        <Input type="textarea" value={props.original.barcodes} rows="10" onChange={(e) => props.handleOriginalOnChange(e)} name="barcodes" />
+      </FormGroup>
+      { props.original.tray.length === props.trayLength
+        ? <Button style={{marginRight: '10px'}} onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Submit</Button>
+        : <Button style={{marginRight: '10px'}} onClick={e => (e.preventDefault)} color="secondary">Submit</Button>
+      }
+      { Object.keys(props.verified).map(items => items).length
+        ? <Button onClick={(e) => props.processRequests(e)} color="success">Process data</Button>
+        : ''
+      }
+    </Form>
   </div>
-);
-
-const ProcessForm = props => (
-  <Form>
-    <Button onClick={(e) => props.processRequests(e)} color="success">Process data</Button>
-  </Form>
 );
 
 const Display = props => (
@@ -493,7 +478,14 @@ const Display = props => (
                 {props.data[items].collection}
               </dd>
           </dl>
-          <Button color="danger" onClick={() => props.removeItem(items)}>Delete</Button>
+          <Button color="danger" onClick={
+              function () {
+                if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
+                  props.removeItem(items)
+                }
+              }}>
+            Delete
+          </Button>
         </CardBody>
       </Card>
     );
