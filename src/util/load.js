@@ -1,18 +1,34 @@
-import {
-    newtray,
-    managetrayupdate,
-    insertshelf,
-    collections,
-    history,
-    account,
-    // updateEntireTray,
-    trayAPI,
-    shelfAPI,
-    itemAPI,
-    inProcess,
-  } from '../config/endpoints';
+import { base } from '../config/endpoints';
 import Alerts from '../components/alerts';
 import { getFormattedDate } from '../util/date';
+
+const account = `${base}user/`
+// const settings = `${base}settings/`
+const trayAPI = `${base}tray-api/`
+const collectionAPI = `${base}collection-api/`
+const shelfAPI = `${base}shelf-api/`
+const itemAPI = `${base}item-api/`
+
+const newtray = base + "tray-api/new-tray/"
+const insertshelf = base + "shelf-api/shelf-insert/"
+// const searchaleph = base + "tray-api/search-barcode/"
+// const searchalephpost = base + "tray-api/search-barcode-post/"
+// const traysearch  = base + "tray-api/search-tray/"
+// const shelfsearch = base + "shelf-api/search-shelf/"
+// const shelfsearchall = base + "shelf-api/search-all-shelf/"
+// const titlesearch = base + "tray-api/search-title/"
+// const oclcsearch = base + "tray-api/search-oclc/"
+// const callnumbersearch = base + "tray-api/search-call/"
+// const managetray = base + "/tray-api/search-tray-id/"
+const managetrayupdate = base + "tray-api/tray-status-update/"
+// const shelfmanagement = base + "shelf-api/search-shelf-id/"
+// const shelfmanagementupdate = base + "shelf-api/"
+// const pagingslips = base + 'tray-api/paging-slips/'
+// const internalrequests = base + 'internal-requests/'
+// const internalrequestscomments = base + 'internal-requests-comments/'
+// const statistics = base + 'statistics/'
+const history = base + 'history/'
+// const inProcess = base + 'in-process/'
 
 
 class Load {
@@ -126,27 +142,27 @@ class Load {
   */
 
   createNewCollection = async (data) => {
-    const create = await this.handleUpdate(`${collections}new-collection/`, 'POST', data);
+    const create = await this.handleUpdate(`${collectionAPI}new-collection/`, 'POST', data);
     return create;
   }
 
   collectionHasItems = async (data) => {
-    const get = await this.handleUpdate(`${collections}collection-has-items/`, 'GET', data);
+    const get = await this.handleUpdate(`${collectionAPI}collection-has-items/`, 'GET', data);
     return get;
   }
 
   collectionExists = async (data) => {
-    const get = await this.handleUpdate(`${collections}collection-exists/`, 'GET', data);
+    const get = await this.handleUpdate(`${collectionAPI}collection-exists/`, 'GET', data);
     return get;
   }
 
   updateCollection = async (data) => {
-    const update = await this.handleUpdate(`${collections}update-collection/`, 'POST', data);
+    const update = await this.handleUpdate(`${collectionAPI}update-collection/`, 'POST', data);
     return update;
   }
 
   deleteCollection = async (data) => {
-    const deleteCollection = await this.handleUpdate(`${collections}delete-collection/`, 'POST', data);
+    const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'POST', data);
     return deleteCollection;
   }
 

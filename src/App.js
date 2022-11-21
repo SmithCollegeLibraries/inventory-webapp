@@ -99,7 +99,7 @@ export default class Main extends Component {
         this.collections();
       })
     } else {
-      failure('There was a problem with your username or password');
+      failure('There was a problem logging in.');
     }
   }
 
