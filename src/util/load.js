@@ -140,7 +140,7 @@ class Load {
   */
 
   createNewCollection = async (data) => {
-    const create = await this.handleUpdate(`${collectionAPI}new-collection/`, 'POST', data);
+    const create = await this.handleUpdate(`${collectionAPI}new-collection/`, 'GET', data);
     return create;
   }
 
@@ -155,12 +155,12 @@ class Load {
   }
 
   updateCollection = async (data) => {
-    const update = await this.handleUpdate(`${collectionAPI}update-collection/`, 'POST', data);
+    const update = await this.handleUpdate(`${collectionAPI}update-collection/`, 'GET', data);
     return update;
   }
 
   deleteCollection = async (data) => {
-    const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'POST', data);
+    const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'GET', data);
     return deleteCollection;
   }
 
