@@ -221,10 +221,11 @@ class Load {
     const storage = JSON.parse(sessionStorage.getItem('account'));
     const { account } = storage || '';
     const { access_token } = account || '';
+    console.log(data);
     try {
       let response = await fetch(string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`, {
         method: `${method}`,
-        body: JSON.stringify(data)
+        body: data
       });
       return this.responseHandling(response);
     } catch(e) {
@@ -254,13 +255,13 @@ class Load {
         this.catchError('Method not allowed', response.statusText);
         break;
       case 422:
-        this.catchError('Data Validation Fail', response.statusText);
+        this.catchError('Data validation fail', response.statusText);
         break;
       case 500:
-        this.catchError('Internal Server error', response.statusText);
+        this.catchError('Internal server error', response.statusText);
         break;
       default:
-        this.catchError('There was an error.  Check your internet connection', '');
+        this.catchError('There was an error. Check your internet connection', '');
     }
   }
 
