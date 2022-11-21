@@ -82,11 +82,6 @@ class ContentSearch {
     return search
   }
 
-  getInternalRequests = async (completed) => {
-    let search = await this.search(`${internalrequests}status?completed=${completed}`)
-    return search
-  }
-
   trayShelfSearch = async (value) => {
     let search = await this.search(`${shelfmanagement}?query=${value.replace(/[^0-9]+/g, '')}`)
     return search
