@@ -212,7 +212,7 @@ const NewTray = (props) => {
   const handleOriginalSubmit = e => {
     e.preventDefault();
     // TODO: Automatically add newline to the end of this form if necessary
-    if (handleInspectCollection() && handleInspectTray()) {
+    if (handleInspectCollection() && handleInspectTray() && inspectBarcodes()) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
     }
   };
@@ -236,6 +236,21 @@ const NewTray = (props) => {
       return true;
     }
   };
+
+  const inspectBarcodes = () => {
+    const { original } = data;
+    const barcodesAsArray = original.barcodes.trim().split('\n');
+    for (const barcode of barcodesAsArray) {
+      if (barcode.length !== BARCODE_LENGTH) {
+        failure(`Barcode ${barcodesAsArray[barcode]} is not ${BARCODE_LENGTH} characters`);
+        return false;
+      } else if (barcode.slice(0, 4) !== '3101') {
+        failure(`Barcode ${barcodesAsArray[barcode]} does not begin with 3101`);
+        return false;
+      }
+    }
+    return true;
+  }
 
   const handleVerifyOnChange = e => {
     e.preventDefault();
