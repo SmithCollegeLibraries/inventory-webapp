@@ -140,7 +140,7 @@ class Load {
   */
 
   createNewCollection = async (data) => {
-    const create = await this.handleUpdate(`${collectionAPI}new-collection/`, 'GET', data);
+    const create = await this.handleUpdate(`${collectionAPI}new-collection/`, 'POST', data);
     return create;
   }
 
@@ -155,12 +155,12 @@ class Load {
   }
 
   updateCollection = async (data) => {
-    const update = await this.handleUpdate(`${collectionAPI}update-collection/`, 'GET', data);
+    const update = await this.handleUpdate(`${collectionAPI}update-collection/`, 'POST', data);
     return update;
   }
 
   deleteCollection = async (data) => {
-    const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'GET', data);
+    const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'POST', data);
     return deleteCollection;
   }
 
@@ -205,7 +205,7 @@ class Load {
     return update
   }
 
-  handleAccount= async (string, method, data) => {
+  handleAccount = async (string, method, data) => {
     try {
       let response =  await fetch(string, {
         method: `${method}`,
@@ -221,12 +221,15 @@ class Load {
     const storage = JSON.parse(sessionStorage.getItem('account'));
     const { account } = storage || '';
     const { access_token } = account || '';
-    console.log(data);
+    const callURL = string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`;
     try {
-      let response = await fetch(string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`, {
-        method: `${method}`,
-        body: data
-      });
+      let response = await fetch(
+          callURL,
+          {
+            "method": `${method}`,
+            "body": JSON.stringify(data)
+          },
+        );
       return this.responseHandling(response);
     } catch(e) {
       return this.catchError('', e);

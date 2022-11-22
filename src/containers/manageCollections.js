@@ -49,10 +49,10 @@ function ManageCollections(props) {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const updateData = {
+    const createData = {
       'name' : data.collection
     };
-    const results = await Load.createNewCollection(updateData);
+    const results = await Load.createNewCollection(createData);
     if (results) {
       success("New collection successfully created");
       collections();

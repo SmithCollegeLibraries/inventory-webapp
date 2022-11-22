@@ -46,7 +46,7 @@ function ManageUsers() {
     if (update) {
       success("Account successfully updated");
     } else {
-      failure("There was an error updating this account. Please make sure that the level is between 0 and 100.");
+      failure("There was an error updating this account.");
     }
   };
 
