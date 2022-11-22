@@ -1,21 +1,21 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Redirect } from "react-router-dom";
 import './css/bootstrap.css';
 import './css/index.css';
 import 'react-s-alert/dist/s-alert-default.css';
 import {
-  NewTray,
-  // Shelf,
-  // AddPaging,
-  // PagingDisplay,
-  // Reports,
-  // History,
-  // Search,
-  ManageCollections,
-  // ManageTrays,
-  // ManageShelves,
-  ManageUsers
-} from './containers';
+    NewTray,
+    // Shelf,
+    // AddPaging,
+    // PagingDisplay,
+    // Reports,
+    // History,
+    // Search,
+    ManageCollections,
+    // ManageTrays,
+    // ManageShelves,
+    ManageUsers
+  } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
 import { LoginPage } from './components/login';
@@ -44,7 +44,7 @@ export default class Main extends Component {
   componentDidMount = async () => {
     if (sessionStorage.getItem('account') || this.state.loggedIn === true ) {
       this.collections();
-      this.settings();
+      // this.settings();
     }
   };
 
@@ -58,15 +58,15 @@ export default class Main extends Component {
     this.setState({ collections: search });
   };
 
-  settings = async () => {
-    let settings = await this.localStorage('settings');
-    if (!settings) {
-      settings = await ContentSearch.setting();
-      localforage.setItem('settings', settings);
-    }
+  // settings = async () => {
+  //   let settings = await this.localStorage('settings');
+  //   if (!settings) {
+  //     settings = await ContentSearch.setting();
+  //     localforage.setItem('settings', settings);
+  //   }
 
-    this.setState({ settings: settings });
-  }
+  //   this.setState({ settings: settings });
+  // }
 
   handleCreateNewPage = () => {
     this.setState({
@@ -111,7 +111,8 @@ export default class Main extends Component {
   };
 
   render() {
-    const { loggedIn, settings} = this.state;
+    // const { loggedIn, settings} = this.state;
+    const { loggedIn } = this.state;
     return (
       <div>
         <ToastContainer />
@@ -123,19 +124,16 @@ export default class Main extends Component {
           {sessionStorage.getItem('account') || loggedIn === true ?
             <div className="container-fluid">
               <Switch>
+                <Route exact path="/">
+                  <Redirect to="/new-tray" />
+                </Route>
                 <Route path="/new-tray" render={() => (
                   <NewTray
                     collections={this.state.collections}
-                    settings={settings}
+                    // settings={settings}
                   />
                 )}/>
-                {/* <Route exact path="/" render={() => (
-                  <Trays
-                    collections={this.state.collections}
-                    settings={settings}
-                  />
-                )}/>
-                <Route path="/shelf" render={() => (
+                {/* <Route path="/shelf" render={() => (
                   <Shelf
                     collections={this.state.collections}
                     settings={settings}
@@ -184,7 +182,7 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/users" render={() => (
                   <ManageUsers
-                    settings={settings}
+                    // settings={settings}
                   />
                 )}/>
               </Switch>

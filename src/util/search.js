@@ -2,7 +2,7 @@ import { base } from '../config/endpoints';
 import Alerts from '../components/alerts';
 
 // const account = `${base}user/`
-const settings = `${base}settings/`
+// const settings = `${base}settings/`
 const trayAPI = `${base}tray-api/`
 const collectionAPI = `${base}collection-api/`
 // const shelfAPI = `${base}shelf-api/`
@@ -35,10 +35,10 @@ class ContentSearch {
     return search
   }
 
-  setting = async () => {
-    let search = await this.search(settings)
-    return search
-  }
+  // setting = async () => {
+  //   let search = await this.search(settings)
+  //   return search
+  // }
 
   autocomplete = async (value) => {
     let search = await this.search(`${trayAPI}auto-complete-tray/?query=${value}`)
