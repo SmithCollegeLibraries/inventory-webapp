@@ -55,6 +55,7 @@ function ManageCollections(props) {
     const results = await Load.createNewCollection(createData);
     if (results) {
       success("New collection successfully created");
+      dispatch({ type: "UPDATE_COLLECTION_FORM", collections: ""});
       collections();
       props.newCollections();
     } else {
