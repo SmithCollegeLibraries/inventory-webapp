@@ -8,8 +8,9 @@ import localforage from 'localforage';
 import useDebounce from '../components/debounce';
 import { success, failure, warning } from '../components/toastAlerts';
 
-// TODO: get this number from settings
+// TODO: get these numbers from settings
 const BARCODE_LENGTH = 15;
+const TRAY_BARCODE_LENGTH = 8;
 
 const initialState = {
   original: {
@@ -27,7 +28,7 @@ const initialState = {
   checkedOnFolio: [],
   form: 'original',
   trayValid: false,
-  trayLength: 8,
+  trayLength: TRAY_BARCODE_LENGTH,
   timeout: 0,
   email: '',
   locked: false
@@ -112,10 +113,7 @@ const NewTray = (props) => {
   useEffect(() => {
     if (props) {
       // const { settings } = props || '';
-      // Assume the length of a tray barcode is 8; otherwise,
-      // get the value from settings
-      // TODO: Get this value from settings
-      let trayLength = 8;
+      let trayLength = TRAY_BARCODE_LENGTH;
       // if (settings !== "") {
       //   Object.keys(settings).map(items => {
       //     if (settings[items].type === 'tray_barcode_length') {
@@ -126,6 +124,36 @@ const NewTray = (props) => {
       dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength});
     }
   },[props]);
+
+  // Check that the tray barcode is the correct length and
+  // isn't in the system already
+  useEffect(() => {
+    const trayBarcodeToVerify = data.original.tray;
+
+    const handleVerifyTrayUnused = async (tray) => {
+      const data = { "barcode" : tray };
+      const results = await Load.traySearch(data);
+      if (results && results[0]) {
+        failure(`${trayBarcodeToVerify} already exists in the system`);
+        return false;
+      } else {
+        return true;
+      }
+    };
+
+    if (trayBarcodeToVerify && trayBarcodeToVerify.length > 0) {
+      if (trayBarcodeToVerify.length !== TRAY_BARCODE_LENGTH) {
+        failure(`${trayBarcodeToVerify} must be ${TRAY_BARCODE_LENGTH} characters long. You currently have ${trayBarcodeToVerify.length}`);
+      }
+      // If tray is correct length, check that it's not already used
+      else {
+        const trayIsUnused = handleVerifyTrayUnused(trayBarcodeToVerify);
+        if (!trayIsUnused) {
+          failure(`Tray with barocde ${trayBarcodeToVerify} is already in use`);
+        }
+      }
+    }
+  });
 
   useEffect(() => {
     const handleVerifyBarcodesUnused = async (barcodes) => {
@@ -306,7 +334,7 @@ const NewTray = (props) => {
         success(`${data.verified[items].tray} successfully added`);
         removeItem(items);
       } else {
-        failure(`Unable to add tray ${data.verified[items].tray}. Please check that the tray does not already exist.`);
+        failure(`Unable to add tray ${data.verified[items].tray}. Please check that the tray and all items are not already in the system.`);
       }
     })
   };

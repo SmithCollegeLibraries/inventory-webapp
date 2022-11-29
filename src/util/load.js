@@ -74,6 +74,11 @@ class Load {
     return insert;
   };
 
+  traySearch = async (data) => {
+    const search = await this.handleUpdate(`${trayAPI}search/`, 'POST', data);
+    return search;
+  };
+
   /**
     * @desc Item
   */
@@ -222,6 +227,8 @@ class Load {
     const { account } = storage || '';
     const { access_token } = account || '';
     const callURL = string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`;
+    console.log("data!", JSON.stringify(data));
+    console.log("callURL!", callURL);
     try {
       let response = await fetch(
           callURL,
@@ -258,7 +265,7 @@ class Load {
         this.catchError('Method not allowed', response.statusText);
         break;
       case 422:
-        this.catchError('Data validation fail', response.statusText);
+        this.catchError('Data validation failed', response.statusText);
         break;
       case 500:
         this.catchError('Internal server error', response.statusText);

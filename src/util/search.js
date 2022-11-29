@@ -172,7 +172,7 @@ class ContentSearch {
         return await this.catchError('Method not allowed', response.statusText)
       break;
       case 422:
-        return await this.catchError('Data validation fail', response.statusText)
+        return await this.catchError('Data validation failed', response.statusText)
       break;
       case 500:
         return await this.catchError('Internal server error', response.statusText)
