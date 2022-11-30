@@ -344,6 +344,7 @@ const NewTray = (props) => {
       }
     }
     removeItems(data.verified, submittedTrays);
+    dispatch({ type: "RESET" });
   };
 
   const removeItems = (trayList, barcodes) => {
