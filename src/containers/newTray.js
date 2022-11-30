@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, Fragment } from 'react';
+import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
 // import { getFormattedDate } from '../util/date';
@@ -376,9 +376,8 @@ const NewTray = (props) => {
     <Fragment>
       <div style={{paddingTop: "10px"}}>
         <Button color={data.locked ? "success" : "primary"} onClick={(e) => lockCollection(e)}>{data.locked ? "Collection locked" : "Lock collection"}</Button>{' '}
-        <Button color="warning" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
       </div>
-      <div style={{marginTop: "50px"}}>
+      <div style={{marginTop: "10px"}}>
         <Row>
           <Col md="4">
             <Card>
@@ -387,10 +386,10 @@ const NewTray = (props) => {
                 handleOriginalOnChange={handleOriginalOnChange}
                 collections={props.collections}
                 handleOriginalSubmit={handleOriginalSubmit}
-                processRequests={handleProcess}
                 verified={data.verified}
                 trayLength={data.trayLength}
                 original={data.original}
+                form={data.form}
                 handleEnter={handleEnter}
                 lockCollection={lockCollection}
                 handleVerifySubmit={handleVerifySubmit}
@@ -423,6 +422,13 @@ const NewTray = (props) => {
               handleDisplayChange={handleDisplayChange}
               removeItem={removeItem}
             />
+            { Object.keys(data.verified).map(items => items).length
+              ? <>
+                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcess(e)} color="primary">Process new trays</Button>
+                <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
+              </>
+              : ''
+            }
           </Col>
         </Row>
       </div>
@@ -456,7 +462,7 @@ const TrayFormVerify = props => (
       <Label for="tray">Barcodes</Label>
       <Input type="textarea" rows="10" value={props.verify.barcodes} onChange={(e) => props.handleVerifyOnChange(e)} name="barcodes" />
     </FormGroup>
-    <Button onClick={(e) => props.handleVerifySubmit(e)} color="success">Verify</Button>
+    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Stage</Button>
   </Form>
 );
 
@@ -489,13 +495,9 @@ const TrayFormOriginal = props => (
         <Label for="tray">Barcodes</Label>
         <Input type="textarea" value={props.original.barcodes} rows="10" onChange={(e) => props.handleOriginalOnChange(e)} name="barcodes" />
       </FormGroup>
-      { props.original.tray.length === props.trayLength
-        ? <Button style={{marginRight: '10px'}} onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Submit</Button>
-        : <Button style={{marginRight: '10px'}} onClick={e => (e.preventDefault)} color="secondary">Submit</Button>
-      }
-      { Object.keys(props.verified).map(items => items).length
-        ? <Button onClick={(e) => props.processRequests(e)} color="success">Process data</Button>
-        : ''
+      { props.original.tray.length === props.trayLength && props.form === 'original'
+        ? <Button style={{marginRight: '10px'}} onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Verify</Button>
+        : <Button style={{marginRight: '10px'}} onClick={e => (e.preventDefault)} color="secondary">Verify</Button>
       }
     </Form>
   </div>
