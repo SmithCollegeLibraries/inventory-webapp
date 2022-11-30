@@ -142,11 +142,10 @@ const NewTray = (props) => {
     };
 
     if (trayBarcodeToVerify && trayBarcodeToVerify.length > 0) {
-      if (trayBarcodeToVerify.length !== TRAY_BARCODE_LENGTH) {
-        failure(`${trayBarcodeToVerify} must be ${TRAY_BARCODE_LENGTH} characters long. You currently have ${trayBarcodeToVerify.length}`);
-      }
-      // If tray is correct length, check that it's not already used
-      else {
+      // If tray is correct length, check that it's not already used.
+      // (We're already showing the user that it's the wrong length,
+      // so no need to give a popup alert.)
+      if (trayBarcodeToVerify.length === TRAY_BARCODE_LENGTH) {
         const trayIsUnused = handleVerifyTrayUnused(trayBarcodeToVerify);
         if (!trayIsUnused) {
           failure(`Tray with barocde ${trayBarcodeToVerify} is already in use`);
