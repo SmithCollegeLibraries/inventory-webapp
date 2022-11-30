@@ -294,7 +294,7 @@ const NewTray = (props) => {
   const goBackToOriginal = e => {
     e.preventDefault();
     dispatch({ type: 'CHANGE_FORM', form: 'original'});
-    dispatch({ type: 'ADD_VERIFY', verify: { tray: '', barcodes: []} });
+    dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
   };
 
   const handleVerifySubmit = e => {
@@ -331,7 +331,7 @@ const NewTray = (props) => {
     dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
   };
 
-  const handleProcess = async (e) => {
+  const handleProcessTrays = async (e) => {
     e.preventDefault();
     Object.keys(data.verified).map(async (items, idx) => {
       const response = await Load.newTray(data.verified[items]);
@@ -371,7 +371,7 @@ const NewTray = (props) => {
   };
 
   const clearDisplayGrid = e => {
-    if (window.confirm('Are you sure you want to clear all currently staged trays? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to clear all staged trays as well as the current tray? This action cannot be undone.')) {
       dispatch({ type: "RESET" });
       dispatch({ type: 'UPDATE_VERIFIED', verified: []});
       localforage.setItem('tray', {});
@@ -429,8 +429,8 @@ const NewTray = (props) => {
             />
             { Object.keys(data.verified).map(items => items).length
               ? <>
-                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcess(e)} color="primary">Process new trays</Button>
-                <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
+                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process new trays</Button>
+                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
               </>
               : ''
             }
@@ -461,7 +461,7 @@ const TrayFormVerify = props => (
         : <Badge color="danger">{props.verify.tray.length}</Badge>
       }
       </Label>
-      <Input type="text" onKeyDown={props.handleEnter} name="tray" value={props.verify.tray} onChange={(e) => props.handleVerifyOnChange(e)}  placeholder="Tray barcode" />
+      <Input type="text" onKeyDown={props.handleEnter} name="tray" value={props.verify.tray} onChange={(e) => props.handleVerifyOnChange(e)} placeholder="Tray barcode" />
     </FormGroup>
     <FormGroup>
       <Label for="tray">Barcodes</Label>
@@ -515,11 +515,11 @@ const Display = props => (
       <Card key={items}>
         <CardBody>
           <dl className="row">
-            <dt className="col-sm-3">Tray barcode</dt>
+            <dt className="col-sm-3">Tray</dt>
               <dd className="col-sm-9">
                 {props.data[items].barcode}
               </dd>
-              <dt className="col-sm-3">Item barcodes</dt>
+              <dt className="col-sm-3">Items</dt>
                 <dd className="col-sm-9">
                   {props.data[items].items}
                 </dd>
