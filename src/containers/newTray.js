@@ -266,7 +266,7 @@ const NewTray = (props) => {
 
   const inspectBarcodes = () => {
     const { original } = data;
-    const barcodesAsArray = original.barcodes.trim().split('\n');
+    const barcodesAsArray = original.barcodes ? original.barcodes.trim().split('\n') : [];
     for (const barcode of barcodesAsArray) {
       if (barcode.length !== BARCODE_LENGTH) {
         failure(`Barcode ${barcodesAsArray[barcode]} is not ${BARCODE_LENGTH} characters`);
