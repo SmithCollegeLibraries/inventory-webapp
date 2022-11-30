@@ -450,7 +450,7 @@ const TrayFormVerify = props => (
       </Input>
     </FormGroup>
     <FormGroup>
-      <Label for="tray">Tray
+      <Label for="tray">Tray{ ' ' }
       { props.verify.tray.length === props.trayLength
         ? <Badge color="success">{props.trayLength}</Badge>
         : <Badge color="danger">{props.verify.tray.length}</Badge>
@@ -485,7 +485,7 @@ const TrayFormOriginal = props => (
       <FormGroup>
       <Label for="tray">Tray{ ' ' }
       { props.original.tray.length === props.trayLength
-        ? <Badge color="success">{props.trayLength}</Badge>
+        ? <><Badge color="success">{props.trayLength}</Badge> ✓</>
         : <Badge color="danger">{props.original.tray.length}</Badge>
       }
       </Label>
