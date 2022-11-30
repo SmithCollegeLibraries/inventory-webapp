@@ -197,10 +197,10 @@ const NewTray = (props) => {
       for (const barcode of barcodesToVerify) {
         if (barcode !== '') {
           if (!barcode.startsWith('3101')) {
-            warning(`${barcode} does not begin with 3101`);
+            failure(`${barcode} does not begin with 3101`);
             warned = true;
           } else if (barcode.length !== BARCODE_LENGTH) {
-            warning(`${barcode} must be ${BARCODE_LENGTH} characters long. You currently have ${barcode.length}`);
+            failure(`${barcode} must be ${BARCODE_LENGTH} characters long. You currently have ${barcode.length}`);
             warned = true;
           }
         }
