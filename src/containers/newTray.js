@@ -304,8 +304,8 @@ const NewTray = (props) => {
       let barcodesAsArray = data.original.barcodes.trim().split('\n');
       verified[Date.now()] = {
         collection: data.original.collection,
-        tray: data.verify.tray,
-        barcodes: barcodesAsArray
+        barcode: data.verify.tray,
+        items: barcodesAsArray
       };
       localforage.setItem('tray', verified);
       dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
@@ -330,10 +330,10 @@ const NewTray = (props) => {
     Object.keys(data.verified).map(async (items, idx) => {
       const response = await Load.newTray(data.verified[items]);
       if (response) {
-        success(`${data.verified[items].tray} successfully added`);
+        success(`${data.verified[items].barcode} successfully added`);
         removeItem(items);
       } else {
-        failure(`Unable to add tray ${data.verified[items].tray}. Please check that the tray and all items are not already in the system.`);
+        failure(`Unable to add tray ${data.verified[items].barcode}. Please check that the tray and all items are not already in the system.`);
       }
     })
   };
@@ -509,11 +509,11 @@ const Display = props => (
           <dl className="row">
             <dt className="col-sm-3">Tray barcode</dt>
               <dd className="col-sm-9">
-                {props.data[items].tray}
+                {props.data[items].barcode}
               </dd>
               <dt className="col-sm-3">Item barcodes</dt>
                 <dd className="col-sm-9">
-                  {props.data[items].barcodes}
+                  {props.data[items].items}
                 </dd>
               <dt className="col-sm-3">Collection</dt>
               <dd className="col-sm-9">
