@@ -227,8 +227,6 @@ class Load {
     const { account } = storage || '';
     const { access_token } = account || '';
     const callURL = string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`;
-    console.log("data!", JSON.stringify(data));
-    console.log("callURL!", callURL);
     try {
       let response = await fetch(
           callURL,

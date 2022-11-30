@@ -333,28 +333,27 @@ const NewTray = (props) => {
 
   const handleProcessTrays = async (e) => {
     e.preventDefault();
-    Object.keys(data.verified).map(async (items, idx) => {
-      const response = await Load.newTray(data.verified[items]);
+    let submittedTrays = [];
+    for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
+      const response = await Load.newTray(tray);
       if (response) {
-        success(`${data.verified[items].barcode} successfully added`);
-        removeItem(items);
+        success(`${tray.barcode} successfully added`);
+        submittedTrays.push(tray.barcode);
       } else {
-        failure(`Unable to add tray ${data.verified[items].barcode}. Please check that the tray and all items are not already in the system.`);
+        failure(`Unable to add tray ${tray.barcode}. Please check that the tray and all items are not already in the system.`);
       }
-    })
+    }
+    removeItems(data.verified, submittedTrays);
   };
 
-  const removeItem = (index) => {
+  const removeItems = (trayList, barcodes) => {
     // Create list of verified trays staged for submission,
     // without the tray that was just removed
-    const filtered = Object.keys(data.verified)
-      .filter(key => key !== index)
-      .reduce((obj, key) => {
-        obj[key] = data.verified[key];
-        return obj;
-      }, {});
-    dispatch({ type: 'UPDATE_VERIFIED', verified: filtered});
-    localforage.setItem('tray', filtered);
+    const newTrayList = Object.keys(trayList)
+        .map(key => trayList[key])
+        .filter(tray => !barcodes.includes(tray.barcode));
+    dispatch({ type: 'UPDATE_VERIFIED', verified: newTrayList});
+    localforage.setItem('tray', newTrayList);
   };
 
   const handleEnter = (event) => {
@@ -425,7 +424,7 @@ const NewTray = (props) => {
               data={data.verified}
               collections={props.collections}
               handleDisplayChange={handleDisplayChange}
-              removeItem={removeItem}
+              removeItems={removeItems}
             />
             { Object.keys(data.verified).map(items => items).length
               ? <>
@@ -510,28 +509,28 @@ const TrayFormOriginal = props => (
 );
 
 const Display = props => (
-  Object.keys(props.data).map((items, idx) => {
+  Object.keys(props.data).map((tray, idx) => {
     return (
-      <Card key={items}>
+      <Card key={tray}>
         <CardBody>
           <dl className="row">
             <dt className="col-sm-3">Tray</dt>
               <dd className="col-sm-9">
-                {props.data[items].barcode}
+                {props.data[tray].barcode}
               </dd>
               <dt className="col-sm-3">Items</dt>
                 <dd className="col-sm-9">
-                  {props.data[items].items}
+                  {props.data[tray].items}
                 </dd>
               <dt className="col-sm-3">Collection</dt>
               <dd className="col-sm-9">
-                {props.data[items].collection}
+                {props.data[tray].collection}
               </dd>
           </dl>
           <Button color="danger" onClick={
               function () {
                 if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeItem(items)
+                  props.removeItems(props.data, [props.data[tray].barcode])
                 }
               }}>
             Delete
