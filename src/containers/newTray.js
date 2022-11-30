@@ -81,7 +81,6 @@ const trayReducer = (state, action) => {
           barcodes: []
         },
         verify: {
-          collection: state.locked === true ? state.verify.collection : '',
           tray: '',
           barcodes: []
         }
@@ -241,6 +240,7 @@ const NewTray = (props) => {
     // TODO: Automatically add newline to the end of this form if necessary
     if (handleInspectCollection() && handleInspectTray() && inspectBarcodes()) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
+      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
     }
   };
 
@@ -389,16 +389,14 @@ const NewTray = (props) => {
             <Card>
               <CardBody>
               <TrayFormOriginal
-                handleOriginalOnChange={handleOriginalOnChange}
+                handleEnter={handleEnter}
                 collections={props.collections}
-                handleOriginalSubmit={handleOriginalSubmit}
-                verified={data.verified}
+                lockCollection={lockCollection}
                 trayLength={data.trayLength}
                 original={data.original}
+                handleOriginalOnChange={handleOriginalOnChange}
+                handleOriginalSubmit={handleOriginalSubmit}
                 form={data.form}
-                handleEnter={handleEnter}
-                lockCollection={lockCollection}
-                handleVerifySubmit={handleVerifySubmit}
               />
               </CardBody>
             </Card>
@@ -408,13 +406,13 @@ const NewTray = (props) => {
                 <Card>
                   <CardBody>
                   <TrayFormVerify
-                    handleVerifyOnChange={handleVerifyOnChange}
-                    collections={props.collections}
-                    handleVerifySubmit={handleVerifySubmit}
-                    original={data.original}
-                    trayLength={data.trayLength}
-                    verify={data.verify}
                     handleEnter={handleEnter}
+                    collections={props.collections}
+                    trayLength={data.trayLength}
+                    original={data.original}
+                    verify={data.verify}
+                    handleVerifyOnChange={handleVerifyOnChange}
+                    handleVerifySubmit={handleVerifySubmit}
                     goBackToOriginal={goBackToOriginal}
                   />
                   </CardBody>
