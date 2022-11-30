@@ -291,6 +291,12 @@ const NewTray = (props) => {
     dispatch({ type: 'ADD_VERIFY', verify: verify});
   };
 
+  const goBackToOriginal = e => {
+    e.preventDefault();
+    dispatch({ type: 'CHANGE_FORM', form: 'original'});
+    dispatch({ type: 'ADD_VERIFY', verify: { tray: '', barcodes: []} });
+  };
+
   const handleVerifySubmit = e => {
     e.preventDefault()
     // TODO: Do a diff on the original and verify so that it's clear which
@@ -409,6 +415,7 @@ const NewTray = (props) => {
                     trayLength={data.trayLength}
                     verify={data.verify}
                     handleEnter={handleEnter}
+                    goBackToOriginal={goBackToOriginal}
                   />
                   </CardBody>
                 </Card>
@@ -463,6 +470,7 @@ const TrayFormVerify = props => (
       <Input type="textarea" rows="10" value={props.verify.barcodes} onChange={(e) => props.handleVerifyOnChange(e)} name="barcodes" />
     </FormGroup>
     <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Stage</Button>
+    <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)}>Go back</Button>
   </Form>
 );
 
