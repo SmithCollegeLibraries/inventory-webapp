@@ -2,7 +2,7 @@ import React, { useReducer, useEffect } from 'react';
 import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import ContentSearch from '../util/search';
-import { Row, Col, Form, Button, Input, Alert, Card, CardBody } from 'reactstrap';
+import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
 const initialState = {
   collections: [],

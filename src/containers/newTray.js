@@ -98,7 +98,7 @@ const trayReducer = (state, action) => {
 const NewTray = (props) => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
-  const debouncedSearchTerm = useDebounce(data.original.barcodes, 500);
+  const debouncedSearchTerm = useDebounce(data.original.barcodes);
 
   // Anytime the DOM is updated, update local storage
   useEffect(() => {
@@ -216,7 +216,7 @@ const NewTray = (props) => {
         failure("Duplicate barcode detected");
       }
     }
-  },[debouncedSearchTerm]);
+  },[debouncedSearchTerm, data.checkedOnFolio]);
 
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);

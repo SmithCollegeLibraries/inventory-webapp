@@ -11,7 +11,7 @@ import {
     DropdownMenu,
     DropdownItem,
   } from 'reactstrap';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import { webapp_base } from '../config/endpoints';
 

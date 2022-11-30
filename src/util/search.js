@@ -15,9 +15,9 @@ const searchalephpost = base + "tray-api/search-barcode-post/"
 const traysearch  = base + "tray-api/search-tray/"
 // const shelfsearch = base + "shelf-api/search-shelf/"
 const shelfsearchall = base + "shelf-api/search-all-shelf/"
-const titlesearch = base + "tray-api/search-title/"
-const oclcsearch = base + "tray-api/search-oclc/"
-const callnumbersearch = base + "tray-api/search-call/"
+// const titlesearch = base + "tray-api/search-title/"
+// const oclcsearch = base + "tray-api/search-oclc/"
+// const callnumbersearch = base + "tray-api/search-call/"
 const managetray = base + "/tray-api/search-tray-id/"
 // const managetrayupdate = base + "tray-api/tray-status-update/"
 const shelfmanagement = base + "shelf-api/search-shelf-id/"
@@ -87,25 +87,6 @@ class ContentSearch {
     return search
   }
 
-  ill = async (type, query) => {
-    let search = ''
-    switch(type){
-      case 'title':
-        search = await this.search(`${titlesearch}?query=${query}`)
-      break;
-      case 'oclc':
-        search = await this.search(`${oclcsearch}?query=${query}`)
-      break;
-      case 'callnumber':
-        search = await this.search(`${callnumbersearch}?query=${query}`)
-      break;
-      default:
-        search = await this.search(`${titlesearch}?query=${query}`)
-      break;
-    }
-    return search
-  }
-
   getHistory = async () => {
     const search = await this.search(`${history}?sort=-timestamp`)
     return search
@@ -155,28 +136,21 @@ class ContentSearch {
       case 201:
       case 304:
         return await response.json()
-      break;
       case 204:
         return {}
       case 400:
         return await this.catchError('Bad Request', response.statusText)
-      break;
       case 401:
       case 403:
         return await this.catchError('Authentication failed', response.statusText)
-      break;
       case 404:
         return await this.catchError("Doesn't exist", response.statusText)
-      break;
       case 405:
         return await this.catchError('Method not allowed', response.statusText)
-      break;
       case 422:
         return await this.catchError('Data validation failed', response.statusText)
-      break;
       case 500:
         return await this.catchError('Internal server error', response.statusText)
-      break;
       default:
         return await this.catchError('There was an error. Check your internet connection', '')
     }

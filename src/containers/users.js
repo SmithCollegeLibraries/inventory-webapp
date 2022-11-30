@@ -17,8 +17,8 @@ import classnames from 'classnames';
 
 function ManageUsers() {
   const [users, setUsers] = useState([]);
-  const [level, setLevel] = useState(0);
-  const [password, setPassword] = useState("");
+  const [, setLevel] = useState(0);
+  const [, setPassword] = useState("");
   const [activeTab, setActiveTab ] = useState("user_update");
 
   useEffect(() => {
