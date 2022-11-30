@@ -520,8 +520,8 @@ const Display = props => (
                 {props.data[tray].barcode}
               </dd>
               <dt className="col-sm-3">Items</dt>
-                <dd className="col-sm-9">
-                  {props.data[tray].items}
+                <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+                  {props.data[tray].items.join('\n')}
                 </dd>
               <dt className="col-sm-3">Collection</dt>
               <dd className="col-sm-9">
