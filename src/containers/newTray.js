@@ -13,93 +13,90 @@ const BARCODE_LENGTH = 15;
 const TRAY_BARCODE_LENGTH = 8;
 
 
-
-const initialState = {
-  original: {
-    collection: '',
-    tray: '',
-    barcodes: []
-  },
-  verify: {
-    tray: '',
-    barcodes: []
-  },
-  // List of trays that have been verified and staged
-  verified: [],
-  // Lists barcodes already checked on FOLIO, so we don't have to spam the server with API calls
-  checkedOnFolio: [],
-  // The current form (original or verify)
-  form: 'original',
-  trayValid: false,
-  trayLength: TRAY_BARCODE_LENGTH,
-  timeout: 0,
-  email: '',
-  locked: false
-};
-
-
-const trayReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_ORIGINAL':
-      return {
-        ...state,
-        original: action.original
-      };
-    case 'CHECKED_ON_FOLIO':
-      return {
-        ...state,
-        checkedOnFolio: action.checkedOnFolio
-      };
-    case 'ADD_VERIFY':
-      return {
-        ...state,
-        verify: action.verify
-      };
-    case 'UPDATE_VERIFIED':
-      return {
-        ...state,
-        verified: action.verified
-      };
-    case 'LOCAL_VERIFIED':
-      return {
-        ...state,
-        verified: action.verified
-      };
-    case 'CHANGE_FORM':
-      return {
-        ...state,
-        form: action.form
-      };
-    case 'UPDATE_TRAY_LENGTH':
-      return {
-        ...state,
-        trayLength: action.trayLength
-      };
-    case 'RESET':
-      return {
-        ...state,
-        form: "original",
-        original: {
-          collection: state.locked === true ? state.original.collection : '',
-          tray: '',
-          barcodes: []
-        },
-        verify: {
-          tray: '',
-          barcodes: []
-        }
-      };
-    case 'LOCK_COLLECTION':
-      return {
-        ...state,
-        locked: !state.locked
-      };
-    default:
-      return state;
-  }
-};
-
 const NewTray = (props) => {
+  const initialState = {
+    original: {
+      collection: '',
+      tray: '',
+      barcodes: []
+    },
+    verify: {
+      tray: '',
+      barcodes: []
+    },
+    // List of trays that have been verified and staged
+    verified: [],
+    // Lists barcodes already checked on FOLIO, so we don't have to spam the server with API calls
+    checkedOnFolio: [],
+    // The current form (original or verify)
+    form: 'original',
+    trayValid: false,
+    trayLength: TRAY_BARCODE_LENGTH,
+    timeout: 0,
+    email: '',
+    locked: false
+  };
+
+  const trayReducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD_ORIGINAL':
+        return {
+          ...state,
+          original: action.original
+        };
+      case 'CHECKED_ON_FOLIO':
+        return {
+          ...state,
+          checkedOnFolio: action.checkedOnFolio
+        };
+      case 'ADD_VERIFY':
+        return {
+          ...state,
+          verify: action.verify
+        };
+      case 'UPDATE_VERIFIED':
+        return {
+          ...state,
+          verified: action.verified
+        };
+      case 'LOCAL_VERIFIED':
+        return {
+          ...state,
+          verified: action.verified
+        };
+      case 'CHANGE_FORM':
+        return {
+          ...state,
+          form: action.form
+        };
+      case 'UPDATE_TRAY_LENGTH':
+        return {
+          ...state,
+          trayLength: action.trayLength
+        };
+      case 'RESET':
+        return {
+          ...state,
+          form: "original",
+          original: {
+            collection: state.locked === true ? state.original.collection : '',
+            tray: '',
+            barcodes: []
+          },
+          verify: {
+            tray: '',
+            barcodes: []
+          }
+        };
+      case 'LOCK_COLLECTION':
+        return {
+          ...state,
+          locked: !state.locked
+        };
+      default:
+        return state;
+    }
+  };
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 

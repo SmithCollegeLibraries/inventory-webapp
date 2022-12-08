@@ -5,59 +5,61 @@ import Alerts from '../components/alerts'
 import { Button, Form, FormGroup, Label, Input, Card, CardBody, Row } from 'reactstrap'
 import localforage from 'localforage'
 
-const initialState = {
-    form: {
-        shelf_depth: '',
-        tray: '',
-        shelf: '',
-        shelf_position: 0
-    },
-    shelfData: [],
-    shelfBarcodeLength: 0,
-    shelfPositions: 40,
-    suggestions: [],
-    value: '',
-    trayLength: 8
-}
 
-const shelfReducer = (state, action) => {
-    switch (action.type){
-        case 'UPDATE_FORM':
-        return{
-            ...state,
-            form: action.form
-        }
-        case 'UPDATE_SHELFDATA':
+function Shelf(props) {
+
+    const initialState = {
+        form: {
+            shelf_depth: '',
+            tray: '',
+            shelf: '',
+            shelf_position: 0
+        },
+        shelfData: [],
+        shelfBarcodeLength: 0,
+        shelfPositions: 40,
+        suggestions: [],
+        value: '',
+        trayLength: 8
+    }
+
+    const shelfReducer = (state, action) => {
+        switch (action.type){
+            case 'UPDATE_FORM':
             return{
                 ...state,
-                shelfData: action.shelfData
+                form: action.form
             }
-        case 'LOCAL':
-            return {
-                ...state,
-                shelfData: action.local
-            }
-            case 'UPDATE_TRAY_LENGTH':
-                return {
-                    ...state, trayLength: action.trayLength
+            case 'UPDATE_SHELFDATA':
+                return{
+                    ...state,
+                    shelfData: action.shelfData
                 }
-        case 'RESET':
-            return {
-                ...state,
-                form: {
-                    shelf_depth: '',
-                    tray: '',
-                    shelf: '',
-                    shelf_position: 0
-                },
-                value: ''
-            }
-        default:
-            return state
+            case 'LOCAL':
+                return {
+                    ...state,
+                    shelfData: action.local
+                }
+                case 'UPDATE_TRAY_LENGTH':
+                    return {
+                        ...state, trayLength: action.trayLength
+                    }
+            case 'RESET':
+                return {
+                    ...state,
+                    form: {
+                        shelf_depth: '',
+                        tray: '',
+                        shelf: '',
+                        shelf_position: 0
+                    },
+                    value: ''
+                }
+            default:
+                return state
+        }
     }
-}
 
-function Shelf(props){
     const [data, dispatch] = useReducer(shelfReducer, initialState)
 
     //On page load, Grabs the items in storage

@@ -4,34 +4,33 @@ import { success, failure } from '../components/toastAlerts';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
 
-const initialState = {
-  trays: [],
-  tray: ''
-};
-
-const trayReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_TRAYS':
-      return {
-        ...state,
-        trays: action.trays
-      };
-    case 'UPDATE_TRAY_FORM':
-      return {
-        ...state,
-        tray: action.trays
-      };
-    case 'UPDATE_TRAYS':
-      return {
-        ...state,
-        trays: action.trays
-      };
-    default:
-      return state;
-  }
-};
-
 function ManageTrays(props) {
+  const initialState = {
+    trays: [],
+    tray: ''
+  };
+
+  const trayReducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD_TRAYS':
+        return {
+          ...state,
+          trays: action.trays
+        };
+      case 'UPDATE_TRAY_FORM':
+        return {
+          ...state,
+          tray: action.trays
+        };
+      case 'UPDATE_TRAYS':
+        return {
+          ...state,
+          trays: action.trays
+        };
+      default:
+        return state;
+    }
+  };
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 

@@ -4,34 +4,36 @@ import { success, failure } from '../components/toastAlerts';
 import ContentSearch from '../util/search';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
-const initialState = {
-  collections: [],
-  collection: ''
-};
-
-const collectionReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_COLLECTIONS':
-      return {
-        ...state,
-        collections: action.collections
-      };
-    case 'UPDATE_COLLECTION_FORM':
-      return {
-        ...state,
-        collection: action.collections
-      };
-    case 'UPDATE_COLLECTIONS':
-      return {
-        ...state,
-        collections: action.collections
-      };
-    default:
-      return state;
-  }
-};
 
 function ManageCollections(props) {
+
+  const initialState = {
+    collections: [],
+    collection: ''
+  };
+
+  const collectionReducer = (state, action) => {
+    switch (action.type) {
+      case 'ADD_COLLECTIONS':
+        return {
+          ...state,
+          collections: action.collections
+        };
+      case 'UPDATE_COLLECTION_FORM':
+        return {
+          ...state,
+          collection: action.collections
+        };
+      case 'UPDATE_COLLECTIONS':
+        return {
+          ...state,
+          collections: action.collections
+        };
+      default:
+        return state;
+    }
+  };
+
   const [data, dispatch] = useReducer(collectionReducer, initialState);
 
   useEffect(() => {

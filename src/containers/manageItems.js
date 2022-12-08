@@ -25,6 +25,7 @@ const itemReducer = (state, action) => {
 };
 
 function ManageItems(props) {
+
   const initialState = {
     items: [],
     item: ''

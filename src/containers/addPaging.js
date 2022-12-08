@@ -15,89 +15,91 @@ import { success, warning } from '../components/toastAlerts'
 
 const FoldableTable = FoldableTableHOC(ReactTable);
 
-const initialState = {
-  unsortedList: [],
-  add: [],
-  pick: [],
-  checked: [],
-  count: 0,
-  loading: false,
-  searchObject: [],
-  additionalBarcodes: [],
-  liftHeight: 0,
-  sorted: [],
-  initial: true
-};
-
-const addPagingReducer = (state, action) => {
-  switch (action.type) {
-    case 'UPDATE_LIFTHEIGHT':
-      return {
-          ...state,
-          liftHeight: action.liftHeight
-      };
-    case 'LOCAL_DATA':
-      return {
-          ...state,
-          add: action.unsortedList.concat(state.add),
-          count: action.count,
-      };
-    case 'UPDATE_LOADING':
-      return {
-        ...state,
-        loading: action.loading
-      };
-    case 'UPDATE_UNSORTED':
-      return {
-        ...state,
-        unsortedList: action.unsortedList.concat(state.unsortedList),
-        count: action.count,
-        initial: false
-      };
-    case 'UPDATE_DATA':
-      return {
-        ...state,
-        add: action.add,
-        count: action.count,
-        initial: false
-      };
-    case 'RESET_ADD':
-      return {
-        ...state,
-        add: [],
-        initial: false
-      };
-    case 'UPDATE_PICK':
-      return {
-        ...state,
-        pick: action.pick.concat(state.pick)
-      };
-    case 'FILTER_PICK':
-      return {
-        ...state,
-        pick: action.pick
-      };
-    case 'UPDATE_CHECKED':
-      return {
-        ...state,
-        checked: action.checked
-      };
-    case 'UPDATE_SEARCHOBJECT':
-      return {
-        ...state,
-        searchObject: action.searchObject
-      };
-    case 'UPDATE_SORTED':
-      return {
-        ...state,
-        sorted: action.sorted
-      };
-    default:
-      return state;
-    }
-  };
 
 function AddPaging(props) {
+
+  const initialState = {
+    unsortedList: [],
+    add: [],
+    pick: [],
+    checked: [],
+    count: 0,
+    loading: false,
+    searchObject: [],
+    additionalBarcodes: [],
+    liftHeight: 0,
+    sorted: [],
+    initial: true
+  };
+
+  const addPagingReducer = (state, action) => {
+    switch (action.type) {
+      case 'UPDATE_LIFTHEIGHT':
+        return {
+            ...state,
+            liftHeight: action.liftHeight
+        };
+      case 'LOCAL_DATA':
+        return {
+            ...state,
+            add: action.unsortedList.concat(state.add),
+            count: action.count,
+        };
+      case 'UPDATE_LOADING':
+        return {
+          ...state,
+          loading: action.loading
+        };
+      case 'UPDATE_UNSORTED':
+        return {
+          ...state,
+          unsortedList: action.unsortedList.concat(state.unsortedList),
+          count: action.count,
+          initial: false
+        };
+      case 'UPDATE_DATA':
+        return {
+          ...state,
+          add: action.add,
+          count: action.count,
+          initial: false
+        };
+      case 'RESET_ADD':
+        return {
+          ...state,
+          add: [],
+          initial: false
+        };
+      case 'UPDATE_PICK':
+        return {
+          ...state,
+          pick: action.pick.concat(state.pick)
+        };
+      case 'FILTER_PICK':
+        return {
+          ...state,
+          pick: action.pick
+        };
+      case 'UPDATE_CHECKED':
+        return {
+          ...state,
+          checked: action.checked
+        };
+      case 'UPDATE_SEARCHOBJECT':
+        return {
+          ...state,
+          searchObject: action.searchObject
+        };
+      case 'UPDATE_SORTED':
+        return {
+          ...state,
+          sorted: action.sorted
+        };
+      default:
+        return state;
+      }
+    };
+
     const [data, dispatch] = useReducer(addPagingReducer, initialState);
 
     // console.log(data);

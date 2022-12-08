@@ -13,64 +13,65 @@ import ReactTable from 'react-table'
 import { Link } from 'react-router-dom'
 import 'react-table/react-table.css'
 
-const initialState = {
-    results: [],
-    loading: false,
-    count: 0,
-    defaultSortDesc: true,
-    sorted: [],
-    pickBackup: []
-}
-
-const pagingReducer = (state, action) => {
-    switch(action.type){
-        case 'LOCAL':
-            return {
-                ...state,
-                results: action.results,
-                count: action.results.length
-            }
-        case 'RESET':
-            return{
-                ...state,
-                results: [],
-                count: 0
-            }
-        case 'RESET_SORT':
-            return{
-                ...state,
-                sort: []
-            }
-        case 'UPDATE_DATA':
-            return{
-                ...state,
-                results: action.results
-            }
-        case 'UPDATE_COUNT':
-            return{
-                ...state,
-                count: action.count
-            }
-        case 'UPDATE_SORT':
-            return{
-                ...state,
-                sorted: action.sorted
-            }
-        case 'UPDATE_ALL':
-            return{
-                ...state,
-                results: action.results,
-                loading: action.loading,
-                count: action.count,
-                pickBackup: action.pickBackup
-            }
-        default:
-        return state
-    }
-}
-
 
 function PagingDisplay(props){
+
+    const initialState = {
+        results: [],
+        loading: false,
+        count: 0,
+        defaultSortDesc: true,
+        sorted: [],
+        pickBackup: []
+    }
+
+    const pagingReducer = (state, action) => {
+        switch(action.type){
+            case 'LOCAL':
+                return {
+                    ...state,
+                    results: action.results,
+                    count: action.results.length
+                }
+            case 'RESET':
+                return{
+                    ...state,
+                    results: [],
+                    count: 0
+                }
+            case 'RESET_SORT':
+                return{
+                    ...state,
+                    sort: []
+                }
+            case 'UPDATE_DATA':
+                return{
+                    ...state,
+                    results: action.results
+                }
+            case 'UPDATE_COUNT':
+                return{
+                    ...state,
+                    count: action.count
+                }
+            case 'UPDATE_SORT':
+                return{
+                    ...state,
+                    sorted: action.sorted
+                }
+            case 'UPDATE_ALL':
+                return{
+                    ...state,
+                    results: action.results,
+                    loading: action.loading,
+                    count: action.count,
+                    pickBackup: action.pickBackup
+                }
+            default:
+            return state
+        }
+    }
+
     const [data, dispatch] = useReducer(pagingReducer, initialState)
 
     useEffect(() => {
