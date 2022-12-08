@@ -40,7 +40,7 @@ export default class Header extends Component {
     return (
       <div>
         <Navbar color="dark" dark expand="md">
-          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.0.4)</NavbarBrand>
+          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.0.5)</NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>

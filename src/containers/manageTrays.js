@@ -7,32 +7,6 @@ import AutoSuggest from 'react-autosuggest'
 import classnames from 'classnames';
 import { success, failure, warning } from '../components/toastAlerts'
 
-const initialState = {
-   display: 'entire_tray',
-   tray: '',
-   rawData: [],
-   fields: {
-       trayBarcode: '',
-       newTrayBarcode: '',
-       trayStream: '',
-       shelf: '',
-       shelf_number: 0,
-       shelf_position: 0,
-       shelf_depth: '',
-       barcodes: []
-   },
-   newTray: {
-        trayBarcode: '',
-        trayStream: '',
-        barcodes: []
-   },
-   trayTransferForm: false,
-   suggestions: [],
-   value: '',
-   barcodesToDelete: [],
-   loading: false
-}
-
 const reducer = (state, action) => {
     switch(action.type){
         case 'CHANGE_DISPLAY':
@@ -145,6 +119,32 @@ const reducer = (state, action) => {
 }
 
 function ManageTrays(props){
+    const initialState = {
+        display: 'entire_tray',
+        tray: '',
+        rawData: [],
+        fields: {
+            trayBarcode: '',
+            newTrayBarcode: '',
+            trayStream: '',
+            shelf: '',
+            shelf_number: 0,
+            shelf_position: 0,
+            shelf_depth: '',
+            barcodes: []
+        },
+        newTray: {
+             trayBarcode: '',
+             trayStream: '',
+             barcodes: []
+        },
+        trayTransferForm: false,
+        suggestions: [],
+        value: '',
+        barcodesToDelete: [],
+        loading: false
+    }
+
     const [ state, dispatch ] = useReducer(reducer, initialState)
     const [activeTab, setActiveTab ] = useState('entire_tray')
     const theme = {

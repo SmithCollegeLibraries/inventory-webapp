@@ -13,16 +13,6 @@ import ReactTable from 'react-table'
 import { Link } from 'react-router-dom'
 import 'react-table/react-table.css'
 
-//New Section
-
-const initialState = {
-    results: [],
-    loading: false,
-    count: 0,
-    defaultSortDesc: true,
-    sorted: [],
-    pickBackup: []
-}
 
 const pagingReducer = (state, action) => {
     switch(action.type){
@@ -73,6 +63,16 @@ const pagingReducer = (state, action) => {
 
 
 function PagingDisplay(props){
+
+    const initialState = {
+        results: [],
+        loading: false,
+        count: 0,
+        defaultSortDesc: true,
+        sorted: [],
+        pickBackup: []
+    }
+
     const [data, dispatch] = useReducer(pagingReducer, initialState)
 
     useEffect(() => {
