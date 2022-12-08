@@ -8,7 +8,8 @@ import NewTray from './newTray';
 // import Search from './search';
 import ManageCollections from './manageCollections';
 // import ManageShelves from './manageShelves';
-// import ManageTrays from './manageTrays';
+import ManageItems from './manageItems';
+import ManageTrays from './manageTrays';
 import ManageUsers from './users';
 
 export {
@@ -22,7 +23,8 @@ export {
   // Reports,
   // Return,
   // Search,
-  // ManageTrays,
-  // ManageShelves
+  ManageTrays,
+  ManageItems,
+  // ManageShelves,
   ManageUsers,
 };

@@ -12,7 +12,8 @@ import {
     // History,
     // Search,
     ManageCollections,
-    // ManageTrays,
+    ManageTrays,
+    ManageItems,  // delete later
     // ManageShelves,
     ManageUsers
   } from './containers';
@@ -44,6 +45,8 @@ export default class Main extends Component {
   componentDidMount = async () => {
     if (sessionStorage.getItem('account') || this.state.loggedIn === true ) {
       this.collections();
+      this.items();  // todo: delete later
+      this.trays();  // todo: delete later
       // this.settings();
     }
   };
@@ -57,6 +60,17 @@ export default class Main extends Component {
     const search = await ContentSearch.collections();
     this.setState({ collections: search });
   };
+
+  items = async () => {
+    const search = await Load.viewAllItems();
+    this.setState({ items: search });
+  };
+
+  trays = async () => {
+    const search = await Load.viewAllTrays();
+    this.setState({ trays: search });
+  };
+
 
   // settings = async () => {
   //   let settings = await this.localStorage('settings');
@@ -97,6 +111,8 @@ export default class Main extends Component {
       }, () => {
         sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
         this.collections();
+        this.trays();  // delete later
+        this.items();  // delete later
       })
     } else {
       failure('There was a problem logging in.');
@@ -133,15 +149,21 @@ export default class Main extends Component {
                     // settings={settings}
                   />
                 )}/>
-                {/* <Route path="/shelf" render={() => (
+                <Route path="/manage-trays" render={() => (
+                  <ManageTrays
+                    trays={this.state.trays}
+                  />
+                )}/>
+                <Route path="/manage-items" render={() => (
+                  <ManageItems
+                    items={this.state.items}
+                  />
+                )}/>
+                {/*
+                <Route path="/shelf" render={() => (
                   <Shelf
                     collections={this.state.collections}
                     settings={settings}
-                  />
-                )}/>
-                <Route path="/manage-trays" render={() => (
-                  <ManageTrays
-                    collections={this.state.collections}
                   />
                 )}/>
                 <Route path="/manage-shelves" render={() => (

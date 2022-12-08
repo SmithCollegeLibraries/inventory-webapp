@@ -40,7 +40,7 @@ export default class Header extends Component {
     return (
       <div>
         <Navbar color="dark" dark expand="md">
-          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.0.5)</NavbarBrand>
+          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.0.6)</NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
@@ -84,11 +84,14 @@ export default class Header extends Component {
                     <DropdownItem>
                       <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-collections">Collections</NavLink>
                     </DropdownItem>
-                    {/* <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/tray-management">Tray</NavLink>
+                    <DropdownItem>
+                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-trays">Trays</NavLink>
                     </DropdownItem>
                     <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/shelf-management">Shelf</NavLink>
+                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-items">Items</NavLink>
+                    </DropdownItem>
+                    {/* <DropdownItem>
+                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-shelves">Shelf</NavLink>
                     </DropdownItem> */}
                   {level >= 100 ?
                     <DropdownItem>

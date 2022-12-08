@@ -101,6 +101,32 @@ class Load {
     * @desc Tray management
   */
 
+  newTray = async (data) => {
+    return await this.handleUpdate(newtray, 'POST', data);
+  }
+
+  deleteTrays = async (data, id) => {
+    const historyItems = {
+      action: 'deleted tray',
+      item: data.boxbarcode,
+      status_change: 'deleted',
+      timestamp: getFormattedDate()
+    };
+    this.handleUpdate(`${history}create/`, 'POST', historyItems);
+    const update = await this.handleUpdate(`${managetrayupdate}delete/${id}`, 'DELETE', data);
+    return update;
+  }
+
+  viewAllTrays = async (data) => {
+    const view = await this.handleUpdate(`${trayAPI}view-all-trays/`, 'GET', data);
+    return view;
+  }
+
+  viewAllItems = async (data) => {
+    const view = await this.handleUpdate(`${itemAPI}view-all-items/`, 'GET', data);
+    return view;
+  }
+
   // transfer = async (data) => {
   //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
   //   return transfer
@@ -182,22 +208,6 @@ class Load {
   deleteShelf = async (data) => {
     const deleteShelf = await this.handleUpdate(`${shelfAPI}delete-individual-items`, 'POST', data)
     return deleteShelf
-  }
-
-  newTray = async (data) => {
-    return await this.handleUpdate(newtray, 'POST', data)
-  }
-
-  deleteTrays = async (data, id) => {
-    const historyItems = {
-      action: 'deleted tray',
-      item: data.boxbarcode,
-      status_change: 'deleted',
-      timestamp: getFormattedDate()
-    }
-    this.handleUpdate(`${history}create/`, 'POST', historyItems)
-    const update = await this.handleUpdate(`${managetrayupdate}delete/${id}`, 'DELETE', data)
-    return update
   }
 
   processBarcodes = async (data) => {

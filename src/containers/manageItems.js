@@ -3,99 +3,99 @@ import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
-const trayReducer = (state, action) => {
+const itemReducer = (state, action) => {
   switch (action.type) {
-    case 'ADD_TRAYS':
+    case 'ADD_ITEMS':
       return {
         ...state,
-        trays: action.trays
+        items: action.items
       };
-    case 'UPDATE_TRAY_FORM':
+    case 'UPDATE_ITEM_FORM':
       return {
         ...state,
-        tray: action.trays
+        item: action.items
       };
-    case 'UPDATE_TRAYS':
+    case 'UPDATE_ITEMS':
       return {
         ...state,
-        trays: action.trays
+        items: action.items
       };
     default:
       return state;
   }
 };
 
-function ManageTrays(props) {
+function ManageItems(props) {
   const initialState = {
-    trays: [],
-    tray: ''
+    items: [],
+    item: ''
   };
 
-  const [data, dispatch] = useReducer(trayReducer, initialState);
+  const [data, dispatch] = useReducer(itemReducer, initialState);
 
   useEffect(() => {
-    trays()
+    items()
   }, []);
 
-  const trays = async () => {
-    const trays = await Load.viewAllTrays();
-    dispatch({ type: "ADD_TRAYS", trays: trays});
+  const items = async () => {
+    const items = await Load.viewAllItems();
+    dispatch({ type: "ADD_ITEMS", items: items});
   };
 
   const handleFormChange = (e) => {
-    dispatch({ type: "UPDATE_TRAY_FORM", trays: e.target.value});
+    dispatch({ type: "UPDATE_ITEM_FORM", items: e.target.value});
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     const createData = {
-      'barcode' : data.tray
+      'barcode' : data.item
     };
-    const results = await Load.createNewTray(createData);
+    const results = await Load.createNewItem(createData);
     if (results) {
-      success("New tray successfully created");
-      dispatch({ type: "UPDATE_TRAY_FORM", trays: ""});
-      trays();
-      props.newTrays();
+      success("New item successfully created");
+      dispatch({ type: "UPDATE_ITEM_FORM", items: ""});
+      items();
+      props.newItems();
     } else {
-      failure("Unable to create tray");
+      failure("Unable to create item");
     }
   };
 
   const handleUpdateFormChange = (e, key) => {
-    const tray = data.trays;
-    tray[key]["barcode"] = e.target.value;
-    dispatch({ type: "UPDATE_TRAYS", trays: tray});
+    const item = data.items;
+    item[key]["barcode"] = e.target.value;
+    dispatch({ type: "UPDATE_ITEMS", items: item});
   };
 
   const handleUpdateSubmit = async(e, key) => {
-    const update = await Load.updateTray(data.trays[key]);
+    const update = await Load.updateItem(data.items[key]);
     if (update) {
-      success('Trays updated');
+      success('Items updated');
     } else {
-      failure("There was a problem updating this tray");
+      failure("There was a problem updating this item");
     }
-    trays();
-    props.newTrays();
+    items();
+    props.newItems();
   };
 
   const handleDeleteSubmit = async(e, data) => {
     e.preventDefault();
-    const hasItems = await Load.trayHasItems(data);
+    const hasItems = await Load.itemHasItems(data);
     if (hasItems) {
-      failure("This tray cannot be deleted because it has items tied to it");
+      failure("This item cannot be deleted because it has items tied to it");
     } else {
-      if (window.confirm("Delete this tray? This action can only be undone by the database administrator.")) {
-        const set = await Load.deleteTray({id: data.id});
+      if (window.confirm("Delete this item? This action can only be undone by the database administrator.")) {
+        const set = await Load.deleteItem({id: data.id});
         if (set) {
-          success('Tray removed');
+          success('Item removed');
         } else {
-          failure('Tray could not be removed');
+          failure('Item could not be removed');
         }
       }
     }
-    trays();
-    props.newTrays();
+    items();
+    props.newItems();
   };
 
   return (
@@ -104,15 +104,15 @@ function ManageTrays(props) {
         <DisplayForm
           handleFormChange={handleFormChange}
           handleFormSubmit={handleFormSubmit}
-          tray={data.tray}
+          item={data.item}
         />
       </div>
       <Card>
         <CardBody>
-          {Object.keys(data.trays).map((items, idx) => {
+          {Object.keys(data.items).map((items, idx) => {
             return (
               <Display
-                data={data.trays[items]}
+                data={data.items[items]}
                 index={idx}
                 key={idx}
                 handleUpdateSubmit={handleUpdateSubmit}
@@ -128,13 +128,13 @@ function ManageTrays(props) {
 
 }
 
-export default ManageTrays;
+export default ManageItems;
 
-const DisplayForm = ({ handleFormChange, handleFormSubmit, tray }) => (
+const DisplayForm = ({ handleFormChange, handleFormSubmit, item }) => (
   <Form onSubmit={(e) => handleFormSubmit(e)}>
     <Row>
       <Col md="8">
-        <Input type="text" value={tray} onChange={(e) => handleFormChange(e)} name="tray" placeholder="Add a new tray..." />
+        <Input type="text" value={item} onChange={(e) => handleFormChange(e)} name="item" placeholder="Add a new item..." />
       </Col>
       <Col md="2">
         <Button color="primary">Submit</Button>
