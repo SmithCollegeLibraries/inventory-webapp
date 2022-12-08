@@ -3,6 +3,12 @@ import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
+
+const initialState = {
+  trays: [],
+  tray: ''
+};
+
 const trayReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_TRAYS':
@@ -26,10 +32,6 @@ const trayReducer = (state, action) => {
 };
 
 function ManageTrays(props) {
-  const initialState = {
-    trays: [],
-    tray: ''
-  };
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
@@ -132,14 +134,14 @@ export default ManageTrays;
 
 const DisplayForm = ({ handleFormChange, handleFormSubmit, tray }) => (
   <Form onSubmit={(e) => handleFormSubmit(e)}>
-    <Row>
+    {/* <Row>
       <Col md="8">
         <Input type="text" value={tray} onChange={(e) => handleFormChange(e)} name="tray" placeholder="Add a new tray..." />
       </Col>
       <Col md="2">
         <Button color="primary">Submit</Button>
       </Col>
-    </Row>
+    </Row> */}
   </Form>
 );
 

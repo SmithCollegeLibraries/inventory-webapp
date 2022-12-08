@@ -5,6 +5,21 @@ import Alerts from '../components/alerts'
 import { Button, Form, FormGroup, Label, Input, Card, CardBody, Row } from 'reactstrap'
 import localforage from 'localforage'
 
+const initialState = {
+    form: {
+        shelf_depth: '',
+        tray: '',
+        shelf: '',
+        shelf_position: 0
+    },
+    shelfData: [],
+    shelfBarcodeLength: 0,
+    shelfPositions: 40,
+    suggestions: [],
+    value: '',
+    trayLength: 8
+}
+
 const shelfReducer = (state, action) => {
     switch (action.type){
         case 'UPDATE_FORM':
@@ -43,21 +58,6 @@ const shelfReducer = (state, action) => {
 }
 
 function Shelf(props){
-    const initialState = {
-        form: {
-            shelf_depth: '',
-            tray: '',
-            shelf: '',
-            shelf_position: 0
-        },
-        shelfData: [],
-        shelfBarcodeLength: 0,
-        shelfPositions: 40,
-        suggestions: [],
-        value: '',
-        trayLength: 8
-    }
-
     const [data, dispatch] = useReducer(shelfReducer, initialState)
 
     //On page load, Grabs the items in storage

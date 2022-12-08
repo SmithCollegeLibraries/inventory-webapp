@@ -4,6 +4,11 @@ import { success, failure } from '../components/toastAlerts';
 import ContentSearch from '../util/search';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
+const initialState = {
+  collections: [],
+  collection: ''
+};
+
 const collectionReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_COLLECTIONS':
@@ -27,11 +32,6 @@ const collectionReducer = (state, action) => {
 };
 
 function ManageCollections(props) {
-  const initialState = {
-    collections: [],
-    collection: ''
-  };
-
   const [data, dispatch] = useReducer(collectionReducer, initialState);
 
   useEffect(() => {

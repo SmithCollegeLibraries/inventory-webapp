@@ -13,6 +13,31 @@ const BARCODE_LENGTH = 15;
 const TRAY_BARCODE_LENGTH = 8;
 
 
+
+const initialState = {
+  original: {
+    collection: '',
+    tray: '',
+    barcodes: []
+  },
+  verify: {
+    tray: '',
+    barcodes: []
+  },
+  // List of trays that have been verified and staged
+  verified: [],
+  // Lists barcodes already checked on FOLIO, so we don't have to spam the server with API calls
+  checkedOnFolio: [],
+  // The current form (original or verify)
+  form: 'original',
+  trayValid: false,
+  trayLength: TRAY_BARCODE_LENGTH,
+  timeout: 0,
+  email: '',
+  locked: false
+};
+
+
 const trayReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ORIGINAL':
@@ -75,28 +100,6 @@ const trayReducer = (state, action) => {
 };
 
 const NewTray = (props) => {
-  const initialState = {
-    original: {
-      collection: '',
-      tray: '',
-      barcodes: []
-    },
-    verify: {
-      tray: '',
-      barcodes: []
-    },
-    // List of trays that have been verified and staged
-    verified: [],
-    // Lists barcodes already checked on FOLIO, so we don't have to spam the server with API calls
-    checkedOnFolio: [],
-    // The current form (original or verify)
-    form: 'original',
-    trayValid: false,
-    trayLength: TRAY_BARCODE_LENGTH,
-    timeout: 0,
-    email: '',
-    locked: false
-  };
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 

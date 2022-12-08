@@ -15,6 +15,20 @@ import { success, warning } from '../components/toastAlerts'
 
 const FoldableTable = FoldableTableHOC(ReactTable);
 
+const initialState = {
+  unsortedList: [],
+  add: [],
+  pick: [],
+  checked: [],
+  count: 0,
+  loading: false,
+  searchObject: [],
+  additionalBarcodes: [],
+  liftHeight: 0,
+  sorted: [],
+  initial: true
+};
+
 const addPagingReducer = (state, action) => {
   switch (action.type) {
     case 'UPDATE_LIFTHEIGHT':
@@ -84,20 +98,6 @@ const addPagingReducer = (state, action) => {
   };
 
 function AddPaging(props) {
-    const initialState = {
-      unsortedList: [],
-      add: [],
-      pick: [],
-      checked: [],
-      count: 0,
-      loading: false,
-      searchObject: [],
-      additionalBarcodes: [],
-      liftHeight: 0,
-      sorted: [],
-      initial: true
-    };
-
     const [data, dispatch] = useReducer(addPagingReducer, initialState);
 
     // console.log(data);
