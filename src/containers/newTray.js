@@ -217,7 +217,7 @@ const NewTray = (props) => {
       // Show error if duplicate barcode exists within the same input field
       if ((new Set(barcodesToVerify)).size !== barcodesToVerify.length) {
         // TODO: Show which barcode is duplicated
-        failure("Duplicate barcode detected");
+        failure("Please double-check that you do not have duplicate barcodes or blank lines");
       }
       for (const barcode of barcodesToVerify) {
         if (barcode !== '') {
