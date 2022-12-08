@@ -177,8 +177,12 @@ const NewTray = (props) => {
     const results = await Load.itemSearch(payload);
     if (results && results[0] && results[0]["id"]) {
       results.map(item => {
-        // TODO: Give more details on which tray and collection the item is in
-        failure(`Item ${item["barcode"]} is already trayed`);
+        if (item["tray"]) {
+          failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}`);
+        }
+        else {
+          failure(`Item ${item["barcode"]} is already in the system (untrayed)`);
+        }
         return false;
       });
     } else {
@@ -254,7 +258,6 @@ const NewTray = (props) => {
 
   const handleOriginalSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Automatically add newline to the end of this form if necessary
     const trayPassedInspection = await inspectTray();
     const barcodesPassedInspection = await inspectBarcodes();
     if (inspectCollection() && trayPassedInspection && barcodesPassedInspection) {
