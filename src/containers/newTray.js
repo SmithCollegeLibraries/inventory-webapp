@@ -198,7 +198,7 @@ const NewTray = (props) => {
     // is changed.
     const verifyFolioRecord = async (barcodes) => {
       for (const barcode of barcodes) {
-        if (!data.checkedOnFolio.includes(barcode)) {
+        if (barcode.length > 0 && !data.checkedOnFolio.includes(barcode)) {
           const itemInFolio = await Load.itemInFolio(barcode);
           if (!itemInFolio) {
             warning(`Unable to locate FOLIO record for ${barcode}. Please verify record exists before submitting this barcode`);
