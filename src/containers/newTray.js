@@ -486,11 +486,32 @@ const TrayFormVerify = props => (
         : <Badge color="danger">{props.verify.tray.length}</Badge>
       }
       </Label>
-      <Input type="text" onKeyDown={props.handleEnter} name="tray" value={props.verify.tray} onChange={(e) => props.handleVerifyOnChange(e)} placeholder="Tray barcode" />
+      <Input
+        type="text"
+        name="tray"
+        placeholder="Tray barcode"
+        value={props.verify.tray}
+        onChange={(e) => props.handleVerifyOnChange(e)}
+        onPaste={(e)=>{
+          e.preventDefault()
+          return false;
+        }}
+        onKeyDown={props.handleEnter}
+      />
     </FormGroup>
     <FormGroup>
       <Label for="tray">Barcodes</Label>
-      <Input type="textarea" rows="10" value={props.verify.barcodes} onChange={(e) => props.handleVerifyOnChange(e)} name="barcodes" />
+      <Input
+        type="textarea"
+        rows="10"
+        name="barcodes"
+        value={props.verify.barcodes}
+        onChange={(e) => props.handleVerifyOnChange(e)}
+        onPaste={(e)=>{
+          e.preventDefault()
+          return false;
+        }}
+      />
     </FormGroup>
     <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Stage</Button>
     <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)}>Go back</Button>
@@ -520,11 +541,32 @@ const TrayFormOriginal = props => (
         : <Badge color="danger">{props.original.tray.length}</Badge>
       }
       </Label>
-        <Input type="text" name="tray" onKeyDown={props.handleEnter} value={props.original.tray} onChange={(e) => props.handleOriginalOnChange(e)}  placeholder="Tray barcode" />
+        <Input
+          type="text"
+          name="tray"
+          placeholder="Tray barcode"
+          value={props.original.tray}
+          onChange={(e) => props.handleOriginalOnChange(e)}
+          onPaste={(e)=>{
+            e.preventDefault()
+            return false;
+          }}
+          onKeyDown={props.handleEnter}
+        />
       </FormGroup>
       <FormGroup>
         <Label for="tray">Barcodes</Label>
-        <Input type="textarea" value={props.original.barcodes} rows="10" onChange={(e) => props.handleOriginalOnChange(e)} name="barcodes" />
+        <Input
+          type="textarea"
+          rows="10"
+          name="barcodes"
+          value={props.original.barcodes}
+          onChange={(e) => props.handleOriginalOnChange(e)}
+          onPaste={(e)=>{
+            e.preventDefault()
+            return false;
+          }}
+        />
       </FormGroup>
       { props.original.tray.length === props.trayLength && props.form === 'original'
         ? <Button style={{marginRight: '10px'}} onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Verify</Button>
