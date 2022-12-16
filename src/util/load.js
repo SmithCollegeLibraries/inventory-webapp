@@ -1,6 +1,6 @@
 import { base } from '../config/endpoints';
 import Alerts from '../components/alerts';
-import { getFormattedDate } from '../util/date';
+// import { getFormattedDate } from '../util/date';
 
 const account = `${base}user/`
 // const settings = `${base}settings/`
@@ -8,25 +8,6 @@ const trayAPI = `${base}tray-api/`
 const collectionAPI = `${base}collection-api/`
 const shelfAPI = `${base}shelf-api/`
 const itemAPI = `${base}item-api/`
-
-const newtray = base + "tray-api/new-tray/"
-const insertshelf = base + "shelf-api/shelf-insert/"
-// const searchaleph = base + "tray-api/search-barcode/"
-// const searchalephpost = base + "tray-api/search-barcode-post/"
-// const traysearch  = base + "tray-api/search-tray/"
-// const shelfsearch = base + "shelf-api/search-shelf/"
-// const shelfsearchall = base + "shelf-api/search-all-shelf/"
-// const titlesearch = base + "tray-api/search-title/"
-// const oclcsearch = base + "tray-api/search-oclc/"
-// const callnumbersearch = base + "tray-api/search-call/"
-// const managetray = base + "/tray-api/search-tray-id/"
-const managetrayupdate = base + "tray-api/tray-status-update/"
-// const shelfmanagement = base + "shelf-api/search-shelf-id/"
-// const shelfmanagementupdate = base + "shelf-api/"
-// const pagingslips = base + 'tray-api/paging-slips/'
-// const statistics = base + 'statistics/'
-const history = base + 'history/'
-// const inProcess = base + 'in-process/'
 
 
 class Load {
@@ -74,10 +55,28 @@ class Load {
     return insert;
   };
 
-  traySearch = async (data) => {
-    const search = await this.handleUpdate(`${trayAPI}search/`, 'POST', data);
-    return search;
+  getTray = async (data) => {
+    const tray = await this.handleUpdate(`${trayAPI}get-tray/`, 'POST', data);
+    return tray;
   };
+
+  updateTray = async (data, id) => {
+    const update = await this.handleUpdate(`${trayAPI}update-tray/`, 'POST', data);
+    return update;
+  }
+
+
+  // deleteTray = async (data, id) => {
+  //   const historyItems = {
+  //     action: 'deleted tray',
+  //     item: data.boxbarcode,
+  //     status_change: 'deleted',
+  //     timestamp: getFormattedDate()
+  //   };
+  //   this.handleUpdate(`${history}create/`, 'POST', historyItems);
+  //   const update = await this.handleUpdate(`${managetrayupdate}delete/${id}`, 'DELETE', data);
+  //   return update;
+  // }
 
   /**
     * @desc Item
@@ -98,43 +97,22 @@ class Load {
   };
 
   /**
-    * @desc Tray management
+    * @desc Tray management -- DEPRECATED SECTION
   */
 
-  newTray = async (data) => {
-    return await this.handleUpdate(newtray, 'POST', data);
-  }
+  // viewAllTrays = async (data) => {
+  //   const view = await this.handleUpdate(`${trayAPI}view-all-trays/`, 'GET', data);
+  //   return view;
+  // }
 
-  deleteTrays = async (data, id) => {
-    const historyItems = {
-      action: 'deleted tray',
-      item: data.boxbarcode,
-      status_change: 'deleted',
-      timestamp: getFormattedDate()
-    };
-    this.handleUpdate(`${history}create/`, 'POST', historyItems);
-    const update = await this.handleUpdate(`${managetrayupdate}delete/${id}`, 'DELETE', data);
-    return update;
-  }
-
-  viewAllTrays = async (data) => {
-    const view = await this.handleUpdate(`${trayAPI}view-all-trays/`, 'GET', data);
-    return view;
-  }
-
-  viewAllItems = async (data) => {
-    const view = await this.handleUpdate(`${itemAPI}view-all-items/`, 'GET', data);
-    return view;
-  }
+  // viewAllItems = async (data) => {
+  //   const view = await this.handleUpdate(`${itemAPI}view-all-items/`, 'GET', data);
+  //   return view;
+  // }
 
   // transfer = async (data) => {
   //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
   //   return transfer
-  // }
-
-  // updateEntireTrays = async (data, id) => {
-  //   const update = await this.handleUpdate(updateEntireTray, 'POST', data)
-  //   return update
   // }
 
   // deleteTrayAndItems = async (data) => {
@@ -195,10 +173,10 @@ class Load {
     return deleteCollection;
   }
 
-  getHistory = async (data, page='') => {
-    const search = await this.handleUpdate(`${history}filter-columns/${page ? `?page=${page}` : ''}`, 'POST', data)
-    return search
-  }
+  // getHistory = async (data, page='') => {
+  //   const search = await this.handleUpdate(`${history}filter-columns/${page ? `?page=${page}` : ''}`, 'POST', data)
+  //   return search
+  // }
 
   updateShelf = async (data, id) => {
     const update = await this.handleUpdate(`${shelfAPI}shelf-update`, 'POST', data)
@@ -210,15 +188,15 @@ class Load {
     return deleteShelf
   }
 
-  processBarcodes = async (data) => {
-    const update = await this.handleUpdate(`${managetrayupdate}`, 'POST', data)
-    return update
-  }
+  // processBarcodes = async (data) => {
+  //   const update = await this.handleUpdate(`${managetrayupdate}`, 'POST', data)
+  //   return update
+  // }
 
-  insertShelf = async (data) => {
-    const update = await this.handleUpdate(insertshelf, 'POST', data)
-    return update
-  }
+  // insertShelf = async (data) => {
+  //   const update = await this.handleUpdate(insertshelf, 'POST', data)
+  //   return update
+  // }
 
   handleAccount = async (string, method, data) => {
     try {

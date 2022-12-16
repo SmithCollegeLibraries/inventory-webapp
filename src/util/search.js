@@ -8,31 +8,17 @@ const collectionAPI = `${base}collection-api/`
 // const shelfAPI = `${base}shelf-api/`
 // const itemAPI = `${base}item-api/`
 
-// const newtray = base + "tray-api/new-tray/"
-// const insertshelf = base + "shelf-api/shelf-insert/"
-const searchaleph = base + "tray-api/search-barcode/"
-const searchalephpost = base + "tray-api/search-barcode-post/"
-const traysearch  = base + "tray-api/search-tray/"
-// const shelfsearch = base + "shelf-api/search-shelf/"
-const shelfsearchall = base + "shelf-api/search-all-shelf/"
-// const titlesearch = base + "tray-api/search-title/"
-// const oclcsearch = base + "tray-api/search-oclc/"
-// const callnumbersearch = base + "tray-api/search-call/"
-const managetray = base + "/tray-api/search-tray-id/"
-// const managetrayupdate = base + "tray-api/tray-status-update/"
-const shelfmanagement = base + "shelf-api/search-shelf-id/"
-// const shelfmanagementupdate = base + "shelf-api/"
-const pagingslips = base + 'tray-api/paging-slips/'
-const statistics = base + 'statistics/'
-const history = base + 'history/'
-// const inProcess = base + 'in-process/'
-
 
 class ContentSearch {
 
   collections = async () => {
-    let search = await this.search(`${collectionAPI}`)
-    return search
+    let search = await this.search(`${collectionAPI}`);
+    return search;
+  }
+
+  trays = async (searchTerm) => {
+    let search = await this.search(`${trayAPI}search/?query=${searchTerm}`);
+    return search;
   }
 
   // setting = async () => {
@@ -40,62 +26,62 @@ class ContentSearch {
   //   return search
   // }
 
-  autocomplete = async (value) => {
-    let search = await this.search(`${trayAPI}auto-complete-tray/?query=${value}`)
-    return search
-  }
+  // autocomplete = async (value) => {
+  //   let search = await this.search(`${trayAPI}auto-complete-tray/?query=${value}`)
+  //   return search
+  // }
 
-  traymanagement = async (value) => {
+  // traymanagement = async (value) => {
 
-    let search = await this.search(`${managetray}?query=${value.replace(/[^0-9]+/g, '')}`)
-    return search
-  }
+  //   let search = await this.search(`${managetray}?query=${value.replace(/[^0-9]+/g, '')}`)
+  //   return search
+  // }
 
-  shelfmanagement = async (value) => {
-    let search = await this.search(`${shelfsearchall}?query=${value}`)
-    return search
-  }
+  // shelfmanagement = async (value) => {
+  //   let search = await this.search(`${shelfsearchall}?query=${value}`)
+  //   return search
+  // }
 
-  traySearch = async (value) => {
-    value.replace('SM', '')
-    let search = await this.search(`${traysearch}?query=${value.replace(/[^0-9]+/g, '')}`)
-    return search
-  }
+  // traySearch = async (value) => {
+  //   value.replace('SM', '')
+  //   let search = await this.search(`${traysearch}?query=${value.replace(/[^0-9]+/g, '')}`)
+  //   return search
+  // }
 
-  pagingSlips = async (day) => {
-    let search = await this.search(`${pagingslips}?day=${day}`)
-    return search
-  }
+  // pagingSlips = async (day) => {
+  //   let search = await this.search(`${pagingslips}?day=${day}`)
+  //   return search
+  // }
 
-  recordData = async (barcodes) => {
-    let search = await this.searchPost(`${searchalephpost}`, barcodes)
-    return search
-  }
+  // recordData = async (barcodes) => {
+  //   let search = await this.searchPost(`${searchalephpost}`, barcodes)
+  //   return search
+  // }
 
-  reports = async (endpoint, query) => {
-    let search = await this.search(`${statistics}${endpoint}${query}`)
-    return search
-  }
+  // reports = async (endpoint, query) => {
+  //   let search = await this.search(`${statistics}${endpoint}${query}`)
+  //   return search
+  // }
 
-  searchAleph = async (data) => {
-    let search = await this.search(`${searchaleph}?${data}`)
-    return search
-  }
+  // searchAleph = async (data) => {
+  //   let search = await this.search(`${searchaleph}?${data}`)
+  //   return search
+  // }
 
-  trayShelfSearch = async (value) => {
-    let search = await this.search(`${shelfmanagement}?query=${value.replace(/[^0-9]+/g, '')}`)
-    return search
-  }
+  // trayShelfSearch = async (value) => {
+  //   let search = await this.search(`${shelfmanagement}?query=${value.replace(/[^0-9]+/g, '')}`)
+  //   return search
+  // }
 
-  getHistory = async () => {
-    const search = await this.search(`${history}?sort=-timestamp`)
-    return search
-  }
+  // getHistory = async () => {
+  //   const search = await this.search(`${history}?sort=-timestamp`)
+  //   return search
+  // }
 
-  searchHistory = async query => {
-    const search = await this.search(`${history}search?query=${query}`)
-    return search
-  }
+  // searchHistory = async query => {
+  //   const search = await this.search(`${history}search?query=${query}`)
+  //   return search
+  // }
 
 
   search = async (string) => {

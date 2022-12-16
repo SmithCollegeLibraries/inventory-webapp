@@ -95,20 +95,21 @@ export default class Search extends Component {
             case 'title':
                 search = await ContentSearch.ill('title', searchValue)
                 if(search && !search.length){ Alerts.info('No search results found')}
-            break;
+                break;
             case 'single' :
                 search = await ContentSearch.searchAleph(`barcode=${searchValue}`)
                 if(search && !search.length){ Alerts.info('No search results found')}
-            break
+                break;
             case 'multi':
                 await this.getRecords()
-            break
+                break;
             case 'tray':
                 search = await ContentSearch.traySearch(searchValue)
                 if(search && !search.length){ Alerts.info('No search results found')}
-            break
+                break;
             case 'shelf':
                 search = await ContentSearch.shelfmanagement(searchValue)
+                break;
             default:
                 break;
         }
