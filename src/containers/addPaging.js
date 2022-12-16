@@ -102,7 +102,6 @@ function AddPaging(props) {
 
     const [data, dispatch] = useReducer(addPagingReducer, initialState);
 
-    // console.log(data);
     useEffect(() => {
       const getLocalItems = async () => {
           const local = await handleLocalStorage('add') || []

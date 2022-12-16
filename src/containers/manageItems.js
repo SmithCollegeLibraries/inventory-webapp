@@ -38,7 +38,7 @@ function ManageItems(props) {
   }, []);
 
   const items = async () => {
-    const items = await Load.viewAllItems();
+    // const items = await Load.viewAllItems();
     dispatch({ type: "ADD_ITEMS", items: items});
   };
 

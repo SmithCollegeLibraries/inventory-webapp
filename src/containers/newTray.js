@@ -139,7 +139,6 @@ const NewTray = (props) => {
     // Then check if it is in the database
     const payload = { "barcode" : tray };
     const results = await Load.getTray(payload);
-    // console.log(results)
     if (results) {
       failure(`Tray ${tray} already exists in the system`);
       return false;

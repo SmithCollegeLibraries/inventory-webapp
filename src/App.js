@@ -45,8 +45,6 @@ export default class Main extends Component {
   componentDidMount = async () => {
     if (sessionStorage.getItem('account') || this.state.loggedIn === true ) {
       this.collections();
-      this.items();  // todo: delete later
-      this.trays();  // todo: delete later
       // this.settings();
     }
   };
@@ -59,16 +57,6 @@ export default class Main extends Component {
   collections = async () => {
     const search = await ContentSearch.collections();
     this.setState({ collections: search });
-  };
-
-  items = async () => {
-    const search = await Load.viewAllItems();
-    this.setState({ items: search });
-  };
-
-  trays = async () => {
-    const search = await Load.viewAllTrays();
-    this.setState({ trays: search });
   };
 
 
@@ -111,8 +99,6 @@ export default class Main extends Component {
       }, () => {
         sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
         this.collections();
-        this.trays();  // delete later
-        this.items();  // delete later
       })
     } else {
       failure('There was a problem logging in.');

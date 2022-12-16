@@ -65,6 +65,11 @@ class Load {
     return update;
   }
 
+  deleteTrayAndItems = async (data) => {
+    const results = await this.handleUpdate(`${trayAPI}delete-tray/`, 'POST', data);
+    return results;
+  }
+
 
   // deleteTray = async (data, id) => {
   //   const historyItems = {
@@ -113,11 +118,6 @@ class Load {
   // transfer = async (data) => {
   //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
   //   return transfer
-  // }
-
-  // deleteTrayAndItems = async (data) => {
-  //   const deleteTray = await this.handleUpdate(`${trayAPI}handle-tray-delete/`, 'POST', data)
-  //   return deleteTray
   // }
 
   // deleteTrayAndUnlink = async (data) => {

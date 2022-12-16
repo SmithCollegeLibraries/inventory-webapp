@@ -1,161 +1,318 @@
-import React, { useReducer, useEffect } from 'react';
-import Load from '../util/load';
-import { success, failure } from '../components/toastAlerts';
-import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
+import React, { useReducer } from 'react'
+import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap'
+import Load from '../util/load'
+import ContentSearch from '../util/search'
+import { success, failure, warning } from '../components/toastAlerts'
 
-
-function ManageTrays(props) {
-  const initialState = {
-    trays: [],
-    tray: ''
-  };
-
-  const trayReducer = (state, action) => {
-    switch (action.type) {
-      case 'ADD_TRAYS':
-        return {
-          ...state,
-          trays: action.trays
-        };
-      case 'UPDATE_TRAY_FORM':
-        return {
-          ...state,
-          tray: action.trays
-        };
-      case 'UPDATE_TRAYS':
-        return {
-          ...state,
-          trays: action.trays
-        };
-      default:
-        return state;
-    }
-  };
-
-  const [data, dispatch] = useReducer(trayReducer, initialState);
-
-  useEffect(() => {
-    trays()
-  }, []);
-
-  const trays = async () => {
-    const trays = await Load.viewAllTrays();
-    dispatch({ type: "ADD_TRAYS", trays: trays});
-  };
-
-  const handleFormChange = (e) => {
-    dispatch({ type: "UPDATE_TRAY_FORM", trays: e.target.value});
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const createData = {
-      'barcode' : data.tray
-    };
-    const results = await Load.createNewTray(createData);
-    if (results) {
-      success("New tray successfully created");
-      dispatch({ type: "UPDATE_TRAY_FORM", trays: ""});
-      trays();
-      props.newTrays();
-    } else {
-      failure("Unable to create tray");
-    }
-  };
-
-  const handleUpdateFormChange = (e, key) => {
-    const tray = data.trays;
-    tray[key]["barcode"] = e.target.value;
-    dispatch({ type: "UPDATE_TRAYS", trays: tray});
-  };
-
-  const handleUpdateSubmit = async(e, key) => {
-    const update = await Load.updateTray(data.trays[key]);
-    if (update) {
-      success('Trays updated');
-    } else {
-      failure("There was a problem updating this tray");
-    }
-    trays();
-    props.newTrays();
-  };
-
-  const handleDeleteSubmit = async(e, data) => {
-    e.preventDefault();
-    const hasItems = await Load.trayHasItems(data);
-    if (hasItems) {
-      failure("This tray cannot be deleted because it has items tied to it");
-    } else {
-      if (window.confirm("Delete this tray? This action can only be undone by the database administrator.")) {
-        const set = await Load.deleteTray({id: data.id});
-        if (set) {
-          success('Tray removed');
-        } else {
-          failure('Tray could not be removed');
-        }
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'QUERY_CHANGE':
+      return {
+        ...state,
+        query: action.payload
+      };
+    case 'UPDATE_RESULTS':
+      return {
+        ...state,
+        // fields: action.payload.data,
+        search_results: action.payload.search_results,
+      };
+    case 'UPDATE_SELECTION':
+      return {
+        ...state,
+        fields: action.payload,
+      };
+    case 'UPDATE_FIELD':
+      const data = state.fields;
+      data[action.payload.field] = action.payload.value;
+      return {
+        ...state,
+        fields: data
+      };
+    case 'RESET':
+      return {
+        ...state,
+        fields: {
+          tray_barcode: '',
+          new_tray_barcode: '',
+          shelf: '',
+          depth: '',
+          position: 0,
+          items: [],
+        },
       }
+    default:
+      throw new Error();
+  }
+};
+
+const ManageTrays = (props) => {
+  const initialState = {
+    query: '',
+    search_results: [],
+    fields: {
+      tray_barcode: '',
+      new_tray_barcode: '',
+      shelf: '',
+      depth: '',
+      position: 0,
+      items: [],
+    },
+  };
+
+  const [ state, dispatch ] = useReducer(reducer, initialState);
+
+  const handleQueryChange = (e) => {
+    e.preventDefault();
+    dispatch({
+      type: "QUERY_CHANGE",
+      payload: e.target.value,
+    });
+  };
+
+  const handleTrayChange = e => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_FIELD",
+      payload: {
+        field: e.target.name,
+        value: e.target.value,
+      }
+    });
+  };
+
+  const handleTraySelect = (data, e) => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_SELECTION",
+      payload: {
+        tray_barcode: data.barcode,
+        new_tray_barcode: '',
+        shelf: data.shelf,
+        depth: data.depth,
+        position: data.position,
+        items: data.items,
+      }
+    });
+  }
+
+  const handleSearch = async () => {
+    const results = await ContentSearch.trays(state.query);
+    if (results && results[0]) {
+      let items = [];
+      for (let barcode of results[0].items) {
+        items.push(barcode);
+      }
+      const fields = {
+        tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
+        new_tray_barcode: "",
+        shelf: results[0].shelf ? results[0].shelf : "",
+        depth: results[0].shelf_depth ? results[0].shelf_depth : "",
+        position: results[0].shelf_position ? results[0].shelf_position : 0,
+        items: items,
+      }
+      dispatch({
+        type: 'UPDATE_RESULTS',
+        payload: {
+          search_results: results,
+          fields: fields,
+        }
+      });
+    } else {
+      warning('No results found');
     }
-    trays();
-    props.newTrays();
+  };
+
+  const handleTrayUpdate = async (e) => {
+    e.preventDefault();
+    const data = {
+      barcode: state.fields.tray_barcode,
+      new_barcode: state.fields.new_tray_barcode || null,
+      shelf: state.fields.shelf || null,
+      depth: state.fields.depth || null,
+      position: state.fields.position || null,
+    };
+    console.log(data);
+    const load = await Load.updateTray(data);
+    if (load) {
+      success(`Tray ${load['barcode']} successfully updated}`);
+      dispatch({ type: 'RESET', payload: ''});
+      handleSearch();
+    } else {
+      failure(`There was an error updating tray ${data.barcode}`);
+    }
+  };
+
+  const handleTrayDelete = async (barcode, e) => {
+    const data = { barcode: barcode };
+    const deleteTray = await Load.deleteTrayAndItems(data);
+    if (deleteTray && 'active' in deleteTray && !deleteTray.active) {
+      success("Tray and items successfully deleted");
+      dispatch({ type: 'RESET', payload: '' });
+      handleSearch();
+    } else {
+      failure('There was an error deleting the tray');
+    }
   };
 
   return (
     <div>
-      <div style={{backgroundColor: "#fff", padding: '20px', textAlign: "middle", marginTop: "20px"}}>
-        <DisplayForm
-          handleFormChange={handleFormChange}
-          handleFormSubmit={handleFormSubmit}
-          tray={data.tray}
+      <div className="container-fluid" style={{paddingTop: "20px"}}>
+        <SearchForm
+          query={state.query}
+          handleSearch={handleSearch}
+          handleQueryChange={handleQueryChange}
         />
       </div>
-      <Card>
-        <CardBody>
-          {Object.keys(data.trays).map((items, idx) => {
-            return (
-              <Display
-                data={data.trays[items]}
-                index={idx}
-                key={idx}
-                handleUpdateSubmit={handleUpdateSubmit}
-                handleUpdateFormChange={handleUpdateFormChange}
-                handleDeleteSubmit={handleDeleteSubmit}
-              />
-            );
-          })}
-        </CardBody>
-      </Card>
+      <div style={{marginTop: "20px"}}>
+        <Row>
+          <Col md="4">
+            { state.search_results
+              ? Object.keys(state.search_results).map((tray, idx) => {
+                  return (
+                    <ResultDisplay
+                      data={state.search_results[tray]}
+                      handleTraySelect={handleTraySelect}
+                      index={idx}
+                      key={idx}
+                    />
+                  );
+                })
+              : null
+            }
+          </Col>
+          <Col md="4">
+            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
+              ? <Card>
+                  <CardBody>
+                    <TrayForm
+                      fields={state.fields}
+                      handleTrayChange={handleTrayChange}
+                      handleTrayUpdate={handleTrayUpdate}
+                      handleTrayDelete={handleTrayDelete}
+                    />
+                  </CardBody>
+                </Card>
+              : null
+            }
+          </Col>
+          <Col md="4">
+            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
+              ? <Card>
+                  <CardBody>
+                    <dl className="row">
+                        <dt className="col-sm-3">Items</dt>
+                          <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+                            {state.fields.items.join('\n')}
+                          </dd>
+                    </dl>
+                  </CardBody>
+                </Card>
+              : null
+            }
+          </Col>
+        </Row>
+      </div>
     </div>
   );
+};
 
+const SearchForm = props => {
+  return (
+    <Form inline onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <Input
+        type="text"
+        style={{"marginRight": "10px"}}
+        name="query"
+        placeholder="Tray barcode"
+        value={props.query}
+        onChange={(e) => props.handleQueryChange(e)}
+      />
+      <Button color="primary">Search</Button>
+    </Form>
+  );
+};
+
+const ResultDisplay = (props) => {
+  return (
+    <Card
+      style={{"paddingLeft": "10px", "cursor": "pointer"}}
+      onClick={(e) => props.handleTraySelect(props.data, e)}
+    >
+      <CardBody>
+        <Row>
+          <dl className="row">
+            <dt className="col-sm-3">Barcode</dt>
+              <dd className="col-sm-9">
+                {props.data.barcode}
+              </dd>
+              <dt className="col-sm-3">Created</dt>
+                <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+                  {props.data.created}
+                </dd>
+              <dt className="col-sm-3">Updated</dt>
+              <dd className="col-sm-9">
+                {props.data.updated}
+              </dd>
+              <dt className="col-sm-3">Items</dt>
+              <dd className="col-sm-9">
+                {props.data.items.length}
+              </dd>
+          </dl>
+        </Row>
+      </CardBody>
+    </Card>
+  );
 }
 
-export default ManageTrays;
-
-const DisplayForm = ({ handleFormChange, handleFormSubmit, tray }) => (
-  <Form onSubmit={(e) => handleFormSubmit(e)}>
-    {/* <Row>
-      <Col md="8">
-        <Input type="text" value={tray} onChange={(e) => handleFormChange(e)} name="tray" placeholder="Add a new tray..." />
-      </Col>
-      <Col md="2">
-        <Button color="primary">Submit</Button>
-      </Col>
-    </Row> */}
-  </Form>
-);
-
-const Display = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, handleDeleteSubmit }) => {
+const TrayForm = (props) => {
   return (
-    <div key={index} style={{paddingBottom: "20px"}}>
-      <Row>
-        <Col md="8">
-          <Input type="text" onChange={(e) => handleUpdateFormChange(e, index)} value={data.barcode} name="barcode" />
-        </Col>
-        <Col>
-          {/* <Button color="primary" style={{"marginRight": "10px"}} onClick={(e) => {handleUpdateSubmit(e, index)}}>Update</Button>
-          <Button color="danger" onClick={(e) => {handleDeleteSubmit(e, data)}}>Delete</Button> */}
-        </Col>
-      </Row>
-    </div>
-  )
+    <Row>
+      <Col>
+        <Form>
+          <FormGroup>
+            <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
+            <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
+          </FormGroup>
+          <FormGroup>
+            <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
+            <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
+          </FormGroup>
+          <FormGroup>
+            <Label for="tray" style={{"fontWeight":"bold"}}>Shelf</Label>
+            <Input type="text" value={props.fields.shelf || ''} onChange={(e) => props.handleTrayChange(e)} name="shelf" />
+          </FormGroup>
+          <FormGroup>
+            <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
+            <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
+              <option>Select depth…</option>
+              <option>Front</option>
+              <option>Middle</option>
+              <option>Rear</option>
+            </Input>
+          </FormGroup>
+          <FormGroup>
+            <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
+            {/* TODO: make max position not hardcoded */}
+            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} min="0" max="20" onChange={e => props.handleTrayChange(e)} />
+          </FormGroup>
+          <FormGroup style={{"marginTop": "40px"}}>
+            <Button
+              color="primary"
+              style={{"float": "left"}}
+              onClick={(e) => props.handleTrayUpdate(e)}
+            >Update tray</Button>
+            <Button
+              color="danger"
+              style={{"float": "right"}}
+              onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
+            >Delete tray and all items</Button>
+          </FormGroup>
+        </Form>
+      </Col>
+    </Row>
+  );
 };
+
+
+export default ManageTrays;
