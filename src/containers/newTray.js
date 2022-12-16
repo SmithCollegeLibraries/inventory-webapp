@@ -413,24 +413,24 @@ const NewTray = (props) => {
 
   return (
     <Fragment>
-      <div style={{paddingTop: "10px"}}>
+      <div style={{paddingTop: "20px"}}>
         <Button color={data.locked ? "success" : "primary"} onClick={(e) => lockCollection(e)}>{data.locked ? "Collection locked" : "Lock collection"}</Button>{' '}
       </div>
-      <div style={{marginTop: "10px"}}>
+      <div style={{marginTop: "20px"}}>
         <Row>
           <Col md="4">
             <Card>
               <CardBody>
-              <TrayFormOriginal
-                handleEnter={handleEnter}
-                collections={props.collections}
-                lockCollection={lockCollection}
-                trayLength={data.trayLength}
-                original={data.original}
-                handleOriginalOnChange={handleOriginalOnChange}
-                handleOriginalSubmit={handleOriginalSubmit}
-                form={data.form}
-              />
+                <TrayFormOriginal
+                  handleEnter={handleEnter}
+                  collections={props.collections}
+                  lockCollection={lockCollection}
+                  trayLength={data.trayLength}
+                  original={data.original}
+                  handleOriginalOnChange={handleOriginalOnChange}
+                  handleOriginalSubmit={handleOriginalSubmit}
+                  form={data.form}
+                />
               </CardBody>
             </Card>
           </Col>
@@ -570,7 +570,7 @@ const TrayFormOriginal = props => (
           name="barcodes"
           value={props.original.barcodes}
           onChange={(e) => props.handleOriginalOnChange(e)}
-          onPaste={(e)=>{
+          onPaste={(e) => {
             e.preventDefault()
             return false;
           }}
