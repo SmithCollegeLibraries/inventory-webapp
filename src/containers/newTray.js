@@ -290,19 +290,24 @@ const NewTray = (props) => {
 
   const inspectBarcodes = async () => {
     const { original } = data;
-    const barcodesAsArray = original.barcodes ? original.barcodes.trim().split('\n') : [];
-    for (const barcode of barcodesAsArray) {
-      if (barcode.length !== BARCODE_LENGTH) {
-        failure(`Barcode ${barcodesAsArray[barcode]} is not ${BARCODE_LENGTH} characters`);
-        return false;
-      }
-      else if (barcode.slice(0, 4) !== '3101') {
-        failure(`Barcode ${barcodesAsArray[barcode]} does not begin with 3101`);
-        return false;
-      }
-      else {
-        const verifiedBarcodesUnused = await verifyBarcodesUnused(barcodesAsArray);
-        return verifiedBarcodesUnused;
+    if (!original.barcodes || original.barcodes.length === 0) {
+      failure(`You cannot add an empty tray`);
+    }
+    else {
+      const barcodesAsArray = original.barcodes.trim().split('\n');
+      for (const barcode of barcodesAsArray) {
+        if (barcode.length !== BARCODE_LENGTH) {
+          failure(`Barcode ${barcodesAsArray[barcode]} is not ${BARCODE_LENGTH} characters`);
+          return false;
+        }
+        else if (barcode.slice(0, 4) !== '3101') {
+          failure(`Barcode ${barcodesAsArray[barcode]} does not begin with 3101`);
+          return false;
+        }
+        else {
+          const verifiedBarcodesUnused = await verifyBarcodesUnused(barcodesAsArray);
+          return verifiedBarcodesUnused;
+        }
       }
     }
   }
