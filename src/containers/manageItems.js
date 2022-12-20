@@ -24,7 +24,7 @@ const itemReducer = (state, action) => {
   }
 };
 
-function ManageItems(props) {
+const ManageItems = () => {
 
   const initialState = {
     items: [],
@@ -38,7 +38,7 @@ function ManageItems(props) {
   }, []);
 
   const items = async () => {
-    // const items = await Load.viewAllItems();
+    const items = await Load.viewAllItems();
     dispatch({ type: "ADD_ITEMS", items: items});
   };
 
@@ -62,7 +62,6 @@ function ManageItems(props) {
       </tbody>
     </Table>
   );
-
-}
+};
 
 export default ManageItems;

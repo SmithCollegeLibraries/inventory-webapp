@@ -135,7 +135,7 @@ const ManageTrays = (props) => {
     console.log(data);
     const load = await Load.updateTray(data);
     if (load) {
-      success(`Tray ${load['barcode']} successfully updated}`);
+      success(`Tray ${load['barcode']} successfully updated`);
       dispatch({ type: 'RESET', payload: ''});
       handleSearch();
     } else {
