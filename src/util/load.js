@@ -65,6 +65,12 @@ class Load {
     return update;
   }
 
+  shelveTray = async (data, id) => {
+    console.log(data);
+    const update = await this.handleUpdate(`${trayAPI}shelve-tray/`, 'POST', data);
+    return update;
+  }
+
   deleteTrayAndItems = async (data) => {
     const results = await this.handleUpdate(`${trayAPI}delete-tray/`, 'POST', data);
     return results;

@@ -40,16 +40,15 @@ export default class Header extends Component {
     return (
       <div>
         <Navbar color="dark" dark expand="md">
-          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.0.8)</NavbarBrand>
+          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.1.0)</NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
               <Nav className="ml-auto" navbar>
-                {
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
                 </NavItem>
-                /*
+                {/*
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/shelf">Shelf</NavLink>
                 </NavItem>
@@ -76,6 +75,9 @@ export default class Header extends Component {
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/reports">Reports</NavLink>
                 </NavItem>
                 */}
+                <NavItem>
+                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-load">Rapid load</NavLink>
+                </NavItem>
                 <UncontrolledDropdown nav inNavbar>
                   <DropdownToggle nav caret>
                     Manage
