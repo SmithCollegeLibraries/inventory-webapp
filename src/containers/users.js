@@ -82,18 +82,20 @@ function ManageUsers() {
         <Nav tabs>
           <NavItem>
             <NavLink
-              className={classnames({ active: activeTab === 'user_update' })}
-              onClick={() => { toggle('user_update'); }}
-            >
+                className={classnames({ active: activeTab === 'user_update' })}
+                onClick={() => { toggle('user_update'); }}
+                style={{cursor:'pointer'}}
+              >
             Users
             </NavLink>
           </NavItem>
           <NavItem>
             <NavLink
-              className={classnames({ active: activeTab === 'user_creation' })}
-              onClick={() => { toggle('user_creation'); }}
-            >
-            Create new user
+                className={classnames({ active: activeTab === 'user_creation' })}
+                onClick={() => { toggle('user_creation'); }}
+                style={{cursor:'pointer'}}
+              >
+              Create new user
             </NavLink>
           </NavItem>
         </Nav>
