@@ -219,24 +219,61 @@ const UserCreation = () => {
 
   return (
     <div>
-      <Form className="form-signin">
+      <Form className="form-signin" autoComplete="off">
         <FormGroup>
           <Label for="email">Email address</Label>
-          <Input type="email" value={state.createNewAccount.email} pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/" name="email" onChange={(e) => handleCreationChange(e)} required autoFocus />
+          <Input
+              type="email"
+              value={state.createNewAccount.email}
+              pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
+              name="new-user-email"
+              onChange={(e) => handleCreationChange(e)}
+              required
+              autoFocus
+              autoComplete="new-user-email"
+              // onFocus={e => { if (e.target.autocomplete) { e.target.autocomplete = "no-auto-email"; }}}
+            />
         </FormGroup>
         <FormGroup>
           <Label for="password">Password</Label>
-          <Input type="password" name="password" value={state.createNewAccount.password} onChange={(e) => handleCreationChange(e)} required />
+          <Input
+              type="password"
+              name="new-user-password"
+              value={state.createNewAccount.password}
+              onChange={(e) => handleCreationChange(e)}
+              required
+            />
         </FormGroup>
         <FormGroup>
           <Label for="name">Name</Label>
-          <Input type="text" name="name" value={state.createNewAccount.name} onChange={(e) => handleCreationChange(e)} required />
+          <Input
+              type="text"
+              name="name"
+              value={state.createNewAccount.name}
+              onChange={(e) => handleCreationChange(e)}
+              required
+            />
         </FormGroup>
         <FormGroup>
           <Label for="level">Level</Label>
-          <Input type="number" name="level" min="0" max="100" value={state.createNewAccount.level} onChange={e => handleCreationChange(e)} required />
+          <Input
+              type="number"
+              name="level"
+              min="0"
+              max="100"
+              value={state.createNewAccount.level}
+              onChange={e => handleCreationChange(e)}
+              required
+            />
         </FormGroup>
-        <Button color="primary" className="btn-block" onClick={(e) => handleAccountCreationSubmit(e)} type="submit">Create account</Button>
+        <Button
+            color="primary"
+            className="btn-block"
+            onClick={(e) => handleAccountCreationSubmit(e)}
+            type="submit"
+          >
+          Create account
+        </Button>
       </Form>
     </div>
   );

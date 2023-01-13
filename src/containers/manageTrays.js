@@ -64,9 +64,14 @@ const ManageTrays = (props) => {
 
   const handleQueryChange = (e) => {
     e.preventDefault();
+    let value = e.target.value;
+    // Automatically remove non-numeric characters from tray field;
+    // this is important because the actual barcodes for trays are
+    // prefixed with SM, which the barcode scanners will add to the input
+    value = e.target.value.replace(/\D/g,'');
     dispatch({
       type: "QUERY_CHANGE",
-      payload: e.target.value,
+      payload: value,
     });
   };
 
@@ -96,7 +101,7 @@ const ManageTrays = (props) => {
     });
   }
 
-  const handleSearch = async () => {
+  const handleSearch = async (showWarnings = false) => {
     const results = await ContentSearch.trays(state.query);
     if (results && results[0]) {
       let items = [];
@@ -118,8 +123,25 @@ const ManageTrays = (props) => {
           fields: fields,
         }
       });
-    } else {
-      warning('No results found');
+    }
+    else {
+      dispatch({
+        type: 'UPDATE_RESULTS',
+        payload: {
+          search_results: [],
+          fields: {
+            tray_barcode: '',
+            new_tray_barcode: '',
+            shelf: '',
+            depth: '',
+            position: 0,
+            items: [],
+          },
+        }
+      })
+      if (showWarnings) {
+        warning('No results found');
+      }
     }
   };
 
@@ -137,7 +159,7 @@ const ManageTrays = (props) => {
     if (load) {
       success(`Tray ${load['barcode']} successfully updated`);
       dispatch({ type: 'RESET', payload: ''});
-      handleSearch();
+      handleSearch(false);
     } else {
       failure(`There was an error updating tray ${data.barcode}`);
     }
@@ -149,7 +171,7 @@ const ManageTrays = (props) => {
     if (deleteTray && 'active' in deleteTray && !deleteTray.active) {
       success("Tray and items successfully deleted");
       dispatch({ type: 'RESET', payload: '' });
-      handleSearch();
+      handleSearch(false);
     } else {
       failure('There was an error deleting the tray');
     }
@@ -219,7 +241,7 @@ const ManageTrays = (props) => {
 
 const SearchForm = props => {
   return (
-    <Form inline onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Input
         type="text"
         style={{"marginRight": "10px"}}
@@ -269,7 +291,7 @@ const TrayForm = (props) => {
   return (
     <Row>
       <Col>
-        <Form>
+        <Form autoComplete="off">
           <FormGroup>
             <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
             <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
@@ -294,7 +316,7 @@ const TrayForm = (props) => {
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
             {/* TODO: make max position not hardcoded */}
-            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} min="0" max="20" onChange={e => props.handleTrayChange(e)} />
+            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button

@@ -33,7 +33,6 @@ const NewTray = (props) => {
     trayValid: false,
     trayLength: TRAY_BARCODE_LENGTH,
     timeout: 0,
-    email: '',
     locked: false
   };
 
@@ -54,12 +53,7 @@ const NewTray = (props) => {
           ...state,
           verify: action.verify
         };
-      case 'UPDATE_VERIFIED':
-        return {
-          ...state,
-          verified: action.verified
-        };
-      case 'LOCAL_VERIFIED':
+      case 'UPDATE_STAGED':
         return {
           ...state,
           verified: action.verified
@@ -107,13 +101,14 @@ const NewTray = (props) => {
   useEffect(() => {
     const getLocalItems = async () => {
       const local = await handleLocalStorage('tray') || [];
-      dispatch({ type: 'LOCAL_VERIFIED', verified: local});
+      dispatch({ type: 'UPDATE_STAGED', verified: local});
     };
     getLocalItems();
   }, []);
 
   useEffect(() => {
     if (props) {
+      // TODO: Get this from settings instead of a constant
       // const { settings } = props || '';
       let trayLength = TRAY_BARCODE_LENGTH;
       // if (settings !== "") {
@@ -221,8 +216,8 @@ const NewTray = (props) => {
       }
       for (const barcode of barcodesToVerify) {
         if (barcode !== '') {
-          if (!barcode.startsWith('3101')) {
-            failure(`Item ${barcode} does not begin with 3101`);
+          if (!barcode.startsWith('310')) {
+            failure(`Item ${barcode} does not begin with 310`);
             warned = true;
           } else if (barcode.length !== BARCODE_LENGTH) {
             failure(`Item barcodes must be ${BARCODE_LENGTH} characters long. You currently have ${barcode.length} in item ${barcode}`);
@@ -247,7 +242,9 @@ const NewTray = (props) => {
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field
+    // Automatically remove non-numeric characters from tray field;
+    // this is important because the actual barcodes for trays are
+    // prefixed with SM, which the barcode scanners will add to the input
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
@@ -297,11 +294,11 @@ const NewTray = (props) => {
       const barcodesAsArray = original.barcodes.trim().split('\n');
       for (const barcode of barcodesAsArray) {
         if (barcode.length !== BARCODE_LENGTH) {
-          failure(`Barcode ${barcodesAsArray[barcode]} is not ${BARCODE_LENGTH} characters`);
+          failure(`Barcode ${barcode} is not ${BARCODE_LENGTH} characters`);
           return false;
         }
-        else if (barcode.slice(0, 4) !== '3101') {
-          failure(`Barcode ${barcodesAsArray[barcode]} does not begin with 3101`);
+        else if (!barcode.startsWith('310')) {
+          failure(`Barcode ${barcode} does not begin with 310`);
           return false;
         }
         else {
@@ -316,7 +313,9 @@ const NewTray = (props) => {
     e.preventDefault();
     const verify = data.verify;
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field
+    // Automatically remove non-numeric characters from tray field;
+    // this is important because the actual barcodes for trays are
+    // prefixed with SM, which the barcode scanners will add to the input
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
@@ -347,7 +346,7 @@ const NewTray = (props) => {
         items: barcodesAsArray
       };
       localforage.setItem('tray', verified);
-      dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
+      dispatch({ type: 'UPDATE_STAGED', verified: verified});
       dispatch({ type: "RESET" });
     }
   };
@@ -361,7 +360,7 @@ const NewTray = (props) => {
 
     verified[key] = values;
     localforage.setItem('tray', verified);
-    dispatch({ type: 'UPDATE_VERIFIED', verified: verified});
+    dispatch({ type: 'UPDATE_STAGED', verified: verified});
   };
 
   const handleProcessTrays = async (e) => {
@@ -376,17 +375,22 @@ const NewTray = (props) => {
         failure(`Unable to add tray ${tray.barcode}. Please check that the tray and all items are not already in the system.`);
       }
     }
-    removeItems(data.verified, submittedTrays);
+    removeItems(submittedTrays);
     dispatch({ type: "RESET" });
   };
 
-  const removeItems = (trayList, barcodes) => {
+  // We want to be able to remove more than one tray at a time from the
+  // staging list because after submitting, we are keeping track of
+  // which ones have been submitted and need to remove all the submitted
+  // trays at once
+  const removeItems = (trayBarcodes) => {
+    const stagedTrays = data.verified;
     // Create list of verified trays staged for submission,
-    // without the tray that was just removed
-    const newTrayList = Object.keys(trayList)
-        .map(key => trayList[key])
-        .filter(tray => !barcodes.includes(tray.barcode));
-    dispatch({ type: 'UPDATE_VERIFIED', verified: newTrayList});
+    // without the trays that were just removed
+    const newTrayList = Object.keys(stagedTrays)
+        .map(key => stagedTrays[key])
+        .filter(tray => !trayBarcodes.includes(tray.barcode));
+    dispatch({ type: 'UPDATE_STAGED', verified: newTrayList});
     localforage.setItem('tray', newTrayList);
   };
 
@@ -406,7 +410,7 @@ const NewTray = (props) => {
   const clearDisplayGrid = e => {
     if (window.confirm('Are you sure you want to clear all staged trays as well as the current tray? This action cannot be undone.')) {
       dispatch({ type: "RESET" });
-      dispatch({ type: 'UPDATE_VERIFIED', verified: []});
+      dispatch({ type: 'UPDATE_STAGED', verified: []});
       localforage.setItem('tray', {});
     }
   };
@@ -462,7 +466,7 @@ const NewTray = (props) => {
             />
             { Object.keys(data.verified).map(items => items).length
               ? <>
-                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process new trays</Button>
+                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process all</Button>
                 <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
               </>
               : ''
@@ -475,7 +479,7 @@ const NewTray = (props) => {
 };
 
 const TrayFormVerify = props => (
-  <Form>
+  <Form autoComplete="off">
     <FormGroup>
       <Label for="collections">Collections</Label>
       <Input type="select" value={props.original.collection} onChange={(e) => props.handleVerifyOnChange(e)} name="collection">
@@ -521,17 +525,16 @@ const TrayFormVerify = props => (
         }}
       />
     </FormGroup>
-    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Stage</Button>
+    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Add</Button>
     <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)}>Go back</Button>
   </Form>
 );
 
 const TrayFormOriginal = props => (
   <div>
-    <Form className="sticky-top">
+    <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collections
-      </Label>
+        <Label for="collections">Collections</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
         <option>Select Collection</option>
         { props.collections
@@ -543,12 +546,12 @@ const TrayFormOriginal = props => (
         </Input>
       </FormGroup>
       <FormGroup>
-      <Label for="tray">Tray{ ' ' }
-      { props.original.tray.length === props.trayLength
-        ? <><Badge color="success">{props.trayLength}</Badge> ✓</>
-        : <Badge color="danger">{props.original.tray.length}</Badge>
-      }
-      </Label>
+        <Label for="tray">Tray{ ' ' }
+          { props.original.tray.length === props.trayLength
+            ? <><Badge color="success">{props.trayLength}</Badge> ✓</>
+            : <Badge color="danger">{props.original.tray.length}</Badge>
+          }
+        </Label>
         <Input
           type="text"
           name="tray"
@@ -563,7 +566,7 @@ const TrayFormOriginal = props => (
         />
       </FormGroup>
       <FormGroup>
-        <Label for="tray">Barcodes</Label>
+        <Label for="barcodes">Barcodes</Label>
         <Input
           type="textarea"
           rows="10"
@@ -591,22 +594,22 @@ const Display = props => (
         <CardBody>
           <dl className="row">
             <dt className="col-sm-3">Tray</dt>
-              <dd className="col-sm-9">
-                {props.data[tray].barcode}
-              </dd>
-              <dt className="col-sm-3">Items</dt>
-                <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                  {props.data[tray].items.join('\n')}
-                </dd>
-              <dt className="col-sm-3">Collection</dt>
-              <dd className="col-sm-9">
-                {props.data[tray].collection}
-              </dd>
+            <dd className="col-sm-9">
+              {props.data[tray].barcode}
+            </dd>
+            <dt className="col-sm-3">Items</dt>
+            <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+              {props.data[tray].items ? props.data[tray].items.join('\n') : ''}
+            </dd>
+            <dt className="col-sm-3">Collection</dt>
+            <dd className="col-sm-9">
+              {props.data[tray].collection}
+            </dd>
           </dl>
           <Button color="danger" onClick={
               function () {
                 if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeItems(props.data, [props.data[tray].barcode])
+                  props.removeItems([props.data[tray].barcode])
                 }
               }}>
             Delete

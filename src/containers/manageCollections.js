@@ -136,7 +136,7 @@ function ManageCollections(props) {
 export default ManageCollections;
 
 const DisplayForm = ({ handleFormChange, handleFormSubmit, collection }) => (
-  <Form onSubmit={(e) => handleFormSubmit(e)}>
+  <Form autoComplete="off" onSubmit={(e) => handleFormSubmit(e)}>
     <Row>
       <Col md="8">
         <Input type="text" value={collection} onChange={(e) => handleFormChange(e)} name="collection" placeholder="Add a new collection..." />
