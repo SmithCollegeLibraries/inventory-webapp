@@ -30,7 +30,7 @@ const RapidLoad = (props) => {
     staged: [],
     // TODO: get these numbers from settings
     trayStructure: /^[0-9]{8}$/,
-    shelfStructure: /^[0-9]{2}[RL][0-9]{4}$/,
+    shelfStructure: /^[01][0-9][RL][0-9]{4}$/,
     timeout: 0,
   };
 
