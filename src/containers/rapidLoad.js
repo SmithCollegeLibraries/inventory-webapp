@@ -18,15 +18,6 @@ const RapidLoad = (props) => {
       depth: '',
       position: '',
     },
-    // We keep track of the most recent tray shelved so that we can
-    // double-check that the order it's going in makes sense.
-    // We'll ask for confirmation if it doesn't.
-    previous: {
-      tray: '',
-      shelf: '',
-      depth: '',
-      position: '',
-    },
     staged: [],
     // TODO: get these numbers from settings
     trayStructure: /^[0-9]{8}$/,
@@ -40,11 +31,6 @@ const RapidLoad = (props) => {
         return {
           ...state,
           current: action.current
-        };
-      case 'UPDATE_PREVIOUS':
-        return {
-          ...state,
-          previous: action.previous
         };
       case 'UPDATE_STAGED':
         return {
@@ -62,27 +48,10 @@ const RapidLoad = (props) => {
           },
           timeout: 0,
         };
-      case 'RESET_PREVIOUS':
-        return {
-          ...state,
-          previous: {
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
-          },
-          timeout: 0,
-        };
       case 'DELETE_ALL':
         return {
           ...state,
           current: {
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
-          },
-          previous: {
             tray: '',
             shelf: '',
             depth: '',
@@ -101,7 +70,7 @@ const RapidLoad = (props) => {
   const debouncedTray = useDebounce(data.current.tray);
   const debouncedShelf = useDebounce(data.current.shelf);
 
-  // Anytime the DOM is updated, update local storage
+  // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
     const getLocal = async () => {
       const local = await handleLocalStorage('load') || [];
@@ -146,27 +115,8 @@ const RapidLoad = (props) => {
     }
   }
 
-  // Check in real time that the tray barcode is the correct length and
-  // isn't staged already
-  useEffect(() => {
-    const trayBarcodeToVerify = debouncedTray;
-    if (trayBarcodeToVerify) {
-      verifyTrayLive(trayBarcodeToVerify);
-    }
-  }, [debouncedTray]);
-
   const verifyBarcodesUnused = async (barcodes) => {
-    // First see whether it already exists in staged trays
-    const arrayOfStagedBarcodes = Object.keys(data.staged).map(tray => data.staged[tray].items);
-    const stagedBarcodes = [].concat.apply([], arrayOfStagedBarcodes);
-    for (const barcode of barcodes) {
-      if (stagedBarcodes.includes(barcode)) {
-        failure(`Item ${barcode} is already staged`);
-        return false;
-      }
-    }
-
-    // Now see whether it is in the database
+    // See whether it is in the database
     const payload = {
       barcodes: barcodes
     };
@@ -185,6 +135,32 @@ const RapidLoad = (props) => {
       return true;
     }
   };
+
+  // Check in real time that the tray barcode is the correct length and
+  // isn't staged already
+  useEffect(() => {
+    const trayBarcodeToVerify = debouncedTray;
+    if (trayBarcodeToVerify) {
+      verifyTrayLive(trayBarcodeToVerify);
+    }
+  }, [debouncedTray]);
+
+  const getPreviousTray = () => {
+    if (data.staged.length === 0) {
+      return null;
+    }
+    else {
+      return data.staged[data.staged.length - 1];
+    }
+  }
+
+  const matchesNextInSequence = (shelf, depth, position) => {
+    const previous = getPreviousTray();
+    if (previous.shelf === shelf && previous.depth === depth && previous.position === position) {
+      return true;
+    }
+    return false;
+  }
 
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);
@@ -237,11 +213,10 @@ const RapidLoad = (props) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (verifyTrayLive()) {
-      dispatch({ type: 'UPDATE_PREVIOUS', previous: data.current });
-      let staged = data.staged;
-      staged[Date.now()] = data.current;
-      localforage.setItem('load', staged);
-      dispatch({ type: 'UPDATE_STAGED', staged: staged });
+      let newStaged = data.staged;
+      newStaged[data.staged.length] = data.current;
+      localforage.setItem('load', newStaged);
+      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
       // Go back to the first element in the form
       const form = e.target.form;
@@ -251,9 +226,12 @@ const RapidLoad = (props) => {
 
   const handleUndo = e => {
     e.preventDefault();
-    removeTrays([data.previous.tray]);
-    dispatch({ type: 'RESET_PREVIOUS' });
-    dispatch({ type: 'RESET_CURRENT' });
+    const previousTray = getPreviousTray();
+    if (previousTray) {
+      removeTrays([previousTray.tray]);
+      dispatch({ type: 'RESET_PREVIOUS' });
+      dispatch({ type: 'RESET_CURRENT' });
+    }
   };
 
   const handleDisplayChange = (e, key) => {
@@ -343,16 +321,6 @@ const RapidLoad = (props) => {
               </CardBody>
             </Card>
           </Col>
-          {/* <Col md="3">
-            <Card>
-              <CardBody>
-                <PreviousShelvingForm
-                  previous={data.previous}
-                  handleUndo={handleUndo}
-                />
-              </CardBody>
-            </Card>
-          </Col> */}
           <Col>
             <Display
               data={data.staged}
@@ -452,52 +420,6 @@ const CurrentShelvingForm = props => (
         ? <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary">Add</Button>
         : <Button style={{marginRight: '10px'}} onClick={e => e.preventDefault} color="secondary">Add</Button>
       }
-    </Form>
-  </div>
-);
-
-const PreviousShelvingForm = props => (
-  <div>
-    <Form className="sticky-top">
-      <FormGroup>
-        <Label for="tray">Previous tray</Label>
-        <Input
-          type="text"
-          name="previousTray"
-          value={props.previous.tray}
-          disabled={true}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="shelf">Previous shelf</Label>
-        <Input
-          type="text"
-          name="previousShelf"
-          value={props.previous.shelf}
-          disabled={true}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="depth">Previous depth</Label>
-        <Input
-          type="text"
-          name="previousDepth"
-          value={props.previous.depth}
-          disabled={true}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="position">Previous position</Label>
-        <Input
-          type="text"
-          name="previousPosition"
-          value={props.previous.position}
-          disabled={true}
-        />
-      </FormGroup>
-      <Button color="warning" onClick={props.handleUndo}>
-        Undo
-      </Button>
     </Form>
   </div>
 );
