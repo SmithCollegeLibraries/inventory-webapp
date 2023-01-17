@@ -115,29 +115,7 @@ const RapidLoad = (props) => {
     }
   }
 
-  const verifyBarcodesUnused = async (barcodes) => {
-    // See whether it is in the database
-    const payload = {
-      barcodes: barcodes
-    };
-    const results = await Load.itemSearch(payload);
-    if (results && results[0] && results[0]["id"]) {
-      results.map(item => {
-        if (item["tray"]) {
-          failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}`);
-        }
-        else {
-          failure(`Item ${item["barcode"]} is already in the system (untrayed)`);
-        }
-        return false;
-      });
-    } else {
-      return true;
-    }
-  };
-
-  // Check in real time that the tray barcode is the correct length and
-  // isn't staged already
+  // Check in real time that the tray isn't staged already
   useEffect(() => {
     const trayBarcodeToVerify = debouncedTray;
     if (trayBarcodeToVerify) {
@@ -416,10 +394,7 @@ const CurrentShelvingForm = props => (
           onKeyDown={props.handleEnterTabSubmit}
         />
       </FormGroup>
-      { props.trayStructure.test(props.current.tray) && props.shelfStructure.test(props.current.shelf) && props.verifyTrayLive(props.current.tray)
-        ? <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary">Add</Button>
-        : <Button style={{marginRight: '10px'}} onClick={e => e.preventDefault} color="secondary">Add</Button>
-      }
+      <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary" disabled={!props.trayStructure.test(props.current.tray) || !props.shelfStructure.test(props.current.shelf) || !props.verifyTrayLive(props.current) || props.current.depth === "" || props.current.position === ""}>Add</Button>
     </Form>
   </div>
 );
