@@ -60,8 +60,6 @@ function ManageCollections(props) {
       dispatch({ type: "UPDATE_COLLECTION_FORM", collections: ""});
       collections();
       props.newCollections();
-    } else {
-      failure("Unable to create collection");
     }
   };
 

@@ -1,5 +1,5 @@
 import { base } from '../config/endpoints';
-import Alerts from '../components/alerts';
+import { failure } from '../components/toastAlerts'
 // import { getFormattedDate } from '../util/date';
 
 const account = `${base}user/`
@@ -222,22 +222,19 @@ class Load {
     const { account } = storage || '';
     const { access_token } = account || '';
     const callURL = string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`;
-    try {
-      let response = await fetch(
-          callURL,
-          {
-            "method": `${method}`,
-            "body": JSON.stringify(data)
-          },
-        );
-      return this.responseHandling(response);
-    } catch(e) {
-      return this.catchError('', e);
-    }
+
+    let response = await fetch(
+        callURL,
+        {
+          "method": `${method}`,
+          "body": JSON.stringify(data)
+        },
+      );
+    return this.responseHandling(response);
   }
 
   responseHandling = async response => {
-    switch(response.status){
+    switch (response.status) {
       case 200:
       case 201:
       case 304:
@@ -245,35 +242,18 @@ class Load {
       case 204:
         return {};
       case 400:
-        this.catchError('Bad Request', response.statusText);
-        break;
       case 401:
       case 403:
-        this.catchError('Authentication failed', response.statusText);
-        break;
       case 404:
-        this.catchError("Doesn't exist", response.statusText);
-        break;
       case 405:
-        this.catchError('Method not allowed', response.statusText);
-        break;
       case 422:
-        this.catchError('Data validation failed', response.statusText);
-        break;
       case 500:
-        this.catchError('Internal server error', response.statusText);
+        const info = await response.json();
+        failure(info.message ? info.message : response.statusText);
         break;
       default:
-        this.catchError('There was an error. Check your internet connection', '');
+        failure('There was an error. Please check your internet connection.');
     }
-  }
-
-  catchError = (value, e) => {
-    const error = {
-      name: value,
-      message: e
-    }
-    Alerts.error(error)
   }
 }
 

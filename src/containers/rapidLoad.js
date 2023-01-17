@@ -276,8 +276,6 @@ const RapidLoad = (props) => {
       if (response) {
         success(`Tray ${x.tray} successfully shelved`);
         submittedTrays.push(x.tray);
-      } else {
-        failure(`Unable to process tray ${x.tray}.`);
       }
     }
     removeTrays(submittedTrays);

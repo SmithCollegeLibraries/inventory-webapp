@@ -371,8 +371,6 @@ const NewTray = (props) => {
       if (response) {
         success(`Tray ${tray.barcode} successfully added`);
         submittedTrays.push(tray.barcode);
-      } else {
-        failure(`Unable to add tray ${tray.barcode}. Please check that the tray and all items are not already in the system.`);
       }
     }
     removeItems(submittedTrays);
