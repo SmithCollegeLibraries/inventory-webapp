@@ -11,6 +11,7 @@ import { success, failure, warning } from '../components/toastAlerts';
 // TODO: get these numbers from settings
 const BARCODE_LENGTH = 15;
 const TRAY_BARCODE_LENGTH = 8;
+const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 
 
 const NewTray = (props) => {
@@ -340,7 +341,7 @@ const NewTray = (props) => {
     } else {
       let verified = data.verified;
       let barcodesAsArray = data.original.barcodes.trim().split('\n');
-      verified[Date.now()] = {
+      verified[data.verified.length] = {
         collection: data.original.collection,
         barcode: data.verify.tray,
         items: barcodesAsArray
@@ -436,25 +437,23 @@ const NewTray = (props) => {
               </CardBody>
             </Card>
           </Col>
-          { data.form !== 'original'
-            ? <Col md="4">
-                <Card>
-                  <CardBody>
-                  <TrayFormVerify
-                    handleEnter={handleEnter}
-                    collections={props.collections}
-                    trayLength={data.trayLength}
-                    original={data.original}
-                    verify={data.verify}
-                    handleVerifyOnChange={handleVerifyOnChange}
-                    handleVerifySubmit={handleVerifySubmit}
-                    goBackToOriginal={goBackToOriginal}
-                  />
-                  </CardBody>
-                </Card>
-              </Col>
-            : ''
-          }
+          <Col md="4">
+            <Card>
+              <CardBody>
+              <TrayFormVerify
+                handleEnter={handleEnter}
+                collections={props.collections}
+                trayLength={data.trayLength}
+                original={data.original}
+                verify={data.verify}
+                handleVerifyOnChange={handleVerifyOnChange}
+                handleVerifySubmit={handleVerifySubmit}
+                goBackToOriginal={goBackToOriginal}
+                disabled={data.form === 'original'}
+              />
+              </CardBody>
+            </Card>
+          </Col>
           <Col>
             <Display
               data={data.verified}
@@ -479,8 +478,8 @@ const NewTray = (props) => {
 const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
-      <Label for="collections">Collections</Label>
-      <Input type="select" value={props.original.collection} onChange={(e) => props.handleVerifyOnChange(e)} name="collection">
+      <Label for="collections">Collection</Label>
+      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled="true">
       { props.collections
         ? Object.keys(props.collections).map((items, idx) => (
             <option key={idx}>{props.collections[items].name}</option>
@@ -491,7 +490,7 @@ const TrayFormVerify = props => (
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
-      { props.verify.tray.length === props.trayLength
+      { props.disabled ? "" : props.verify.tray.length === props.trayLength
         ? <Badge color="success">{props.trayLength}</Badge>
         : <Badge color="danger">{props.verify.tray.length}</Badge>
       }
@@ -499,7 +498,7 @@ const TrayFormVerify = props => (
       <Input
         type="text"
         name="tray"
-        placeholder="Tray barcode"
+        placeholder={ props.disabled ? "" : "Tray barcode" }
         value={props.verify.tray}
         onChange={(e) => props.handleVerifyOnChange(e)}
         onPaste={(e)=>{
@@ -507,6 +506,7 @@ const TrayFormVerify = props => (
           return false;
         }}
         onKeyDown={props.handleEnter}
+        disabled={props.disabled}
       />
     </FormGroup>
     <FormGroup>
@@ -521,10 +521,11 @@ const TrayFormVerify = props => (
           e.preventDefault()
           return false;
         }}
+        disabled={props.disabled}
       />
     </FormGroup>
-    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary">Add</Button>
-    <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)}>Go back</Button>
+    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary" disabled={props.disabled}>Add</Button>
+    <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)} disabled={props.disabled}>Go back</Button>
   </Form>
 );
 
@@ -532,9 +533,9 @@ const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collections</Label>
+        <Label for="collections">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
-        <option>Select Collection</option>
+        <option>{ COLLECTION_PLACEHOLDER }</option>
         { props.collections
           ? Object.keys(props.collections).map((items, idx) => (
               <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
@@ -577,10 +578,14 @@ const TrayFormOriginal = props => (
           }}
         />
       </FormGroup>
-      { props.original.tray.length === props.trayLength && props.form === 'original'
-        ? <Button style={{marginRight: '10px'}} onClick={(e) => props.handleOriginalSubmit(e)} color="primary">Verify</Button>
-        : <Button style={{marginRight: '10px'}} onClick={e => (e.preventDefault)} color="secondary">Verify</Button>
-      }
+      <Button
+          style={{marginRight: '10px'}}
+          onClick={(e) => props.handleOriginalSubmit(e)}
+          color="primary"
+          disabled={props.original.tray.length !== props.trayLength || props.original.barcodes.length === 0 || props.form !== 'original'}
+        >
+        Verify
+      </Button>
     </Form>
   </div>
 );
