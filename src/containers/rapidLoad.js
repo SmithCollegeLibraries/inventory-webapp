@@ -19,11 +19,12 @@ const RapidLoad = (props) => {
       position: '',
     },
     staged: [],
-    // TODO: get these numbers from settings
-    trayStructure: /^[0-9]{8}$/,
-    shelfStructure: /^[01][0-9][RL][0-9]{4}$/,
     timeout: 0,
   };
+
+  // TODO: get these numbers from settings
+  const trayStructure = /^[0-9]{8}$/;
+  const shelfStructure = /^[01][0-9][RL][0-9]{4}$/;
 
   const loadReducer = (state, action) => {
     switch (action.type) {
@@ -79,6 +80,26 @@ const RapidLoad = (props) => {
     getLocal();
   }, []);
 
+  const checkAddPossible = () => {
+    // Check that the tray matches the expected structure
+    if (!trayStructure.test(data.current.tray)) {
+      return false;
+    }
+    // Check that the shelf matches the expected structure
+    if (!shelfStructure.test(data.current.shelf)) {
+      return false;
+    }
+    // If the tray is already staged, don't allow it to be added again
+    if (!verifyTrayLive(data.current)) {
+      return false;
+    }
+    // Don't allow submission if either the depth or position is empty
+    if (data.current.depth === "" || data.current.position === "") {
+      return false;
+    }
+    return true;
+  }
+
   // This is the verification that's done on a tray in real time,
   // as opposed to when data is submitted to the system.
   const verifyTrayLive = tray => {
@@ -132,12 +153,80 @@ const RapidLoad = (props) => {
     }
   }
 
-  const matchesNextInSequence = (shelf, depth, position) => {
+  // Make sure that the new tray is shelved in an expected location:
+  // i.e. the next position in the same depth, or the first position
+  // in the next depth, or the first position on the next shelf
+  const matchesExpectedLocation = (shelf, depth, position) => {
     const previous = getPreviousTray();
-    if (previous.shelf === shelf && previous.depth === depth && previous.position === position) {
+
+    const isNextConsecutiveShelf = (newShelf, previousShelf) => {
+      // These variables are used to calculate the next expected shelf
+      const previousRow = parseInt(previousShelf.slice(0, 2));
+      const previousSide = previousShelf.slice(2, 3) === 'L' ? 0 : 1;
+      const previousLadder = parseInt(previousShelf.slice(3, 5));
+      const previousRung = parseInt(previousShelf.slice(5, 7));
+      const newRow = parseInt(newShelf.slice(0, 2));
+      const newSide = newShelf.slice(2, 3) === 'L' ? 0 : 1;
+      const newLadder = parseInt(newShelf.slice(3, 5));
+      const newRung = parseInt(newShelf.slice(5, 7));
+
+      if (newRow === previousRow) {
+        if (newSide === previousSide) {
+          if (newLadder === previousLadder) {
+            return newRung === previousRung + 1;
+          }
+          else {
+            return newLadder === previousLadder + 1 && newRung === 1;
+          }
+        }
+        else {
+          return newSide === previousSide + 1 && newLadder === 1 && newRung === 1;
+        }
+      }
+      else {
+        return newRow === previousRow + 1 && newSide === 0 && newLadder === 1 && newRung === 1;
+      }
+    }
+
+    // If there are no trays staged, then the new tray can be anywhere
+    if (previous === null) {
       return true;
     }
-    return false;
+    if (shelf === previous.shelf) {
+      if (depth === previous.depth) {
+        if (parseInt(position) === parseInt(previous.position) + 1) {
+          return true;
+        }
+        else {
+          return "The tray is on the same shelf as the last one, but not in the next position."
+        }
+      }
+      else {
+        if (parseInt(position) === 1) {
+          // Can't shelve in front of a tray that's already in the front
+          if (previous.depth === "Front") {
+            return "You are currently trying to shelve behind an existing tray."
+          }
+          else {
+            return true;
+          }
+        }
+        else {
+          return "The tray is on the same shelf at a new depth, but not in first position."
+        }
+      }
+    }
+    else if (isNextConsecutiveShelf(shelf, previous.shelf)) {
+      if (parseInt(position) === 1) {
+        return true;
+      }
+      else {
+        return "The tray is on a new shelf, but not in first position."
+      }
+    }
+    else {
+      return "The tray is not on the same shelf as the last one."
+    }
   }
 
   const handleLocalStorage = async (key) => {
@@ -190,15 +279,34 @@ const RapidLoad = (props) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (verifyTrayLive()) {
-      let newStaged = data.staged;
-      newStaged[data.staged.length] = data.current;
-      localforage.setItem('load', newStaged);
-      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
-      dispatch({ type: 'RESET_CURRENT' });
-      // Go back to the first element in the form
-      const form = e.target.form;
-      form.elements[0].focus();
+
+    // If the Add button is disabled, do nothing
+    if (checkAddPossible() === true) {
+      const processSubmit = async () => {
+        let newStaged = data.staged;
+        newStaged[data.staged.length] = data.current;
+        localforage.setItem('load', newStaged);
+        dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
+        dispatch({ type: 'RESET_CURRENT' });
+        // Go back to the first element in the form
+        const form = e.target.form;
+        form.elements[0].focus();
+      }
+
+      if (verifyTrayLive(data.current.tray)) {
+        // Check that the tray is in the expected location, and ask for
+        // confirmation if it's not
+        const locationCheck = matchesExpectedLocation(data.current.shelf, data.current.depth, data.current.position);
+        // There will be an error message if it's not true
+        if (locationCheck === true) {
+          processSubmit();
+        }
+        else {
+          if (window.confirm(`${locationCheck} Are you sure that the shelf, depth and location are correct?`)) {
+            processSubmit();
+          }
+        }
+      }
     }
   };
 
@@ -292,9 +400,10 @@ const RapidLoad = (props) => {
                   current={data.current}
                   handleOnChange={handleOnChange}
                   handleSubmit={handleSubmit}
-                  trayStructure={data.trayStructure}
-                  shelfStructure={data.shelfStructure}
+                  trayStructure={trayStructure}
+                  shelfStructure={shelfStructure}
                   verifyTrayLive={verifyTrayLive}
+                  checkAddPossible={checkAddPossible}
                 />
               </CardBody>
             </Card>
@@ -394,7 +503,7 @@ const CurrentShelvingForm = props => (
           onKeyDown={props.handleEnterTabSubmit}
         />
       </FormGroup>
-      <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary" disabled={!props.trayStructure.test(props.current.tray) || !props.shelfStructure.test(props.current.shelf) || !props.verifyTrayLive(props.current) || props.current.depth === "" || props.current.position === ""}>Add</Button>
+      <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary" disabled={!props.checkAddPossible()}>Add</Button>
     </Form>
   </div>
 );
