@@ -53,31 +53,30 @@ export default class ManageShelves extends Component {
         this.setState({ results })
     }
 
-    updateItem = (e, key) => {
-      e.preventDefault()
-      const data = this.state.data[key]
-      const results = Load.updateShelf(data, data.id)
-      if(results){
-        success(`${data.shelf} updated successfully`)
-        this.handleSearch(e)
-      } else {
-        failure(`There was an error updating shelf ${data.shelf}` )
-      }
-    //
-    }
+    // updateItem = (e, key) => {
+    //   e.preventDefault()
+    //   const data = this.state.data[key]
+    //   const results = Load.updateShelf(data, data.id)
+    //   if(results){
+    //     success(`${data.shelf} updated successfully`)
+    //     this.handleSearch(e)
+    //   } else {
+    //     failure(`There was an error updating shelf ${data.shelf}` )
+    //   }
+    // }
 
-    handleDelete = (e, index, value ) =>{
-        this.setState((prevState) => ({
-          data: prevState.data.filter((_, i) => i != index)
-        }), async () => {
-          const results = await Load.deleteShelf(value.original)
-          if(results){
-            success(`${value.original.boxbarcode} was succesfully deleted from ${value.original.shelf}`)
-          } else {
-            failure(`There was an error deleting shelf ${value.original.boxbarcode} from ${value.original.shelf}` )
-          }
-      })
-    }
+    // handleDelete = (e, index, value ) =>{
+    //     this.setState((prevState) => ({
+    //       data: prevState.data.filter((_, i) => i != index)
+    //     }), async () => {
+    //       const results = await Load.deleteShelf(value.original)
+    //       if(results){
+    //         success(`${value.original.boxbarcode} was succesfully deleted from ${value.original.shelf}`)
+    //       } else {
+    //         failure(`There was an error deleting shelf ${value.original.boxbarcode} from ${value.original.shelf}` )
+    //       }
+    //   })
+    // }
 
 
     render(){

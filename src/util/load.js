@@ -47,6 +47,15 @@ class Load {
   };
 
   /**
+   * @desc Shelf
+   */
+
+  getShelf = async (data) => {
+    const get = await this.handleUpdate(`${shelfAPI}get-shelf`, 'POST', data);
+    return get;
+  }
+
+  /**
     * @desc Tray
   */
 
@@ -65,7 +74,7 @@ class Load {
     return update;
   }
 
-  shelveTray = async (data, id) => {
+  shelveTray = async (data) => {
     console.log(data);
     const update = await this.handleUpdate(`${trayAPI}shelve-tray/`, 'POST', data);
     return update;
@@ -73,6 +82,11 @@ class Load {
 
   deleteTrayAndItems = async (data) => {
     const results = await this.handleUpdate(`${trayAPI}delete-tray/`, 'POST', data);
+    return results;
+  }
+
+  searchTraysByLocation = async (data) => {
+    const results = await this.handleUpdate(`${trayAPI}search/`, 'POST', data);
     return results;
   }
 
@@ -185,15 +199,15 @@ class Load {
   //   return search
   // }
 
-  updateShelf = async (data, id) => {
-    const update = await this.handleUpdate(`${shelfAPI}shelf-update`, 'POST', data)
-    return update
-  }
+  // updateShelf = async (data, id) => {
+  //   const update = await this.handleUpdate(`${shelfAPI}shelf-update`, 'POST', data);
+  //   return update;
+  // }
 
-  deleteShelf = async (data) => {
-    const deleteShelf = await this.handleUpdate(`${shelfAPI}delete-individual-items`, 'POST', data)
-    return deleteShelf
-  }
+  // deleteShelf = async (data) => {
+  //   const deleteShelf = await this.handleUpdate(`${shelfAPI}delete-individual-items`, 'POST', data);
+  //   return deleteShelf;
+  // }
 
   // processBarcodes = async (data) => {
   //   const update = await this.handleUpdate(`${managetrayupdate}`, 'POST', data)
