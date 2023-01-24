@@ -103,40 +103,75 @@ const RapidLoad = (props) => {
   // This is the verification that's done on a tray in real time,
   // as opposed to when data is submitted to the system.
   const verifyTrayLive = tray => {
-    // Check that it's not in the list of staged trays
+    // Check that it's not in the list of staged trays, and that the
+    // position is not already taken in the staged list
     if (data.staged) {
       const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
       if (stagedTrays.includes(tray)) {
         failure(`Tray ${tray} is already staged`);
         return false;
       }
+      else if (data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
+        failure(`Shelf ${data.current.shelf}, ${data.current.depth}, position ${data.current.position} is already occupied`);
+      }
     }
     return true;
   };
 
-  const verifyTrayAtSubmit = async (tray) => {
-    // Check that the tray exists in the system
-    const payload = { "barcode" : tray };
-    const results = await Load.getTray(payload);
-    if (results === null) {
-      failure(`Tray ${tray} does not exist in the system`);
-      return false;
+  // If the user is connected to the internet, do additional verification;
+  // otherwise, we have to assume that everything is OK, and flag anything
+  // anomalous at the point of submission
+  const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
+    if (!navigator.onLine) {
+      return true;
     }
+    else {
+      const payload = { "barcode" : tray };
+      const results = await Load.getTray(payload);
 
-    // Check that it's not shelved already
-    if (results.shelf !== null) {
-      failure(`Tray ${tray} is already shelved in the system`);
-      return false;
-    }
+      const locationPayload = {
+        "shelf": shelf,
+        "depth": depth,
+        "position": position,
+      };
+      const locationResults = await Load.searchTraysByLocation(locationPayload);
 
-    // Check that the tray is not empty
-    if (results.items.length === 0) {
-      failure(`Tray ${tray} is empty and should not be shelved`);
-      return false;
+      const shelfPayload = { "barcode" : shelf };
+      const shelfResults = await Load.getShelf(shelfPayload);
+
+      // Check that the tray exists in the system
+      if (results === null) {
+        failure(`Tray ${tray} does not exist in the system`);
+        return false;
+      }
+      // Check that it's not shelved already
+      else if (results.shelf !== null) {
+        failure(`Tray ${tray} is already marked as being on shelf ${results.shelf}`);
+        return false;
+      }
+      // Check that the tray is not empty
+      else if (results.items.length === 0) {
+        failure(`Tray ${tray} is empty and should not be shelved`);
+        return false;
+      }
+      // Check that the shelf exists in the system
+      else if (shelfResults === null) {
+        failure(`Shelf ${shelf} does not exist in the system`);
+        return false;
+      }
+      // Check that the location of the new tray isn't already taken
+      else if (locationResults.length > 0) {
+        failure(`Location ${shelf}, ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
+        return false;
+      }
+      else {
+        return true;
+      }
     }
   }
 
-  // Check in real time that the tray isn't staged already
+  // Check in real time that the tray isn't staged already, and if
+  // connected to the internet, other things as well
   useEffect(() => {
     const trayBarcodeToVerify = debouncedTray;
     if (trayBarcodeToVerify) {
@@ -293,12 +328,14 @@ const RapidLoad = (props) => {
         form.elements[0].focus();
       }
 
-      if (verifyTrayLive(data.current.tray)) {
+      if (verifyTrayLive(data.current.tray) === true && verifyTrayIfConnected(data.current.tray, data.current.shelf, data.current.depth, data.current.position) === true) {
         // Check that the tray is in the expected location, and ask for
         // confirmation if it's not
         const locationCheck = matchesExpectedLocation(data.current.shelf, data.current.depth, data.current.position);
+        console.log(locationCheck);
         // There will be an error message if it's not true
         if (locationCheck === true) {
+          console.log('Location check passed');
           processSubmit();
         }
         else {
@@ -315,7 +352,6 @@ const RapidLoad = (props) => {
     const previousTray = getPreviousTray();
     if (previousTray) {
       removeTrays([previousTray.tray]);
-      dispatch({ type: 'RESET_PREVIOUS' });
       dispatch({ type: 'RESET_CURRENT' });
     }
   };
@@ -343,7 +379,6 @@ const RapidLoad = (props) => {
       }
     }
     removeTrays(submittedTrays);
-    dispatch({ type: "RESET_PREVIOUS" });
     dispatch({ type: "RESET_CURRENT" });
   };
 
