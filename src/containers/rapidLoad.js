@@ -103,7 +103,6 @@ const RapidLoad = (props) => {
   // as opposed to when data is submitted to the system. It checks that
   // the barcode is not already in the list of staged trays.
   const verifyTrayLive = tray => {
-    console.log(data.staged);
     if (data.staged) {
       const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
       if (stagedTrays.includes(tray)) {
@@ -117,7 +116,7 @@ const RapidLoad = (props) => {
   // This is the verification that's done when the user submits data
   const verifyOnSubmit = tray => {
     if (data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
-      failure(`Shelf ${data.current.shelf}, ${data.current.depth}, position ${data.current.position} is already occupied`);
+      failure(`Shelf ${data.current.shelf}, depth ${data.current.depth}, position ${data.current.position} is already occupied`);
       return false;
     }
     else {
@@ -165,7 +164,8 @@ const RapidLoad = (props) => {
       }
       // Check that the location of the new tray isn't already taken
       else if (locationResults.length > 0) {
-        failure(`Location ${shelf}, ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
+        // TODO: print more than just the first result
+        failure(`Location ${shelf}, depth ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
         return false;
       }
       else {

@@ -86,7 +86,7 @@ class Load {
   }
 
   searchTraysByLocation = async (data) => {
-    const results = await this.handleUpdate(`${trayAPI}search/`, 'POST', data);
+    const results = await this.handleUpdate(`${trayAPI}search-by-location/`, 'POST', data);
     return results;
   }
 
