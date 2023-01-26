@@ -139,9 +139,6 @@ const RapidLoad = (props) => {
       };
       const locationResults = await Load.searchTraysByLocation(locationPayload);
 
-      const shelfPayload = { "barcode" : shelf };
-      const shelfResults = await Load.getShelf(shelfPayload);
-
       // Check that the tray exists in the system
       if (results === null) {
         failure(`Tray ${tray} does not exist in the system`);
@@ -155,11 +152,6 @@ const RapidLoad = (props) => {
       // Check that the tray is not empty
       else if (results.items.length === 0) {
         failure(`Tray ${tray} is empty and should not be shelved`);
-        return false;
-      }
-      // Check that the shelf exists in the system
-      else if (shelfResults === null) {
-        failure(`Shelf ${shelf} does not exist in the system`);
         return false;
       }
       // Check that the location of the new tray isn't already taken
