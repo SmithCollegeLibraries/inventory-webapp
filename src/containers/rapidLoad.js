@@ -7,7 +7,6 @@ import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
 import { success, failure, warning } from '../components/toastAlerts';
-import { remove } from 'lodash';
 
 
 const RapidLoad = (props) => {
@@ -101,31 +100,36 @@ const RapidLoad = (props) => {
   }
 
   // This is the verification that's done on a tray in real time,
-  // as opposed to when data is submitted to the system.
+  // as opposed to when data is submitted to the system. It checks that
+  // the barcode is not already in the list of staged trays.
   const verifyTrayLive = tray => {
-    // Check that it's not in the list of staged trays, and that the
-    // position is not already taken in the staged list
+    console.log(data.staged);
     if (data.staged) {
       const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
       if (stagedTrays.includes(tray)) {
         failure(`Tray ${tray} is already staged`);
         return false;
       }
-      else if (data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
-        failure(`Shelf ${data.current.shelf}, ${data.current.depth}, position ${data.current.position} is already occupied`);
-      }
     }
     return true;
+  };
+
+  // This is the verification that's done when the user submits data
+  const verifyOnSubmit = tray => {
+    if (data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
+      failure(`Shelf ${data.current.shelf}, ${data.current.depth}, position ${data.current.position} is already occupied`);
+      return false;
+    }
+    else {
+      return true;
+    }
   };
 
   // If the user is connected to the internet, do additional verification;
   // otherwise, we have to assume that everything is OK, and flag anything
   // anomalous at the point of submission
   const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
-    if (!navigator.onLine) {
-      return true;
-    }
-    else {
+    if (navigator.onLine === true) {
       const payload = { "barcode" : tray };
       const results = await Load.getTray(payload);
 
@@ -167,6 +171,9 @@ const RapidLoad = (props) => {
       else {
         return true;
       }
+    }
+    else {
+      return true;
     }
   }
 
@@ -271,6 +278,8 @@ const RapidLoad = (props) => {
 
   const handleOnChange = e => {
     e.preventDefault();
+    e.persist();
+
     let value = e.target.value;
     // Remove non-numeric characters from tray barcode
     if (e.target.name === 'tray') {
@@ -313,35 +322,36 @@ const RapidLoad = (props) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
     // If the Add button is disabled, do nothing
-    if (checkAddPossible() === true) {
-      const processSubmit = async () => {
-        let newStaged = data.staged;
-        newStaged[data.staged.length] = data.current;
-        localforage.setItem('load', newStaged);
-        dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
-        dispatch({ type: 'RESET_CURRENT' });
-        // Go back to the first element in the form
-        const form = e.target.form;
-        form.elements[0].focus();
-      }
+    if (checkAddPossible() !== true) {
+      return false;
+    }
 
-      if (verifyTrayLive(data.current.tray) === true && verifyTrayIfConnected(data.current.tray, data.current.shelf, data.current.depth, data.current.position) === true) {
-        // Check that the tray is in the expected location, and ask for
-        // confirmation if it's not
-        const locationCheck = matchesExpectedLocation(data.current.shelf, data.current.depth, data.current.position);
-        console.log(locationCheck);
-        // There will be an error message if it's not true
-        if (locationCheck === true) {
-          console.log('Location check passed');
+    const processSubmit = async () => {
+      let newStaged = data.staged;
+      newStaged[data.staged.length] = data.current;
+      localforage.setItem('load', newStaged);
+      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
+      dispatch({ type: 'RESET_CURRENT' });
+      // Go back to the first element in the form
+      const form = e.target.form;
+      form.elements[0].focus();
+    }
+
+    if (verifyTrayLive(data.current.tray) === true &&
+        verifyOnSubmit(data.current.tray) === true &&
+        await verifyTrayIfConnected(data.current.tray, data.current.shelf, data.current.depth, data.current.position) === true)
+    {
+      // Check that the tray is in the expected location, and ask for
+      // confirmation if it's not
+      const locationCheck = matchesExpectedLocation(data.current.shelf, data.current.depth, data.current.position);
+      // There will be an error message if it's not true
+      if (locationCheck === true) {
+        processSubmit();
+      }
+      else {
+        if (window.confirm(`${locationCheck} Are you sure that the shelf, depth and location are correct?`)) {
           processSubmit();
-        }
-        else {
-          if (window.confirm(`${locationCheck} Are you sure that the shelf, depth and location are correct?`)) {
-            processSubmit();
-          }
         }
       }
     }
@@ -349,6 +359,8 @@ const RapidLoad = (props) => {
 
   const handleUndo = e => {
     e.preventDefault();
+    e.persist();
+
     const previousTray = getPreviousTray();
     if (previousTray) {
       removeTrays([previousTray.tray]);
@@ -397,20 +409,20 @@ const RapidLoad = (props) => {
     localforage.setItem('load', newTrayList);
   };
 
-  const handleEnter = (event) => {
-    if (event.keyCode === 13) {
-      const form = event.target.form;
-      const index = Array.prototype.indexOf.call(form, event.target);
+  const handleEnter = e => {
+    if (e.keyCode === 13) {
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form, e.target);
       form.elements[index + 1].focus();
-      event.preventDefault();
+      e.preventDefault();
     }
   };
 
-  const handleEnterTabSubmit = (event) => {
-    if (event.keyCode === 13 || event.keyCode === 9) {
-      event.preventDefault();
-      const form = event.target.form;
-      handleSubmit(event);
+  const handleEnterTabSubmit = e => {
+    if (e.keyCode === 13 || e.keyCode === 9) {
+      e.preventDefault();
+      e.persist();
+      handleSubmit(e);
     }
   };
 
