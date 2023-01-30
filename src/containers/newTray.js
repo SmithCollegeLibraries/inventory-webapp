@@ -292,7 +292,7 @@ const NewTray = (props) => {
       failure(`You cannot add an empty tray`);
     }
     else {
-      const barcodesAsArray = original.barcodes.trim().split('\n');
+      const barcodesAsArray = original.barcodes.split('\n').filter(Boolean);
       for (const barcode of barcodesAsArray) {
         if (barcode.length !== BARCODE_LENGTH) {
           failure(`Barcode ${barcode} is not ${BARCODE_LENGTH} characters`);
@@ -337,19 +337,39 @@ const NewTray = (props) => {
 
   const handleVerifySubmit = e => {
     e.preventDefault()
-    // TODO: Do a diff on the original and verify so that it's clear which
-    // barcode is the problem
-    if (data.original.tray.trim() !== data.verify.tray.trim()) {
-      failure('Mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
-    } else if (data.original.barcodes.trim() !== data.verify.barcodes.trim()) {
-      failure('Mismatch! \n Original barcodes: \n' + data.original.barcodes + ' \n Verify barcodes: \n' + data.verify.barcodes);
-    } else {
+
+    const findMismatches = (originalList, verifyList) => {
+      const mismatchList = [];
+      for (const item of originalList) {
+        if (verifyList.indexOf(item) === -1) {
+          mismatchList.push(item);
+        }
+      }
+      for (const item of verifyList) {
+        if (originalList.indexOf(item) === -1 && mismatchList.indexOf(item) === -1) {
+          mismatchList.push(item);
+        }
+      }
+      return mismatchList;
+    }
+
+    let originalBarcodesAsArray = data.original.barcodes.split('\n').filter(Boolean);
+    let verifyBarcodesAsArray = data.verify.barcodes.split('\n').filter(Boolean);
+    const mismatches = findMismatches(originalBarcodesAsArray, verifyBarcodesAsArray)
+
+    if (data.original.tray !== data.verify.tray) {
+      failure('Tray mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
+    }
+    if (mismatches.length !== 0) {
+      console.log(mismatches);
+      failure(`Barcode mismatch! Please check ${mismatches.join(', ')}`);
+    }
+    else {
       let verified = data.verified;
-      let barcodesAsArray = data.original.barcodes.trim().split('\n');
       verified[data.verified.length] = {
         collection: data.original.collection,
         barcode: data.verify.tray,
-        items: barcodesAsArray
+        items: originalBarcodesAsArray
       };
       localforage.setItem('tray', verified);
       dispatch({ type: 'UPDATE_STAGED', verified: verified});
