@@ -486,14 +486,7 @@ const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
       <Label for="collections">Collection</Label>
-      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled="true">
-      { props.collections
-        ? Object.keys(props.collections).map((items, idx) => (
-            <option key={idx}>{props.collections[items].name}</option>
-          ))
-        : <option></option>
-      }
-      </Input>
+      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
