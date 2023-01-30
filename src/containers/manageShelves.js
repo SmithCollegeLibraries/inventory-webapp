@@ -150,10 +150,10 @@ const ShelfDisplay = ({ data, loading, handleShelfUpdateChange, updateItem, hand
                 return(
                     <FormGroup>
                         <Input type="select" value={props.value} onChange={(e) => handleShelfUpdateChange(e, props.index)} name="shelf_depth">
-                            <option>Select Depth</option>
-                            <option>Front</option>
-                            <option>Middle</option>
-                            <option>Rear</option>
+                            <option value="">(none)</option>
+                            <option value="Front">Front</option>
+                            <option value="Middle">Middle</option>
+                            <option value="Rear">Rear</option>
                         </Input>
                     </FormGroup>
                 )

@@ -307,10 +307,10 @@ const TrayForm = (props) => {
           <FormGroup>
             <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
             <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
-              <option>Select depth…</option>
-              <option>Front</option>
-              <option>Middle</option>
-              <option>Rear</option>
+              <option value="">(none)</option>
+              <option value="Front">Front</option>
+              <option value="Middle">Middle</option>
+              <option value="Rear">Rear</option>
             </Input>
           </FormGroup>
           <FormGroup>
