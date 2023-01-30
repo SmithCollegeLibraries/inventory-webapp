@@ -330,6 +330,11 @@ const NewTray = (props) => {
     dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
   };
 
+  const clearOriginal = e => {
+    e.preventDefault();
+    dispatch({ type: "RESET" });
+  };
+
   const handleVerifySubmit = e => {
     e.preventDefault()
     // TODO: Do a diff on the original and verify so that it's clear which
@@ -432,7 +437,9 @@ const NewTray = (props) => {
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleOriginalSubmit={handleOriginalSubmit}
+                  clearOriginal={clearOriginal}
                   form={data.form}
+                  disabled={data.form !== 'original' || (data.original.tray.length === 0 && data.original.barcodes.length === 0)}
                 />
               </CardBody>
             </Card>
@@ -585,6 +592,13 @@ const TrayFormOriginal = props => (
           disabled={props.original.tray.length !== props.trayLength || props.original.barcodes.length === 0 || props.form !== 'original'}
         >
         Verify
+      </Button>
+      <Button
+          style={{marginRight: '10px'}}
+          color="warning"
+          onClick={(e) => props.clearOriginal(e)}
+          disabled={props.disabled}>
+        Clear
       </Button>
     </Form>
   </div>
