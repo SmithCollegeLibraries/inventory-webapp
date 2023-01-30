@@ -34,7 +34,7 @@ const NewTray = (props) => {
     trayValid: false,
     trayLength: TRAY_BARCODE_LENGTH,
     timeout: 0,
-    locked: false
+    locked: true
   };
 
   const trayReducer = (state, action) => {
