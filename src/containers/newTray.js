@@ -25,11 +25,9 @@ const NewTray = (props) => {
       tray: '',
       barcodes: []
     },
-    // List of trays that have been verified and staged
-    verified: [],
-    // Lists barcodes already checked on FOLIO, so we don't have to spam the server with API calls
-    checkedOnFolio: [],
-    // The current form (original or verify)
+    verified: [],  // List of trays that have been verified and staged
+    checkedInFolio: [],  // Items verified to be in FOLIO
+    notInFolio: [],  // Items looked up in FOLIO that were not there
     form: 'original',
     trayValid: false,
     trayLength: TRAY_BARCODE_LENGTH,
@@ -44,10 +42,15 @@ const NewTray = (props) => {
           ...state,
           original: action.original
         };
-      case 'CHECKED_ON_FOLIO':
+      case 'CHECKED_IN_FOLIO':
         return {
           ...state,
-          checkedOnFolio: action.checkedOnFolio
+          checkedInFolio: action.checkedInFolio
+        };
+      case 'NOT_IN_FOLIO':
+        return {
+          ...state,
+          notInFolio: action.notInFolio
         };
       case 'ADD_VERIFY':
         return {
@@ -194,12 +197,15 @@ const NewTray = (props) => {
     // is changed.
     const verifyFolioRecord = async (barcodes) => {
       for (const barcode of barcodes) {
-        if (barcode.length > 0 && !data.checkedOnFolio.includes(barcode)) {
+        if (barcode.length > 0 && !data.checkedInFolio.includes(barcode) && !data.notInFolio.includes(barcode)) {
           const itemInFolio = await Load.itemInFolio(barcode);
-          if (!itemInFolio) {
-            warning(`Unable to locate FOLIO record for ${barcode}. Please verify record exists before submitting this barcode`);
+          if (itemInFolio) {
+            dispatch({ type: 'CHECKED_IN_FOLIO', checkedInFolio: [...data.checkedInFolio, barcode]});
           }
-          dispatch({ type: 'CHECKED_ON_FOLIO', checkedOnFolio: [...data.checkedOnFolio, barcode]});
+          else {
+            dispatch({ type: 'NOT_IN_FOLIO', notInFolio: [...data.notInFolio, barcode]})
+            failure(`Unable to locate FOLIO record for ${barcode}. Please verify record exists before submitting this barcode`);
+          }
         }
       }
     };
@@ -233,7 +239,7 @@ const NewTray = (props) => {
         }
       }
     }
-  }, [debouncedBarcodes, data.checkedOnFolio]);
+  }, [debouncedBarcodes, data.checkedInFolio, data.notInFolio]);
 
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);
@@ -300,6 +306,12 @@ const NewTray = (props) => {
         }
         else if (!barcode.startsWith('310')) {
           failure(`Barcode ${barcode} does not begin with 310`);
+          return false;
+        }
+        // If the item is not in FOLIO, we will not add it to
+        // high density storage!
+        else if (!data.checkedInFolio.includes(barcode)) {
+          failure(`Barcode ${barcode} is not in FOLIO`);
           return false;
         }
         else {
