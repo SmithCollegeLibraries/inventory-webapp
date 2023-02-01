@@ -228,8 +228,7 @@ const NewTray = (props) => {
   useEffect(() => {
     if (props) {
       // TODO: Get this from settings instead of a constant
-      let trayLength = TRAY_BARCODE_LENGTH;
-      dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength});
+      dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: TRAY_BARCODE_LENGTH});
     }
   }, [props]);
 
@@ -496,7 +495,9 @@ const NewTray = (props) => {
                   handleOriginalSubmit={handleOriginalSubmit}
                   clearOriginal={clearOriginal}
                   form={data.form}
-                  disabled={data.form !== 'original' || (data.original.tray.length === 0 && data.original.barcodes.length === 0)}
+                  disabled={data.form === 'verify'}
+                  disabledSubmit={data.original.tray.length !== data.trayLength || data.original.barcodes.length === 0}
+                  disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
                 />
               </CardBody>
             </Card>
@@ -591,14 +592,14 @@ const TrayFormOriginal = props => (
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
         <Label for="collections">Collection</Label>
-        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
-        <option>{ COLLECTION_PLACEHOLDER }</option>
-        { props.collections
-          ? Object.keys(props.collections).map((items, idx) => (
-              <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-            ))
-          : <option></option>
-        }
+        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+          <option>{ COLLECTION_PLACEHOLDER }</option>
+          { props.collections
+            ? Object.keys(props.collections).map((items, idx) => (
+                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+              ))
+            : <option></option>
+          }
         </Input>
       </FormGroup>
       <FormGroup>
@@ -619,6 +620,7 @@ const TrayFormOriginal = props => (
             return false;
           }}
           onKeyDown={props.handleEnter}
+          disabled={props.disabled}
         />
       </FormGroup>
       <FormGroup>
@@ -633,13 +635,14 @@ const TrayFormOriginal = props => (
             e.preventDefault()
             return false;
           }}
+          disabled={props.disabled}
         />
       </FormGroup>
       <Button
           style={{marginRight: '10px'}}
           onClick={(e) => props.handleOriginalSubmit(e)}
           color="primary"
-          disabled={props.original.tray.length !== props.trayLength || props.original.barcodes.length === 0 || props.form !== 'original'}
+          disabled={props.disabled || props.disabledSubmit}
         >
         Verify
       </Button>
@@ -647,7 +650,7 @@ const TrayFormOriginal = props => (
           style={{marginRight: '10px'}}
           color="warning"
           onClick={(e) => props.clearOriginal(e)}
-          disabled={props.disabled}>
+          disabled={props.disabled || props.disabledClear}>
         Clear
       </Button>
     </Form>
