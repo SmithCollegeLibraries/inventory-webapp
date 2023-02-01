@@ -52,6 +52,13 @@ const NewTray = (props) => {
           ...state,
           notInFolio: action.notInFolio
         };
+      // We use this so that we can do a last FOLIO check before submission
+      case 'CLEAR_FOLIO_CHECK':
+        return {
+          ...state,
+          checkedInFolio: [],
+          notInFolio: []
+        };
       case 'ADD_VERIFY':
         return {
           ...state,
@@ -99,38 +106,16 @@ const NewTray = (props) => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
   const debouncedTray = useDebounce(data.original.tray);
-  const debouncedBarcodes = useDebounce(data.original.barcodes);
+  const debouncedItems = useDebounce(data.original.barcodes);
 
-  // Anytime the DOM is updated, update local storage
-  useEffect(() => {
-    const getLocalItems = async () => {
-      const local = await handleLocalStorage('tray') || [];
-      dispatch({ type: 'UPDATE_STAGED', verified: local});
-    };
-    getLocalItems();
-  }, []);
 
-  useEffect(() => {
-    if (props) {
-      // TODO: Get this from settings instead of a constant
-      // const { settings } = props || '';
-      let trayLength = TRAY_BARCODE_LENGTH;
-      // if (settings !== "") {
-      //   Object.keys(settings).map(items => {
-      //     if (settings[items].type === 'tray_barcode_length') {
-      //       trayLength = parseInt(settings[items].value);
-      //     }
-      //   });
-      // }
-      dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength});
-    }
-  }, [props]);
+  // Live verification functions, which also get called again on submission
 
-  const verifyTrayUnused = async (tray) => {
+  const verifyTrayLive = async (tray) => {
     // First, check that it's not in the list of staged trays
     if (data.verified) {
-      const stagedBarcodes = Object.keys(data.verified).map(tray => data.verified[tray].barcode);
-      if (stagedBarcodes.includes(tray)) {
+      const stagedTrays = Object.keys(data.verified).map(tray => data.verified[tray].barcode);
+      if (stagedTrays.includes(tray)) {
         failure(`Tray ${tray} is already staged`);
         return false;
       }
@@ -145,51 +130,37 @@ const NewTray = (props) => {
     return true;
   };
 
-  // Check that the tray barcode is the correct length and
-  // isn't in the system already
-  useEffect(() => {
-    const trayBarcodeToVerify = debouncedTray;
-
-    if (trayBarcodeToVerify && trayBarcodeToVerify.length === TRAY_BARCODE_LENGTH) {
-      // If tray is correct length, check that it's not already used.
-      // (We're already showing the user that it's the wrong length,
-      // so no need to give a popup alert.)
-      verifyTrayUnused(trayBarcodeToVerify);
-    }
-  }, [debouncedTray]);
-
-  const verifyBarcodesUnused = async (barcodes) => {
-    // First see whether it already exists in staged trays
-    const arrayOfStagedBarcodes = Object.keys(data.verified).map(tray => data.verified[tray].items);
-    const stagedBarcodes = [].concat.apply([], arrayOfStagedBarcodes);
-    for (const barcode of barcodes) {
-      if (stagedBarcodes.includes(barcode)) {
-        failure(`Item ${barcode} is already staged`);
-        return false;
+  const verifyItemsLive = async (barcodes) => {
+    const verifyItemsFree = async (barcodes) => {
+      // First see whether it already exists in staged trays
+      const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
+      const stagedItems = [].concat.apply([], arrayOfStagedItems);
+      for (const barcode of barcodes) {
+        if (stagedItems.includes(barcode)) {
+          failure(`Item ${barcode} is already staged`);
+          return false;
+        }
       }
-    }
 
-    // Now see whether it is in the database
-    const payload = {
-      barcodes: barcodes
-    };
-    const results = await Load.itemSearch(payload);
-    if (results && results[0] && results[0]["id"]) {
-      results.map(item => {
-        if (item["tray"]) {
-          failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}`);
-        }
-        else {
-          failure(`Item ${item["barcode"]} is already in the system (untrayed)`);
-        }
-        return false;
-      });
-    } else {
+      // Now see whether it is in the database
+      const payload = {
+        barcodes: barcodes
+      };
+      const results = await Load.itemSearch(payload);
+      if (results && results[0] && results[0]["id"]) {
+        results.map(item => {
+          if (item["tray"]) {
+            failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}`);
+          }
+          else {
+            failure(`Item ${item["barcode"]} is already in the system (untrayed)`);
+          }
+          return false;
+        });
+      }
       return true;
-    }
-  };
+    };
 
-  useEffect(() => {
     // Gives an alert to the user if a barcode has been entered that
     // doesn't exist in FOLIO. Only shows this warning once per barcode.
     // Once checked, barcodes are saved in state so that multiple API
@@ -204,47 +175,151 @@ const NewTray = (props) => {
           }
           else {
             dispatch({ type: 'NOT_IN_FOLIO', notInFolio: [...data.notInFolio, barcode]})
-            failure(`Unable to locate FOLIO record for ${barcode}. Please verify record exists before submitting this barcode`);
+            failure(`Unable to locate FOLIO record for ${barcode}`);
+            return false;
           }
         }
       }
+      return true;
     };
 
-    let warned = false;
-    if (debouncedBarcodes && debouncedBarcodes.length > 0) {
-      // Remove the last item: either it's empty, in which case we
-      // don't want to do anything with the empty barcode, or it's an
-      // unfinished barcode, in which case we don't want to verify it
-      const barcodesToVerify = debouncedBarcodes.split('\n').slice(0, -1);
-      // Show error if duplicate barcode exists within the same input field
-      if ((new Set(barcodesToVerify)).size !== barcodesToVerify.length) {
-        // TODO: Show which barcode is duplicated
-        failure("Please double-check that you do not have duplicate barcodes or blank lines");
-      }
-      for (const barcode of barcodesToVerify) {
-        if (barcode !== '') {
-          if (!barcode.startsWith('310')) {
-            failure(`Item ${barcode} does not begin with 310`);
-            warned = true;
-          } else if (barcode.length !== BARCODE_LENGTH) {
-            failure(`Item barcodes must be ${BARCODE_LENGTH} characters long. You currently have ${barcode.length} in item ${barcode}`);
-            warned = true;
-          }
+    // Empty trays halt the verification process, but we don't need an
+    // alert live: this is done on submission
+    if (!barcodes || barcodes.length === 0) {
+      return false;
+    }
+
+    // Show error if duplicate barcode exists within the same input field
+    if ((new Set(barcodes)).size !== barcodes.length) {
+      // TODO: Show which barcode is duplicated
+      failure("Please double-check that you do not have duplicate barcodes");
+      return false;
+    }
+
+    for (const barcode of barcodes) {
+      if (barcode !== '') {
+        if (!barcode.startsWith('3101')) {
+          failure(`Item ${barcode} does not begin with 3101`);
+          return false;
+        }
+        else if (barcode.length !== BARCODE_LENGTH) {
+          failure(`Barcode ${barcode} has ${barcode.length} characters (should be 15)`);
+          return false;
         }
       }
-      if (!warned) {
-        let barcodesUnused = verifyBarcodesUnused(barcodesToVerify);
-        if (barcodesUnused) {
-          verifyFolioRecord(barcodesToVerify);
-        }
+
+      let itemsFree = await verifyItemsFree(barcodes);
+      if (itemsFree) {
+        let itemsInFolio = await verifyFolioRecord(barcodes);
+        return itemsInFolio;
+      }
+      else {
+        return false;
       }
     }
-  }, [debouncedBarcodes, data.checkedInFolio, data.notInFolio]);
 
-  const handleLocalStorage = async (key) => {
-    const results = await localforage.getItem(key);
-    return results;
+    // If nothing has failed, we can return true
+    return true;
   }
+
+
+  // Now the actual hooks that implement the live checks
+
+  useEffect(() => {
+    if (props) {
+      // TODO: Get this from settings instead of a constant
+      let trayLength = TRAY_BARCODE_LENGTH;
+      dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: trayLength});
+    }
+  }, [props]);
+
+  useEffect(() => {
+    // Don't bother doing the live verification if it's not even the
+    // correct length. (We're already showing the user that it's
+    // the wrong length, so no need to give a popup alert.)
+    if (debouncedTray && debouncedTray.length === TRAY_BARCODE_LENGTH) {
+      verifyTrayLive(debouncedTray);
+    }
+  }, [debouncedTray]);
+
+  useEffect(() => {
+    // Don't try to verify barcodes if the item field is empty
+    if (debouncedItems && debouncedItems.length > 0) {
+      const allItems = debouncedItems.split('\n').filter(Boolean);
+      // When checking live, don't check the last item: it might be an
+      // unfinished barcode, in which case traying to verify it will cause
+      // problems. It will get checked upon submission.
+      const itemsToVerify = allItems.slice(0, -1);
+      verifyItemsLive(itemsToVerify, false);
+    }
+  }, [debouncedItems, data.checkedInFolio, data.notInFolio]);
+
+  // Anytime the DOM is updated, update local storage
+  useEffect(() => {
+    const getLocalItems = async () => {
+      const local = await handleLocalStorage('tray') || [];
+      dispatch({ type: 'UPDATE_STAGED', verified: local});
+    };
+    getLocalItems();
+  }, []);
+
+
+  // The inspect functions take place when the original form is submitted
+
+  // Collections aren't inspected live
+  const inspectCollection = () => {
+    const { original } = data;
+    if (!original.collection) {
+      failure(`You must select a collection`);
+      return false;
+    } else {
+      return true;
+    }
+  };
+
+  // When inspecting trays upon submission, we want to give a popup for
+  // tray length, plus the ordinary live checking
+  const inspectTray = async () => {
+    const { original, trayLength } = data;
+    if (original.tray.length !== trayLength) {
+      failure(`Tray barcode must be ${trayLength} characters`);
+      return false;
+    }
+    else {
+      const liveVerification = await verifyTrayLive(original.tray);
+      return liveVerification;
+    }
+  };
+
+  const inspectItems = async () => {
+    const { original } = data;
+    if (!original.barcodes || original.barcodes.length === 0) {
+      failure(`You cannot add an empty tray`);
+      return false;
+    }
+    else {
+      const itemsAsArray = original.barcodes.split('\n').filter(Boolean);
+      // This is our final check, so we include the last item (we don't
+      // check it live because it might not be complete yet)
+      const verifiedAllItems = await verifyItemsLive(itemsAsArray, true);
+      return verifiedAllItems;
+    }
+  }
+
+  // Handling interactions with the form
+
+  const handleLockCollection = e => {
+    dispatch({ type: 'LOCK_COLLECTION' });
+  };
+
+  const handleEnter = (event) => {
+    if (event.keyCode === 13) {
+      const form = event.target.form;
+      const index = Array.prototype.indexOf.call(form, event.target);
+      form.elements[index + 1].focus();
+      event.preventDefault();
+    }
+  };
 
   const handleOriginalOnChange = e => {
     e.preventDefault();
@@ -258,68 +333,6 @@ const NewTray = (props) => {
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
-  }
-
-  const handleOriginalSubmit = async (e) => {
-    e.preventDefault();
-    const trayPassedInspection = await inspectTray();
-    const barcodesPassedInspection = await inspectBarcodes();
-    if (inspectCollection() && trayPassedInspection && barcodesPassedInspection) {
-      dispatch({ type: 'CHANGE_FORM', form: 'verify'});
-      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
-    }
-  };
-
-  const inspectCollection = () => {
-    const { original } = data;
-    if (!original.collection) {
-      failure(`You must select a collection`);
-      return false;
-    } else {
-      return true;
-    }
-  };
-
-  const inspectTray = async () => {
-    const { original, trayLength } = data;
-    if (original.tray.length !== trayLength) {
-      failure(`Tray barcode must be ${trayLength} characters`);
-      return false;
-    }
-    else {
-      const verifiedTrayUnused = await verifyTrayUnused(original.tray);
-      return verifiedTrayUnused;
-    }
-  };
-
-  const inspectBarcodes = async () => {
-    const { original } = data;
-    if (!original.barcodes || original.barcodes.length === 0) {
-      failure(`You cannot add an empty tray`);
-    }
-    else {
-      const barcodesAsArray = original.barcodes.split('\n').filter(Boolean);
-      for (const barcode of barcodesAsArray) {
-        if (barcode.length !== BARCODE_LENGTH) {
-          failure(`Barcode ${barcode} is not ${BARCODE_LENGTH} characters`);
-          return false;
-        }
-        else if (!barcode.startsWith('310')) {
-          failure(`Barcode ${barcode} does not begin with 310`);
-          return false;
-        }
-        // If the item is not in FOLIO, we will not add it to
-        // high density storage!
-        else if (!data.checkedInFolio.includes(barcode)) {
-          failure(`Barcode ${barcode} is not in FOLIO`);
-          return false;
-        }
-        else {
-          const verifiedBarcodesUnused = await verifyBarcodesUnused(barcodesAsArray);
-          return verifiedBarcodesUnused;
-        }
-      }
-    }
   }
 
   const handleVerifyOnChange = e => {
@@ -336,15 +349,33 @@ const NewTray = (props) => {
     dispatch({ type: 'ADD_VERIFY', verify: verify});
   };
 
+  const clearOriginal = e => {
+    e.preventDefault();
+    dispatch({ type: "RESET" });
+  };
+
   const goBackToOriginal = e => {
     e.preventDefault();
     dispatch({ type: 'CHANGE_FORM', form: 'original'});
     dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
   };
 
-  const clearOriginal = e => {
+  const handleOriginalSubmit = async (e) => {
     e.preventDefault();
-    dispatch({ type: "RESET" });
+    // Clear the FOLIO verification arrays, so we can check everything
+    // one last time
+    dispatch({ type: 'CLEAR_FOLIO_CHECK' });
+    const trayPassedInspection = await inspectTray();
+    const itemsPassedInspection = await inspectItems();
+    if (inspectCollection() && trayPassedInspection && itemsPassedInspection) {
+      dispatch({ type: 'CHANGE_FORM', form: 'verify'});
+      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
+    }
+    else {
+      console.log("Tray inspection: ", trayPassedInspection);
+      console.log("Items inspection: ", itemsPassedInspection);
+      console.log("Collection inspection: ", inspectCollection());
+    }
   };
 
   const handleVerifySubmit = e => {
@@ -365,29 +396,31 @@ const NewTray = (props) => {
       return mismatchList;
     }
 
-    let originalBarcodesAsArray = data.original.barcodes.split('\n').filter(Boolean);
-    let verifyBarcodesAsArray = data.verify.barcodes.split('\n').filter(Boolean);
-    const mismatches = findMismatches(originalBarcodesAsArray, verifyBarcodesAsArray)
+    let originalItemsAsArray = data.original.barcodes.split('\n').filter(Boolean);
+    let verifyItemsAsArray = data.verify.barcodes.split('\n').filter(Boolean);
+    const mismatches = findMismatches(originalItemsAsArray, verifyItemsAsArray)
 
     if (data.original.tray !== data.verify.tray) {
       failure('Tray mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
     }
     if (mismatches.length !== 0) {
       console.log(mismatches);
-      failure(`Barcode mismatch! Please check ${mismatches.join(', ')}`);
+      failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
     }
     else {
       let verified = data.verified;
       verified[data.verified.length] = {
         collection: data.original.collection,
         barcode: data.verify.tray,
-        items: originalBarcodesAsArray
+        items: originalItemsAsArray
       };
       localforage.setItem('tray', verified);
       dispatch({ type: 'UPDATE_STAGED', verified: verified});
       dispatch({ type: "RESET" });
     }
   };
+
+  // Staged items area
 
   const handleDisplayChange = (e, key) => {
     const verified = data.verified;
@@ -430,19 +463,6 @@ const NewTray = (props) => {
     localforage.setItem('tray', newTrayList);
   };
 
-  const handleEnter = (event) => {
-    if (event.keyCode === 13) {
-      const form = event.target.form;
-      const index = Array.prototype.indexOf.call(form, event.target);
-      form.elements[index + 1].focus();
-      event.preventDefault();
-    }
-  };
-
-  const lockCollection = e => {
-    dispatch({ type: 'LOCK_COLLECTION' });
-  };
-
   const clearDisplayGrid = e => {
     if (window.confirm('Are you sure you want to clear all staged trays as well as the current tray? This action cannot be undone.')) {
       dispatch({ type: "RESET" });
@@ -451,10 +471,15 @@ const NewTray = (props) => {
     }
   };
 
+  const handleLocalStorage = async (key) => {
+    const results = await localforage.getItem(key);
+    return results;
+  }
+
   return (
     <Fragment>
       <div style={{paddingTop: "20px"}}>
-        <Button color={data.locked ? "success" : "primary"} onClick={(e) => lockCollection(e)}>{data.locked ? "Collection locked" : "Lock collection"}</Button>{' '}
+        <Button color={data.locked ? "success" : "primary"} onClick={(e) => handleLockCollection(e)}>{data.locked ? "Collection locked" : "Lock collection"}</Button>{' '}
       </div>
       <div style={{marginTop: "20px"}}>
         <Row>
@@ -464,7 +489,7 @@ const NewTray = (props) => {
                 <TrayFormOriginal
                   handleEnter={handleEnter}
                   collections={props.collections}
-                  lockCollection={lockCollection}
+                  handleLockCollection={handleLockCollection}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -542,7 +567,7 @@ const TrayFormVerify = props => (
       />
     </FormGroup>
     <FormGroup>
-      <Label for="tray">Barcodes</Label>
+      <Label for="tray">Items</Label>
       <Input
         type="textarea"
         rows="10"
@@ -597,7 +622,7 @@ const TrayFormOriginal = props => (
         />
       </FormGroup>
       <FormGroup>
-        <Label for="barcodes">Barcodes</Label>
+        <Label for="barcodes">Items</Label>
         <Input
           type="textarea"
           rows="10"
