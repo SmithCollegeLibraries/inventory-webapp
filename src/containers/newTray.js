@@ -350,13 +350,17 @@ const NewTray = (props) => {
 
   const clearOriginal = e => {
     e.preventDefault();
-    dispatch({ type: "RESET" });
+    if (window.confirm('Are you sure you want to clear this pane? This action cannot be undone.')) {
+      dispatch({ type: "RESET" });
+    }
   };
 
   const goBackToOriginal = e => {
     e.preventDefault();
-    dispatch({ type: 'CHANGE_FORM', form: 'original'});
-    dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
+    if (window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
+      dispatch({ type: 'CHANGE_FORM', form: 'original'});
+      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
+    }
   };
 
   const handleOriginalSubmit = async (e) => {
