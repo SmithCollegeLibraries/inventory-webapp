@@ -353,10 +353,12 @@ const RapidLoad = (props) => {
     e.preventDefault();
     e.persist();
 
-    const previousTray = getPreviousTray();
-    if (previousTray) {
-      removeTrays([previousTray.tray]);
-      dispatch({ type: 'RESET_CURRENT' });
+    if (window.confirm("Are you sure you want to clear the last shelved tray? This action cannot be undone.")) {
+      const previousTray = getPreviousTray();
+      if (previousTray) {
+        removeTrays([previousTray.tray]);
+        dispatch({ type: 'RESET_CURRENT' });
+      }
     }
   };
 
