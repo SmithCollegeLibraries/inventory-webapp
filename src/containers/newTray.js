@@ -168,15 +168,26 @@ const NewTray = (props) => {
     // is changed.
     const verifyFolioRecord = async (barcodes) => {
       for (const barcode of barcodes) {
-        if (barcode.length > 0 && !data.checkedInFolio.includes(barcode) && !data.notInFolio.includes(barcode)) {
-          const itemInFolio = await Load.itemInFolio(barcode);
-          if (itemInFolio) {
-            dispatch({ type: 'CHECKED_IN_FOLIO', checkedInFolio: [...data.checkedInFolio, barcode]});
+        if (barcode.length > 0) {
+          if (data.checkedInFolio.includes(barcode)) {
+            // Do nothing if it's already been checked in FOLIO
           }
-          else {
-            dispatch({ type: 'NOT_IN_FOLIO', notInFolio: [...data.notInFolio, barcode]})
+          else if (data.notInFolio.includes(barcode)) {
+            // If it's already been checked and not in FOLIO, give
+            // another alert
             failure(`Unable to locate FOLIO record for ${barcode}`);
             return false;
+          }
+          else {
+            const itemInFolio = await Load.itemInFolio(barcode);
+            if (itemInFolio) {
+              dispatch({ type: 'CHECKED_IN_FOLIO', checkedInFolio: [...data.checkedInFolio, barcode]});
+            }
+            else {
+              dispatch({ type: 'NOT_IN_FOLIO', notInFolio: [...data.notInFolio, barcode]})
+              failure(`Unable to locate FOLIO record for ${barcode}`);
+              return false;
+            }
           }
         }
       }
