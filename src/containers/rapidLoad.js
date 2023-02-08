@@ -388,6 +388,11 @@ const RapidLoad = (props) => {
     dispatch({ type: "RESET_CURRENT" });
   };
 
+  const clearShelving = (e) => {
+    e.preventDefault();
+    dispatch({ type: 'RESET_CURRENT' });
+  }
+
   // We want to be able to remove more than one tray at a time from the
   // staging list because after submitting, we are keeping track of
   // which ones have been submitted and need to remove all the submitted
@@ -445,6 +450,8 @@ const RapidLoad = (props) => {
                   shelfStructure={shelfStructure}
                   verifyTrayLive={verifyTrayLive}
                   checkAddPossible={checkAddPossible}
+                  clearShelving={clearShelving}
+                  disabledClear={data.current.tray === '' && data.current.shelf === '' && data.current.depth === '' && data.current.position === ''}
                 />
               </CardBody>
             </Card>
@@ -544,7 +551,20 @@ const CurrentShelvingForm = props => (
           onKeyDown={props.handleEnterTabSubmit}
         />
       </FormGroup>
-      <Button style={{marginRight: '10px'}} onClick={e => props.handleSubmit(e)} color="primary" disabled={!props.checkAddPossible()}>Add</Button>
+      <Button
+          style={{marginRight: '10px'}}
+          onClick={e => props.handleSubmit(e)}
+          color="primary"
+          disabled={!props.checkAddPossible()}>
+        Add
+      </Button>
+      <Button
+          style={{marginRight: '10px'}}
+          color="warning"
+          onClick={(e) => props.clearShelving(e)}
+          disabled={props.disabledClear}>
+        Clear
+      </Button>
     </Form>
   </div>
 );
