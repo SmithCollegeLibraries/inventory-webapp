@@ -340,6 +340,9 @@ const NewTray = (props) => {
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
+    else if (e.target.name === 'collection') {
+      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
+    }
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
