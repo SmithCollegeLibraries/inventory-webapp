@@ -417,9 +417,6 @@ const NewTray = (props) => {
     let verifyItemsAsArray = data.verify.barcodes.split('\n').filter(Boolean);
     const mismatches = findMismatches(originalItemsAsArray, verifyItemsAsArray)
 
-    if (data.original.tray !== data.verify.tray) {
-      failure('Tray mismatch! \n Original tray: \n' + data.original.tray + ' \n Verify tray: \n' + data.verify.tray);
-    }
     if (mismatches.length !== 0) {
       console.log(mismatches);
       failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
