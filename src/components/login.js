@@ -11,7 +11,7 @@ export const LoginPage = ({ handleLoginChange, handleLoginSubmit, state }) => (
       <img className="mb-4" src={SISLogo} alt="SIS Logo" width="172" height="172"/>
     </div>
     <FormGroup>
-      <Label for="email">Email Address</Label>
+      <Label for="email">Email address</Label>
       <Input type="email" name="email" value={state.email} onChange={(e) => handleLoginChange(e)} placeholder="email address" required autoFocus />
     </FormGroup>
     <FormGroup>

@@ -589,7 +589,7 @@ const Display = props => (
             </dd>
             <dt className="col-sm-2">Position</dt>
             <dd className="col-sm-10">
-              {props.data[tray].position}
+              {parseInt(props.data[tray].position)}
             </dd>
           </dl>
           {/* <Button color="danger" onClick={
