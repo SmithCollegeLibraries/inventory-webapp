@@ -24,6 +24,7 @@ const RapidLoad = (props) => {
   // TODO: get these numbers from settings
   const trayStructure = /^[0-9]{8}$/;
   const shelfStructure = /^[01][0-9][RL][0-9]{4}$/;
+  const maxPosition = 12;
 
   const loadReducer = (state, action) => {
     switch (action.type) {
@@ -115,7 +116,10 @@ const RapidLoad = (props) => {
 
   // This is the verification that's done when the user submits data
   const verifyOnSubmit = tray => {
-    if (data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
+    if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > maxPosition || parseInt(data.current.position) < 1) {
+      failure(`Position should be a number between 1 and ${maxPosition}`);
+    }
+    else if (Object.keys(data.staged).length > 0 && data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
       failure(`Shelf ${data.current.shelf}, depth ${data.current.depth}, position ${data.current.position} is already occupied`);
       return false;
     }
@@ -179,11 +183,11 @@ const RapidLoad = (props) => {
   }, [debouncedTray]);
 
   const getPreviousTray = () => {
-    if (data.staged.length === 0) {
+    if (Object.keys(data.staged).length === 0) {
       return null;
     }
     else {
-      return data.staged[data.staged.length - 1];
+      return data.staged[Object.keys(data.staged).length - 1];
     }
   }
 
@@ -321,7 +325,7 @@ const RapidLoad = (props) => {
 
     const processSubmit = async () => {
       let newStaged = data.staged;
-      newStaged[data.staged.length] = data.current;
+      newStaged[Object.keys(data.staged).length] = data.current;
       localforage.setItem('load', newStaged);
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
