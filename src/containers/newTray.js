@@ -450,16 +450,21 @@ const NewTray = (props) => {
 
   const handleProcessTrays = async (e) => {
     e.preventDefault();
-    let submittedTrays = [];
-    for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
-      const response = await Load.newTray(tray);
-      if (response) {
-        success(`Tray ${tray.barcode} successfully added`);
-        submittedTrays.push(tray.barcode);
+    if (navigator.onLine === true) {
+      let submittedTrays = [];
+      for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
+        const response = await Load.newTray(tray);
+        if (response) {
+          success(`Tray ${tray.barcode} successfully added`);
+          submittedTrays.push(tray.barcode);
+        }
       }
+      removeItems(submittedTrays);
+      dispatch({ type: "RESET" });
     }
-    removeItems(submittedTrays);
-    dispatch({ type: "RESET" });
+    else {
+      failure("You must be connected to the internet to process trays. Please check your internet connection.");
+    }
   };
 
   // We want to be able to remove more than one tray at a time from the

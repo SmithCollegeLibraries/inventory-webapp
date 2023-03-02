@@ -69,7 +69,6 @@ const RapidLoad = (props) => {
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
   const debouncedTray = useDebounce(data.current.tray);
-  const debouncedShelf = useDebounce(data.current.shelf);
 
   // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
@@ -173,8 +172,7 @@ const RapidLoad = (props) => {
     }
   }
 
-  // Check in real time that the tray isn't staged already, and if
-  // connected to the internet, other things as well
+  // Perform real-time checks that don't require an internet connection
   useEffect(() => {
     const trayBarcodeToVerify = debouncedTray;
     if (trayBarcodeToVerify) {
@@ -380,16 +378,21 @@ const RapidLoad = (props) => {
 
   const handleProcessTrays = async (e) => {
     e.preventDefault();
-    let submittedTrays = [];
-    for (const x of Object.keys(data.staged).map(key => data.staged[key])) {
-      const response = await Load.shelveTray(x);
-      if (response) {
-        success(`Tray ${x.tray} successfully shelved`);
-        submittedTrays.push(x.tray);
+    if (navigator.onLine === true) {
+      let submittedTrays = [];
+      for (const x of Object.keys(data.staged).map(key => data.staged[key])) {
+        const response = await Load.shelveTray(x);
+        if (response) {
+          success(`Tray ${x.tray} successfully shelved`);
+          submittedTrays.push(x.tray);
+        }
       }
+      removeTrays(submittedTrays);
+      dispatch({ type: "RESET_CURRENT" });
     }
-    removeTrays(submittedTrays);
-    dispatch({ type: "RESET_CURRENT" });
+    else {
+      failure("You must be connected to the internet to process trays. Please check your internet connection.");
+    }
   };
 
   const clearShelving = (e) => {
