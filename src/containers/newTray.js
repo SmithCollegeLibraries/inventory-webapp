@@ -12,6 +12,7 @@ import { success, failure, warning } from '../components/toastAlerts';
 const BARCODE_LENGTH = 15;
 const TRAY_BARCODE_LENGTH = 8;
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+const trayStructure = /^1[0-9]{7}$/;
 
 
 const NewTray = (props) => {
@@ -245,10 +246,16 @@ const NewTray = (props) => {
 
   useEffect(() => {
     // Don't bother doing the live verification if it's not even the
-    // correct length. (We're already showing the user that it's
-    // the wrong length, so no need to give a popup alert.)
-    if (debouncedTray && debouncedTray.length === TRAY_BARCODE_LENGTH) {
+    // correct length or doesn't begin with 1. (We're already showing the
+    // user that it's incorrect with the badge, so no need to give a
+    // popup alert.)
+    if (trayStructure.test(debouncedTray)) {
       verifyTrayLive(debouncedTray);
+    }
+    else {
+      if (debouncedTray.length === TRAY_BARCODE_LENGTH) {
+        failure(`Valid tray barcodes must begin with 1.`);
+      }
     }
   }, [debouncedTray]);
 
@@ -516,8 +523,10 @@ const NewTray = (props) => {
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={data.original.tray.length !== data.trayLength || data.original.barcodes.length === 0}
+                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0}
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
+                  trayStructure={trayStructure}
+                  TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
                 />
               </CardBody>
             </Card>
@@ -535,6 +544,8 @@ const NewTray = (props) => {
                 handleVerifySubmit={handleVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
+                trayStructure={trayStructure}
+                TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
               />
               </CardBody>
             </Card>
@@ -568,10 +579,10 @@ const TrayFormVerify = props => (
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
-      { props.disabled ? "" : props.verify.tray.length === props.trayLength
-        ? <Badge color="success">{props.trayLength}</Badge>
-        : <Badge color="danger">{props.verify.tray.length}</Badge>
-      }
+          { props.trayStructure.test(props.verify.tray)
+            ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
+            : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
+          }
       </Label>
       <Input
         type="text"
@@ -624,9 +635,9 @@ const TrayFormOriginal = props => (
       </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
-          { props.original.tray.length === props.trayLength
-            ? <><Badge color="success">{props.trayLength}</Badge> ✓</>
-            : <Badge color="danger">{props.original.tray.length}</Badge>
+          { props.trayStructure.test(props.original.tray)
+            ? <><Badge color="success">{props.original.tray.length}</Badge> ✓</>
+            : <Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge>
           }
         </Label>
         <Input

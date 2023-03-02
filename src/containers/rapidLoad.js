@@ -22,9 +22,10 @@ const RapidLoad = (props) => {
   };
 
   // TODO: get these numbers from settings
-  const trayStructure = /^[0-9]{8}$/;
+  const TRAY_BARCODE_LENGTH = 8;
+  const MAX_POSITION = 12;
+  const trayStructure = /^1[0-9]{7}$/;
   const shelfStructure = /^[01][0-9][RL][0-9]{4}$/;
-  const maxPosition = 12;
 
   const loadReducer = (state, action) => {
     switch (action.type) {
@@ -85,18 +86,20 @@ const RapidLoad = (props) => {
       return false;
     }
     // Check that the shelf matches the expected structure
-    if (!shelfStructure.test(data.current.shelf)) {
+    else if (!shelfStructure.test(data.current.shelf)) {
       return false;
     }
     // If the tray is already staged, don't allow it to be added again
-    if (!verifyTrayLive(data.current)) {
+    else if (!verifyTrayLive(data.current)) {
       return false;
     }
     // Don't allow submission if either the depth or position is empty
-    if (data.current.depth === "" || data.current.position === "") {
+    else if (data.current.depth === "" || data.current.position === "") {
       return false;
     }
-    return true;
+    else {
+      return true;
+    }
   }
 
   // This is the verification that's done on a tray in real time,
@@ -115,8 +118,8 @@ const RapidLoad = (props) => {
 
   // This is the verification that's done when the user submits data
   const verifyOnSubmit = tray => {
-    if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > maxPosition || parseInt(data.current.position) < 1) {
-      failure(`Position should be a number between 1 and ${maxPosition}`);
+    if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > MAX_POSITION || parseInt(data.current.position) < 1) {
+      failure(`Position should be a number between 1 and ${MAX_POSITION}`);
     }
     else if (Object.keys(data.staged).length > 0 && data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
       failure(`Shelf ${data.current.shelf}, depth ${data.current.depth}, position ${data.current.position} is already occupied`);
@@ -177,6 +180,11 @@ const RapidLoad = (props) => {
     const trayBarcodeToVerify = debouncedTray;
     if (trayBarcodeToVerify) {
       verifyTrayLive(trayBarcodeToVerify);
+    }
+    // If the tray barcode is the right length but doesn't begin with 1,
+    // show a popup message
+    if (trayBarcodeToVerify.length === TRAY_BARCODE_LENGTH && !trayStructure.test(trayBarcodeToVerify)) {
+      failure(`Valid tray barcodes must begin with 1.`);
     }
   }, [debouncedTray]);
 
@@ -459,6 +467,7 @@ const RapidLoad = (props) => {
                   checkAddPossible={checkAddPossible}
                   clearShelving={clearShelving}
                   disabledClear={data.current.tray === '' && data.current.shelf === '' && data.current.depth === '' && data.current.position === ''}
+                  TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
                 />
               </CardBody>
             </Card>
@@ -491,7 +500,7 @@ const CurrentShelvingForm = props => (
         <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.current.tray)
             ? <><Badge color="success">{props.current.tray.length}</Badge> ✓</>
-            : <Badge color="danger">{props.current.tray.length}</Badge>
+            : <Badge color={props.TRAY_BARCODE_LENGTH === props.current.tray.length ? "warning" : "danger"}>{props.current.tray.length}</Badge>
           }
         </Label>
         <Input
