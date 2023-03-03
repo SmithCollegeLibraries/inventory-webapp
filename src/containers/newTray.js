@@ -560,7 +560,7 @@ const NewTray = (props) => {
             { Object.keys(data.verified).map(items => items).length
               ? <>
                 <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process all</Button>
-                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Clear all</Button>
+                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Delete all</Button>
               </>
               : ''
             }
