@@ -174,9 +174,8 @@ const NewTray = (props) => {
             // Do nothing if it's already been checked in FOLIO
           }
           else if (data.notInFolio.includes(barcode)) {
-            // If it's already been checked and not in FOLIO, give
-            // another alert
-            failure(`Unable to locate FOLIO record for ${barcode}`);
+            // If it's already been checked and not in FOLIO, don't give
+            // another alert except on submit to avoid excessive popups
             return false;
           }
           else {
