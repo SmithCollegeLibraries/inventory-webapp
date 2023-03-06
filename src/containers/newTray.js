@@ -262,10 +262,11 @@ const NewTray = (props) => {
     // Don't try to verify barcodes if the item field is empty
     if (debouncedItems && debouncedItems.length > 0) {
       const allItems = debouncedItems.split('\n').filter(Boolean);
-      // When checking live, don't check the last item: it might be an
-      // unfinished barcode, in which case traying to verify it will cause
-      // problems. It will get checked upon submission.
-      const itemsToVerify = allItems.slice(0, -1);
+      // When checking live, don't check the last item if there's no
+      // newline at the end, because that means the barcode may be
+      // incomplete
+      const lastChar = debouncedItems.slice(-1);
+      const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
       verifyItemsLive(itemsToVerify, false);
     }
   }, [debouncedItems, data.checkedInFolio, data.notInFolio]);
