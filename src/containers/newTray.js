@@ -388,16 +388,15 @@ const NewTray = (props) => {
     // Clear the FOLIO verification arrays, so we can check everything
     // one last time
     dispatch({ type: 'CLEAR_FOLIO_CHECK' });
+    const collectionPassedInspection = inspectCollection();
     const trayPassedInspection = await inspectTray();
     const itemsPassedInspection = await inspectItems();
-    if (inspectCollection() && trayPassedInspection && itemsPassedInspection) {
+    if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
       dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
     }
     else {
-      console.log("Tray inspection: ", trayPassedInspection);
-      console.log("Items inspection: ", itemsPassedInspection);
-      console.log("Collection inspection: ", inspectCollection());
+      // Do nothing
     }
   };
 
