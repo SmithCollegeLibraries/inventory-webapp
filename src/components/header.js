@@ -35,10 +35,17 @@ export default class Header extends Component {
     const storage = JSON.parse(sessionStorage.getItem('account'));
     const { account } = storage || '';
     const { level } = account || '';
+    const isTestInstance = process.env.REACT_APP_ROOT.includes("-dev");
+    const colorAttributes = {
+        color: isTestInstance ? 'light' : 'dark',
+        light: isTestInstance,
+        dark: !isTestInstance,
+      };
+    const sisHeader = `SIS ’23 ${isTestInstance ? "TEST" : ""} (Version ${process.env.REACT_APP_VERSION})`;
     return (
       <div>
-        <Navbar color="dark" dark expand="md">
-          <NavbarBrand href="#!">SIS &rsquo;23 (Version 4.1.8)</NavbarBrand>
+        <Navbar {...colorAttributes} expand="md">
+          <NavbarBrand href="#!">{sisHeader}</NavbarBrand>
           <NavbarToggler onClick={this.toggle} />
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
