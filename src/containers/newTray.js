@@ -320,14 +320,14 @@ const NewTray = (props) => {
 
   // When inspecting trays upon submission, we want to give a popup for
   // tray length, plus the ordinary live checking
-  const inspectTray = async () => {
-    const { original, trayLength } = data;
-    if (original.tray.length !== trayLength) {
-      failure(`Tray barcode must be ${trayLength} characters`);
+  const inspectTray = async (tray) => {
+    const { trayLength } = data;
+    if (!trayStructure.test(tray)) {
+      failure(`Tray barcode must be ${trayLength} characters long and begin with 1`);
       return false;
     }
     else {
-      const liveVerification = await verifyTrayLive(original.tray);
+      const liveVerification = await verifyTrayLive(tray);
       return liveVerification;
     }
   };
@@ -413,7 +413,7 @@ const NewTray = (props) => {
     // one last time
     dispatch({ type: 'CLEAR_FOLIO_CHECK' });
     const collectionPassedInspection = inspectCollection();
-    const trayPassedInspection = await inspectTray();
+    const trayPassedInspection = await inspectTray(data.original.tray);
     const itemsPassedInspection = await inspectItems(data.original.barcodes);
     if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
