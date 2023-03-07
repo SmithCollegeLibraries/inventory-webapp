@@ -107,7 +107,8 @@ const NewTray = (props) => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
   const debouncedTray = useDebounce(data.original.tray);
-  const debouncedItems = useDebounce(data.original.barcodes);
+  const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
+  const debouncedMiddlePaneItems = useDebounce(data.verify.barcodes);
 
 
   // Live verification functions, which also get called again on submission
@@ -260,16 +261,26 @@ const NewTray = (props) => {
 
   useEffect(() => {
     // Don't try to verify barcodes if the item field is empty
-    if (debouncedItems && debouncedItems.length > 0) {
-      const allItems = debouncedItems.split('\n').filter(Boolean);
+    if (debouncedLeftPaneItems && debouncedLeftPaneItems.length > 0) {
+      const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
       // When checking live, don't check the last item if there's no
       // newline at the end, because that means the barcode may be
       // incomplete
-      const lastChar = debouncedItems.slice(-1);
+      const lastChar = debouncedLeftPaneItems.slice(-1);
       const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
       verifyItemsLive(itemsToVerify, false);
     }
-  }, [debouncedItems, data.checkedInFolio, data.notInFolio]);
+  }, [debouncedLeftPaneItems, data.checkedInFolio, data.notInFolio]);
+
+  // Do the same verification for the middle pane
+  useEffect(() => {
+    if (debouncedMiddlePaneItems && debouncedMiddlePaneItems.length > 0) {
+      const allItems = debouncedMiddlePaneItems.split('\n').filter(Boolean);
+      const lastChar = debouncedMiddlePaneItems.slice(-1);
+      const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
+      verifyItemsLive(itemsToVerify, false);
+    }
+  }, [debouncedMiddlePaneItems, data.checkedInFolio, data.notInFolio]);
 
   // Anytime the DOM is updated, update local storage
   useEffect(() => {
@@ -308,14 +319,13 @@ const NewTray = (props) => {
     }
   };
 
-  const inspectItems = async () => {
-    const { original } = data;
-    if (!original.barcodes || original.barcodes.length === 0) {
+  const inspectItems = async (barcodes) => {
+    if (!barcodes || barcodes.length === 0) {
       failure(`You cannot add an empty tray`);
       return false;
     }
     else {
-      const itemsAsArray = original.barcodes.split('\n').filter(Boolean);
+      const itemsAsArray = barcodes.split('\n').filter(Boolean);
       // This is our final check, so we include the last item (we don't
       // check it live because it might not be complete yet)
       const verifiedAllItems = await verifyItemsLive(itemsAsArray, true);
@@ -391,7 +401,7 @@ const NewTray = (props) => {
     dispatch({ type: 'CLEAR_FOLIO_CHECK' });
     const collectionPassedInspection = inspectCollection();
     const trayPassedInspection = await inspectTray();
-    const itemsPassedInspection = await inspectItems();
+    const itemsPassedInspection = await inspectItems(data.original.barcodes);
     if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
       dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
