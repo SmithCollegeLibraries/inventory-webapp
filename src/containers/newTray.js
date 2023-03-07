@@ -613,7 +613,7 @@ const TrayFormVerify = props => (
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.verify.tray)
+          { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
             ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
             : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
           }
