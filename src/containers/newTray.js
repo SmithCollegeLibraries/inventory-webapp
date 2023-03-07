@@ -106,8 +106,9 @@ const NewTray = (props) => {
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
-  const debouncedTray = useDebounce(data.original.tray);
+  const debouncedLeftPaneTray = useDebounce(data.original.tray);
   const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
+  const debouncedMiddlePaneTray = useDebounce(data.verify.tray);
   const debouncedMiddlePaneItems = useDebounce(data.verify.barcodes);
 
 
@@ -249,15 +250,15 @@ const NewTray = (props) => {
     // correct length or doesn't begin with 1. (We're already showing the
     // user that it's incorrect with the badge, so no need to give a
     // popup alert.)
-    if (trayStructure.test(debouncedTray)) {
-      verifyTrayLive(debouncedTray);
+    if (trayStructure.test(debouncedLeftPaneTray)) {
+      verifyTrayLive(debouncedLeftPaneTray);
     }
     else {
-      if (debouncedTray.length === TRAY_BARCODE_LENGTH) {
+      if (debouncedLeftPaneTray.length === TRAY_BARCODE_LENGTH) {
         failure(`Valid tray barcodes must begin with 1.`);
       }
     }
-  }, [debouncedTray]);
+  }, [debouncedLeftPaneTray]);
 
   useEffect(() => {
     // Don't try to verify barcodes if the item field is empty
@@ -273,6 +274,18 @@ const NewTray = (props) => {
   }, [debouncedLeftPaneItems, data.checkedInFolio, data.notInFolio]);
 
   // Do the same verification for the middle pane
+
+  useEffect(() => {
+    if (trayStructure.test(debouncedMiddlePaneTray)) {
+      verifyTrayLive(debouncedMiddlePaneTray);
+    }
+    else {
+      if (debouncedMiddlePaneTray.length === TRAY_BARCODE_LENGTH) {
+        failure(`Valid tray barcodes must begin with 1.`);
+      }
+    }
+  }, [debouncedMiddlePaneTray]);
+
   useEffect(() => {
     if (debouncedMiddlePaneItems && debouncedMiddlePaneItems.length > 0) {
       const allItems = debouncedMiddlePaneItems.split('\n').filter(Boolean);
@@ -553,6 +566,7 @@ const NewTray = (props) => {
                 handleVerifySubmit={handleVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
+                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0}
                 trayStructure={trayStructure}
                 TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
               />
@@ -622,8 +636,22 @@ const TrayFormVerify = props => (
         disabled={props.disabled}
       />
     </FormGroup>
-    <Button style={{marginRight: '10px'}} onClick={(e) => props.handleVerifySubmit(e)} color="primary" disabled={props.disabled}>Add</Button>
-    <Button style={{marginRight: '10px'}} color="warning" onClick={(e) => props.goBackToOriginal(e)} disabled={props.disabled}>Go back</Button>
+    <Button
+        style={{marginRight: '10px'}}
+        onClick={(e) => props.handleVerifySubmit(e)}
+        color="primary"
+        disabled={props.disabled || props.disabledSubmit}
+      >
+      Add
+    </Button>
+    <Button
+        style={{marginRight: '10px'}}
+        color="warning"
+        onClick={(e) => props.goBackToOriginal(e)}
+        disabled={props.disabled}
+      >
+      Go back
+    </Button>
   </Form>
 );
 
