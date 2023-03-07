@@ -1,13 +1,11 @@
-import { base } from '../config/endpoints';
 import { failure } from '../components/toastAlerts'
 // import { getFormattedDate } from '../util/date';
 
-const account = `${base}user/`
-// const settings = `${base}settings/`
-const trayAPI = `${base}tray-api/`
-const collectionAPI = `${base}collection-api/`
-const shelfAPI = `${base}shelf-api/`
-const itemAPI = `${base}item-api/`
+const account = `${process.env.REACT_APP_DATABASE_URL}/user/`
+const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
+const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
+const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
+const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 
 
 class Load {
