@@ -13,8 +13,6 @@ import {
   } from 'reactstrap';
 import { NavLink } from 'react-router-dom';
 
-import { webapp_base } from '../config/endpoints';
-
 
 export default class Header extends Component {
   state = {
@@ -30,7 +28,7 @@ export default class Header extends Component {
   logOut = (e) => {
     e.preventDefault();
     sessionStorage.clear();
-    window.location.href = webapp_base;
+    window.location.href = process.env.PUBLIC_URL;
   };
 
   render() {

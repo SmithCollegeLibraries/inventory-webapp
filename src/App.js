@@ -119,7 +119,7 @@ export default class Main extends Component {
     return (
       <div>
         <ToastContainer />
-        <Router basename="/sis">
+        <Router basename={process.env.REACT_APP_ROOT}>
           <Header
             name={this.state.name}
             level={this.state.level}

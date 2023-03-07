@@ -1,12 +1,7 @@
-import { base } from '../config/endpoints';
 import Alerts from '../components/alerts';
 
-// const account = `${base}user/`
-// const settings = `${base}settings/`
-const trayAPI = `${base}tray-api/`
-const collectionAPI = `${base}collection-api/`
-// const shelfAPI = `${base}shelf-api/`
-// const itemAPI = `${base}item-api/`
+const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
+const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 
 
 class ContentSearch {
