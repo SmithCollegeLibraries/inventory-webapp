@@ -454,7 +454,7 @@ const NewTray = (props) => {
       if (data.original.tray !== data.verify.tray) {
         failure("Tray mismatch!");
       }
-      if (mismatches.length !== 0) {
+      else if (mismatches.length !== 0) {
         failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
       }
       else {
