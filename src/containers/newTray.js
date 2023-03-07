@@ -424,7 +424,7 @@ const NewTray = (props) => {
     }
   };
 
-  const handleVerifySubmit = e => {
+  const handleVerifySubmit = async (e) => {
     e.preventDefault()
 
     const findMismatches = (originalList, verifyList) => {
@@ -442,24 +442,35 @@ const NewTray = (props) => {
       return mismatchList;
     }
 
-    let originalItemsAsArray = data.original.barcodes.split('\n').filter(Boolean);
-    let verifyItemsAsArray = data.verify.barcodes.split('\n').filter(Boolean);
+    dispatch({ type: 'CLEAR_FOLIO_CHECK' });
+    const collectionPassedInspection = inspectCollection();
+    const trayPassedInspection = await inspectTray(data.verify.tray);
+    const itemsPassedInspection = await inspectItems(data.verify.barcodes);
+    const originalItemsAsArray = data.original.barcodes.split('\n').filter(Boolean);
+    const verifyItemsAsArray = data.verify.barcodes.split('\n').filter(Boolean);
     const mismatches = findMismatches(originalItemsAsArray, verifyItemsAsArray)
 
-    if (mismatches.length !== 0) {
-      console.log(mismatches);
-      failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
+    if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
+      if (data.original.tray !== data.verify.tray) {
+        failure("Tray mismatch!");
+      }
+      if (mismatches.length !== 0) {
+        failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
+      }
+      else {
+        let verified = data.verified;
+        verified[data.verified.length] = {
+          collection: data.original.collection,
+          barcode: data.verify.tray,
+          items: originalItemsAsArray
+        };
+        localforage.setItem('tray', verified);
+        dispatch({ type: 'UPDATE_STAGED', verified: verified});
+        dispatch({ type: "RESET" });
+      }
     }
     else {
-      let verified = data.verified;
-      verified[data.verified.length] = {
-        collection: data.original.collection,
-        barcode: data.verify.tray,
-        items: originalItemsAsArray
-      };
-      localforage.setItem('tray', verified);
-      dispatch({ type: 'UPDATE_STAGED', verified: verified});
-      dispatch({ type: "RESET" });
+      // Do nothing
     }
   };
 
