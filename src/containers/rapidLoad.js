@@ -236,40 +236,55 @@ const RapidLoad = (props) => {
     if (previous === null) {
       return true;
     }
-    if (shelf === previous.shelf) {
+    else if (shelf === previous.shelf) {
       if (depth === previous.depth) {
         if (parseInt(position) === parseInt(previous.position) + 1) {
           return true;
         }
         else {
-          return "The tray is on the same shelf as the last one, but not in the next position."
+          return "The tray is on the same shelf as the last one, but not in the next position.";
         }
       }
       else {
-        if (parseInt(position) === 1) {
-          // Can't shelve in front of a tray that's already in the front
-          if (previous.depth === "Front") {
-            return "You are currently trying to shelve behind an existing tray."
+        // Can't shelve in front of a tray that's already in the front
+        if (previous.depth === "Front" || (previous.depth === "Middle" && depth === "Rear")) {
+          if (parseInt(position) === 1) {
+            return "You are currently shelving front to back.";
           }
           else {
-            return true;
+            return "You are currently shelving front to back. Also, the tray is not in first position, even though you are starting a new depth.";
           }
         }
         else {
-          return "The tray is on the same shelf at a new depth, but not in first position."
+          if (parseInt(position) === 1) {
+            return true;
+          }
+          else {
+            return "The tray is on the same shelf at a new depth, but not in first position.";
+          }
         }
       }
     }
     else if (isNextConsecutiveShelf(shelf, previous.shelf)) {
-      if (parseInt(position) === 1) {
-        return true;
+      if (depth !== "Rear") {
+        if (parseInt(position) === 1) {
+          return "The tray is on a new shelf, but should be in the rear.";
+        }
+        else {
+          return "The tray is on a new shelf, but not in first position. Also, it should be in the rear.";
+        }
       }
       else {
-        return "The tray is on a new shelf, but not in first position."
+        if (parseInt(position) === 1) {
+          return true;
+        }
+        else {
+          return "The tray is on a new shelf, but not in first position.";
+        }
       }
     }
     else {
-      return "The tray is not on the same shelf as the last one."
+      return "The tray is not on the same shelf as the last tray, nor on the next shelf.";
     }
   }
 
