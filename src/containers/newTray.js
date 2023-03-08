@@ -409,9 +409,9 @@ const NewTray = (props) => {
 
   const handleOriginalSubmit = async (e) => {
     e.preventDefault();
-    // Clear the FOLIO verification arrays, so we can check everything
-    // one last time
-    dispatch({ type: 'CLEAR_FOLIO_CHECK' });
+    // If uncommented: clear the FOLIO verification arrays, so we can check
+    // everything one last time
+    // dispatch({ type: 'CLEAR_FOLIO_CHECK' });
     const collectionPassedInspection = inspectCollection();
     const trayPassedInspection = await inspectTray(data.original.tray);
     const itemsPassedInspection = await inspectItems(data.original.barcodes);
@@ -442,7 +442,8 @@ const NewTray = (props) => {
       return mismatchList;
     }
 
-    dispatch({ type: 'CLEAR_FOLIO_CHECK' });
+    // Don't use CLEAR_FOLIO_CHECK here, because it causes race conditions
+    // with the staging area
     const collectionPassedInspection = inspectCollection();
     const trayPassedInspection = await inspectTray(data.verify.tray);
     const itemsPassedInspection = await inspectItems(data.verify.barcodes);
