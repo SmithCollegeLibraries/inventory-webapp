@@ -133,7 +133,7 @@ const NewTray = (props) => {
     return true;
   };
 
-  const verifyItemsLive = async (barcodes) => {
+  const verifyItemsLive = async (barcodes, verifyButtonClicked) => {
     const verifyItemsFree = async (barcodes) => {
       // First see whether it already exists in staged trays
       const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
@@ -169,7 +169,7 @@ const NewTray = (props) => {
     // Once checked, barcodes are saved in state so that multiple API
     // calls aren't made to the FOLIO server every time the input field
     // is changed.
-    const verifyFolioRecord = async (barcodes) => {
+    const verifyFolioRecord = async (barcodes, verifyButtonClicked) => {
       for (const barcode of barcodes) {
         if (barcode.length > 0) {
           if (data.checkedInFolio.includes(barcode)) {
@@ -177,7 +177,12 @@ const NewTray = (props) => {
           }
           else if (data.notInFolio.includes(barcode)) {
             // If it's already been checked and not in FOLIO, don't give
-            // another alert except on submit to avoid excessive popups
+            // another alert except on submit to avoid excessive popups --
+            // unless the Verify button was just clicked, in which case
+            // we want to explain why the user can't continue
+            if (verifyButtonClicked) {
+              failure(`Unable to locate FOLIO record for ${barcode}`);
+            }
             return false;
           }
           else {
@@ -223,7 +228,7 @@ const NewTray = (props) => {
 
       let itemsFree = await verifyItemsFree(barcodes);
       if (itemsFree) {
-        let itemsInFolio = await verifyFolioRecord(barcodes);
+        let itemsInFolio = await verifyFolioRecord(barcodes, verifyButtonClicked);
         return itemsInFolio;
       }
       else {
