@@ -150,7 +150,7 @@ const NewTray = (props) => {
         barcodes: barcodes
       };
       const results = await Load.itemSearch(payload);
-      if (results && results[0] && results[0]["id"]) {
+      if (results !== null && results.length > 0 && results[0]["id"]) {
         results.map(item => {
           if (item["tray"]) {
             failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}`);
@@ -158,10 +158,12 @@ const NewTray = (props) => {
           else {
             failure(`Item ${item["barcode"]} is already in the system (untrayed)`);
           }
-          return false;
         });
+        return false;
       }
-      return true;
+      else {
+        return true;
+      }
     };
 
     // Gives an alert to the user if a barcode has been entered that
