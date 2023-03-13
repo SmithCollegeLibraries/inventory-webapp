@@ -6,19 +6,20 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
-import { success, failure, warning } from '../components/toastAlerts';
+import { success, failure } from '../components/toastAlerts';
 
 // TODO: get these numbers from settings
 const BARCODE_LENGTH = 15;
 const TRAY_BARCODE_LENGTH = 8;
-const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+// const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+const DEFAULT_COLLECTION = 'Smith General Collections';
 const trayStructure = /^1[0-9]{7}$/;
 
 
 const NewTray = (props) => {
   const initialState = {
     original: {
-      collection: '',
+      collection: DEFAULT_COLLECTION,
       tray: '',
       barcodes: []
     },
@@ -33,7 +34,6 @@ const NewTray = (props) => {
     trayValid: false,
     trayLength: TRAY_BARCODE_LENGTH,
     timeout: 0,
-    locked: true
   };
 
   const trayReducer = (state, action) => {
@@ -85,7 +85,7 @@ const NewTray = (props) => {
           ...state,
           form: "original",
           original: {
-            collection: state.locked === true ? state.original.collection : '',
+            collection: state.original.collection,
             tray: '',
             barcodes: []
           },
@@ -93,11 +93,6 @@ const NewTray = (props) => {
             tray: '',
             barcodes: []
           }
-        };
-      case 'LOCK_COLLECTION':
-        return {
-          ...state,
-          locked: !state.locked
         };
       default:
         return state;
@@ -355,10 +350,6 @@ const NewTray = (props) => {
 
   // Handling interactions with the form
 
-  const handleLockCollection = e => {
-    dispatch({ type: 'LOCK_COLLECTION' });
-  };
-
   const handleEnter = (event) => {
     if (event.keyCode === 13) {
       const form = event.target.form;
@@ -377,9 +368,9 @@ const NewTray = (props) => {
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
-    else if (e.target.name === 'collection') {
-      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
-    }
+    // else if (e.target.name === 'collection') {
+    //   value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
+    // }
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
@@ -545,9 +536,6 @@ const NewTray = (props) => {
 
   return (
     <Fragment>
-      <div style={{paddingTop: "20px"}}>
-        <Button color={data.locked ? "success" : "primary"} onClick={(e) => handleLockCollection(e)}>{data.locked ? "Collection locked" : "Lock collection"}</Button>{' '}
-      </div>
       <div style={{marginTop: "20px"}}>
         <Row>
           <Col md="4">
@@ -555,8 +543,7 @@ const NewTray = (props) => {
               <CardBody>
                 <TrayFormOriginal
                   handleEnter={handleEnter}
-                  collections={props.collections}
-                  handleLockCollection={handleLockCollection}
+                  // collections={props.collections}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -577,7 +564,7 @@ const NewTray = (props) => {
               <CardBody>
               <TrayFormVerify
                 handleEnter={handleEnter}
-                collections={props.collections}
+                // collections={props.collections}
                 trayLength={data.trayLength}
                 original={data.original}
                 verify={data.verify}
@@ -595,7 +582,7 @@ const NewTray = (props) => {
           <Col>
             <Display
               data={data.verified}
-              collections={props.collections}
+              // collections={props.collections}
               handleDisplayChange={handleDisplayChange}
               removeItems={removeItems}
             />
@@ -615,10 +602,10 @@ const NewTray = (props) => {
 
 const TrayFormVerify = props => (
   <Form autoComplete="off">
-    <FormGroup>
+    {/* <FormGroup>
       <Label for="collections">Collection</Label>
       <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
-    </FormGroup>
+    </FormGroup> */}
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
@@ -677,7 +664,7 @@ const TrayFormVerify = props => (
 const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
-      <FormGroup>
+      {/* <FormGroup>
         <Label for="collections">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
           <option>{ COLLECTION_PLACEHOLDER }</option>
@@ -688,7 +675,7 @@ const TrayFormOriginal = props => (
             : <option></option>
           }
         </Input>
-      </FormGroup>
+      </FormGroup> */}
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.original.tray)
@@ -758,10 +745,10 @@ const Display = props => (
             <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
               {props.data[tray].items ? props.data[tray].items.join('\n') : ''}
             </dd>
-            <dt className="col-sm-3">Collection</dt>
+            {/* <dt className="col-sm-3">Collection</dt>
             <dd className="col-sm-9">
               {props.data[tray].collection}
-            </dd>
+            </dd> */}
           </dl>
           <Button color="danger" onClick={
               function () {
