@@ -21,11 +21,11 @@ const NewTray = (props) => {
     original: {
       collection: DEFAULT_COLLECTION,
       tray: '',
-      barcodes: []
+      barcodes: ''
     },
     verify: {
       tray: '',
-      barcodes: []
+      barcodes: ''
     },
     verified: [],  // List of trays that have been verified and staged
     checkedInFolio: [],  // Items verified to be in FOLIO
@@ -87,11 +87,11 @@ const NewTray = (props) => {
           original: {
             collection: state.original.collection,
             tray: '',
-            barcodes: []
+            barcodes: ''
           },
           verify: {
             tray: '',
-            barcodes: []
+            barcodes: ''
           }
         };
       default:
@@ -401,7 +401,7 @@ const NewTray = (props) => {
     e.preventDefault();
     if (window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
       dispatch({ type: 'CHANGE_FORM', form: 'original'});
-      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
+      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
     }
   };
 
@@ -431,7 +431,7 @@ const NewTray = (props) => {
     const itemsPassedInspection = await inspectItems(data.original.barcodes);
     if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
       dispatch({ type: 'CHANGE_FORM', form: 'verify'});
-      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: []} });
+      dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
     }
     else {
       // Do nothing
