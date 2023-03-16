@@ -602,68 +602,6 @@ const NewTray = (props) => {
   );
 };
 
-const TrayFormVerify = props => (
-  <Form autoComplete="off">
-    {/* <FormGroup>
-      <Label for="collections">Collection</Label>
-      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
-    </FormGroup> */}
-    <FormGroup>
-      <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
-            ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
-          }
-      </Label>
-      <Input
-        type="text"
-        name="tray"
-        placeholder={ props.disabled ? "" : "Tray barcode" }
-        value={props.verify.tray}
-        onChange={(e) => props.handleVerifyOnChange(e)}
-        onPaste={(e)=>{
-          e.preventDefault()
-          return false;
-        }}
-        onKeyDown={props.handleEnter}
-        disabled={props.disabled}
-      />
-    </FormGroup>
-    <FormGroup>
-      <Label for="tray">Items</Label>
-      <Input
-        type="textarea"
-        rows="10"
-        name="barcodes"
-        value={props.verify.barcodes}
-        onChange={(e) => props.handleVerifyOnChange(e)}
-        onPaste={(e)=>{
-          e.preventDefault()
-          return false;
-        }}
-        disabled={props.disabled}
-      />
-    </FormGroup>
-    <Button
-        style={{marginRight: '10px'}}
-        onClick={(e) => props.handleVerifySubmit(e)}
-        color="primary"
-        disabled={props.disabled || props.disabledSubmit}
-          onKeyDown={props.handleTabVerifySubmit}
-      >
-      Add
-    </Button>
-    <Button
-        style={{marginRight: '10px'}}
-        color="warning"
-        onClick={(e) => props.goBackToOriginal(e)}
-        disabled={props.disabled}
-      >
-      Go back
-    </Button>
-  </Form>
-);
-
 const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
@@ -734,6 +672,68 @@ const TrayFormOriginal = props => (
       </Button>
     </Form>
   </div>
+);
+
+const TrayFormVerify = props => (
+  <Form autoComplete="off">
+    {/* <FormGroup>
+      <Label for="collections">Collection</Label>
+      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
+    </FormGroup> */}
+    <FormGroup>
+      <Label for="tray">Tray{ ' ' }
+          { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
+            ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
+            : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
+          }
+      </Label>
+      <Input
+        type="text"
+        name="tray"
+        placeholder={ props.disabled ? "" : "Tray barcode" }
+        value={props.verify.tray}
+        onChange={(e) => props.handleVerifyOnChange(e)}
+        onPaste={(e)=>{
+          e.preventDefault()
+          return false;
+        }}
+        onKeyDown={props.handleEnter}
+        disabled={props.disabled}
+      />
+    </FormGroup>
+    <FormGroup>
+      <Label for="tray">Items</Label>
+      <Input
+        type="textarea"
+        rows="10"
+        name="barcodes"
+        value={props.verify.barcodes}
+        onChange={(e) => props.handleVerifyOnChange(e)}
+        onPaste={(e)=>{
+          e.preventDefault()
+          return false;
+        }}
+        disabled={props.disabled}
+      />
+    </FormGroup>
+    <Button
+        style={{marginRight: '10px'}}
+        onClick={(e) => props.handleVerifySubmit(e)}
+        color="primary"
+        disabled={props.disabled || props.disabledSubmit}
+          onKeyDown={props.handleTabVerifySubmit}
+      >
+      Add
+    </Button>
+    <Button
+        style={{marginRight: '10px'}}
+        color="warning"
+        onClick={(e) => props.goBackToOriginal(e)}
+        disabled={props.disabled}
+      >
+      Go back
+    </Button>
+  </Form>
 );
 
 const Display = props => (
