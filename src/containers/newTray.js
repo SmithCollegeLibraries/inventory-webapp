@@ -333,12 +333,12 @@ const NewTray = (props) => {
 
   // Handling interactions with the form
 
-  const handleEnter = (event) => {
-    if (event.keyCode === 13) {
-      const form = event.target.form;
-      const index = Array.prototype.indexOf.call(form, event.target);
+  const handleEnter = (e) => {
+    if (e.keyCode === 13) {
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form, e.target);
       form.elements[index + 1].focus();
-      event.preventDefault();
+      e.preventDefault();
     }
   };
 
