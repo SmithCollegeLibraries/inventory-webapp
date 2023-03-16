@@ -5,7 +5,6 @@ import Load from '../util/load';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
-import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
 
 // TODO: get these numbers from settings
@@ -41,44 +40,39 @@ const NewTray = (props) => {
       case 'ADD_ORIGINAL':
         return {
           ...state,
-          original: action.original
+          original: action.original,
         };
       case 'CHECKED_IN_FOLIO':
         return {
           ...state,
-          checkedInFolio: action.checkedInFolio
+          checkedInFolio: action.checkedInFolio,
         };
       case 'NOT_IN_FOLIO':
         return {
           ...state,
-          notInFolio: action.notInFolio
+          notInFolio: action.notInFolio,
         };
       // We use this so that we can do a last FOLIO check before submission
       case 'CLEAR_FOLIO_CHECK':
         return {
           ...state,
           checkedInFolio: [],
-          notInFolio: []
+          notInFolio: [],
         };
       case 'ADD_VERIFY':
         return {
           ...state,
-          verify: action.verify
+          verify: action.verify,
         };
       case 'UPDATE_STAGED':
         return {
           ...state,
-          verified: action.verified
+          verified: action.verified,
         };
       case 'CHANGE_FORM':
         return {
           ...state,
-          form: action.form
-        };
-      case 'UPDATE_TRAY_LENGTH':
-        return {
-          ...state,
-          trayLength: action.trayLength
+          form: action.form,
         };
       case 'RESET':
         return {
@@ -87,11 +81,11 @@ const NewTray = (props) => {
           original: {
             collection: state.original.collection,
             tray: '',
-            barcodes: ''
+            barcodes: '',
           },
           verify: {
             tray: '',
-            barcodes: ''
+            barcodes: '',
           }
         };
       default:
@@ -101,10 +95,6 @@ const NewTray = (props) => {
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
-  const debouncedLeftPaneTray = useDebounce(data.original.tray);
-  const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
-  const debouncedMiddlePaneTray = useDebounce(data.verify.tray);
-  const debouncedMiddlePaneItems = useDebounce(data.verify.barcodes);
 
 
   // Live verification functions, which also get called again on submission
@@ -241,63 +231,56 @@ const NewTray = (props) => {
   // Now the actual hooks that implement the live checks
 
   useEffect(() => {
-    if (props) {
-      // TODO: Get this from settings instead of a constant
-      dispatch({ type: 'UPDATE_TRAY_LENGTH', trayLength: TRAY_BARCODE_LENGTH});
-    }
-  }, [props]);
-
-  useEffect(() => {
     // Don't bother doing the live verification if it's not even the
     // correct length or doesn't begin with 1. (We're already showing the
     // user that it's incorrect with the badge, so no need to give a
     // popup alert.)
-    if (trayStructure.test(debouncedLeftPaneTray)) {
-      verifyTrayLive(debouncedLeftPaneTray);
+    if (trayStructure.test(data.original.tray)) {
+      verifyTrayLive(data.original.tray);
     }
     else {
-      if (debouncedLeftPaneTray.length === TRAY_BARCODE_LENGTH) {
+      if (data.original.tray.length === TRAY_BARCODE_LENGTH) {
         failure(`Valid tray barcodes must begin with 1.`);
       }
     }
-  }, [debouncedLeftPaneTray]);
+  }, [data.original.tray]);
 
   useEffect(() => {
     // Don't try to verify barcodes if the item field is empty
-    if (debouncedLeftPaneItems && debouncedLeftPaneItems.length > 0) {
-      const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
+    if (data.original.barcodes && data.original.barcodes.length > 0) {
+      const allItems = data.original.barcodes.split('\n').filter(Boolean);
       // When checking live, don't check the last item if there's no
       // newline at the end, because that means the barcode may be
       // incomplete
-      const lastChar = debouncedLeftPaneItems.slice(-1);
+      const lastChar = data.original.barcodes.slice(-1);
       const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
       verifyItemsLive(itemsToVerify, false);
     }
-  }, [debouncedLeftPaneItems, data.checkedInFolio, data.notInFolio]);
+  }, [data.original.barcodes, data.checkedInFolio, data.notInFolio]);
 
   // Do the same verification for the middle pane
 
   useEffect(() => {
-    if (trayStructure.test(debouncedMiddlePaneTray)) {
-      verifyTrayLive(debouncedMiddlePaneTray);
+    if (trayStructure.test(data.verify.tray)) {
+      verifyTrayLive(data.verify.tray);
     }
     else {
-      if (debouncedMiddlePaneTray.length === TRAY_BARCODE_LENGTH) {
+      if (data.verify.tray.length === TRAY_BARCODE_LENGTH) {
         failure(`Valid tray barcodes must begin with 1.`);
       }
     }
-  }, [debouncedMiddlePaneTray]);
+  }, [data.verify.tray]);
 
   useEffect(() => {
-    if (debouncedMiddlePaneItems && debouncedMiddlePaneItems.length > 0) {
-      const allItems = debouncedMiddlePaneItems.split('\n').filter(Boolean);
-      const lastChar = debouncedMiddlePaneItems.slice(-1);
+    if (data.verify.barcodes && data.verify.barcodes.length > 0) {
+      const allItems = data.verify.barcodes.split('\n').filter(Boolean);
+      const lastChar = data.verify.barcodes.slice(-1);
       const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
       verifyItemsLive(itemsToVerify, false);
     }
-  }, [debouncedMiddlePaneItems, data.checkedInFolio, data.notInFolio]);
+  }, [data.verify.barcodes, data.checkedInFolio, data.notInFolio]);
 
-  // Anytime the DOM is updated, update local storage
+  // Add local storage to verified pane (staging area) on load
   useEffect(() => {
     const getLocalItems = async () => {
       const local = await handleLocalStorage('tray') || [];
