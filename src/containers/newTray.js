@@ -465,6 +465,7 @@ const NewTray = (props) => {
         localforage.setItem('tray', verified);
         dispatch({ type: 'UPDATE_STAGED', verified: verified});
         dispatch({ type: "RESET" });
+        window.location.reload();
       }
     }
     else {
@@ -641,7 +642,6 @@ const TrayFormVerify = props => (
           return false;
         }}
         disabled={props.disabled}
-        onKeyDown={props.handleTabVerifySubmit}
       />
     </FormGroup>
     <Button
@@ -649,6 +649,7 @@ const TrayFormVerify = props => (
         onClick={(e) => props.handleVerifySubmit(e)}
         color="primary"
         disabled={props.disabled || props.disabledSubmit}
+          onKeyDown={props.handleTabVerifySubmit}
       >
       Add
     </Button>
@@ -697,6 +698,7 @@ const TrayFormOriginal = props => (
           }}
           onKeyDown={props.handleEnter}
           disabled={props.disabled}
+          autoFocus={true}
         />
       </FormGroup>
       <FormGroup>
