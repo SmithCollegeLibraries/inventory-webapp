@@ -1,5 +1,5 @@
 import NewTray from './newTray';
-import RapidLoad from './rapidLoad';
+import RapidShelve from './rapidShelve';
 // import Shelf from './shelf';
 // import AddPaging from './addPaging';
 // import AddReturn from './addReturn';
@@ -15,7 +15,7 @@ import ManageUsers from './users';
 
 export {
   NewTray,
-  RapidLoad,
+  RapidShelve,
   // Shelf,
   // AddPaging,
   // AddReturn,

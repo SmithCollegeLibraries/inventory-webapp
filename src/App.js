@@ -5,7 +5,7 @@ import './css/index.css';
 import 'react-s-alert/dist/s-alert-default.css';
 import {
     NewTray,
-    RapidLoad,
+    RapidShelve,
     // Shelf,
     // AddPaging,
     // PagingDisplay,
@@ -136,8 +136,8 @@ export default class Main extends Component {
                     // settings={settings}
                   />
                 )}/>
-                <Route path="/rapid-load" render={() => (
-                  <RapidLoad />
+                <Route path="/rapid-shelve" render={() => (
+                  <RapidShelve />
                 )}/>
                 <Route path="/manage-trays" render={() => (
                   <ManageTrays

@@ -9,7 +9,7 @@ import useDebounce from '../components/debounce';
 import { success, failure, warning } from '../components/toastAlerts';
 
 
-const RapidLoad = (props) => {
+const RapidShelve = (props) => {
   const initialState = {
     current: {
       tray: '',
@@ -637,4 +637,4 @@ const Display = props => (
   })
 );
 
-export default RapidLoad;
+export default RapidShelve;
