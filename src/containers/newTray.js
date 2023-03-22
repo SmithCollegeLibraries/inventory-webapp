@@ -6,6 +6,7 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import { success, failure } from '../components/toastAlerts';
+import useDebounce from '../components/debounce';
 
 // TODO: get these numbers from settings
 const BARCODE_LENGTH = 15;
@@ -95,6 +96,7 @@ const NewTray = (props) => {
 
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
+  const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
 
 
   // Live verification functions, which also get called again on submission
@@ -247,16 +249,16 @@ const NewTray = (props) => {
 
   useEffect(() => {
     // Don't try to verify barcodes if the item field is empty
-    if (data.original.barcodes && data.original.barcodes.length > 0) {
-      const allItems = data.original.barcodes.split('\n').filter(Boolean);
+    if (debouncedLeftPaneItems && debouncedLeftPaneItems.length > 0) {
+      const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
       // When checking live, don't check the last item if there's no
       // newline at the end, because that means the barcode may be
       // incomplete
-      const lastChar = data.original.barcodes.slice(-1);
+      const lastChar = debouncedLeftPaneItems.slice(-1);
       const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
       verifyItemsLive(itemsToVerify, false);
     }
-  }, [data.original.barcodes, data.checkedInFolio, data.notInFolio]);
+  }, [debouncedLeftPaneItems, data.checkedInFolio, data.notInFolio]);
 
   // Do the same verification for the middle pane
 
