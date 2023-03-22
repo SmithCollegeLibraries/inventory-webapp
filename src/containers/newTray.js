@@ -331,11 +331,8 @@ const NewTray = (props) => {
             failure(`Unable to locate FOLIO record for ${barcode}.`);
             return false;
           }
-          else if (data.itemFolioCheckStarted.includes(barcode)) {
-            warning(`Verification of item ${barcode} in FOLIO is still pending. Please try again in a few seconds.`);
-          }
           else {
-            failure(`An unknown error occurred.`);
+            warning(`Verification of item ${barcode} in FOLIO may still ble pending. Please try again in a few seconds, and report this problem if it continues.`);
             return false;
           }
         }
@@ -353,18 +350,12 @@ const NewTray = (props) => {
           failure(`Item ${barcode} is already in the system.`);
           return false;
         }
-        else if (data.itemUsedCheckStarted.includes(barcode)) {
-          warning(`Verification of item ${barcode} in the system is still pending. Please try again in a few seconds.`);
-          return false;
-        }
         else {
-          warning(`Is the item marked as good? ${data.itemUsedGood.includes(barcode)}`);
-          failure(`An unknown error occurred.`);
+          warning(`Verification of item ${barcode} in the system may be pending. Please try again in a few seconds, and report this problem if it continues.`);
           return false;
         }
       }
     }
-    clearTimeout();
     return true;
   }
 
@@ -557,7 +548,7 @@ const NewTray = (props) => {
       original['barcodes'] = original['barcodes'] + '\n';
       dispatch({ type: 'ADD_ORIGINAL', original: original});
     }
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       const collectionPassedInspection = inspectCollection();
       const trayPassedInspection = inspectTray(data.original.tray);
       const itemsPassedInspection = inspectItems(data.original.barcodes);
@@ -566,7 +557,7 @@ const NewTray = (props) => {
         dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
       }
     }, 500);
-    clearTimeout();
+    return () => clearTimeout(timer);
   };
 
   const handleVerifySubmit = (e) => {
