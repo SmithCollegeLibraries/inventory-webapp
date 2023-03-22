@@ -2,7 +2,7 @@
   "name": "inventory-webapp",
   "version": "4.2.0",
   "private": true,
-  "homepage": "https://libtools2.smith.edu/sis",
+  "homepage": "https://libtools2.smith.edu/sis-beta",
   "dependencies": {
     "bootstrap": "^5.1.1",
     "constate": "^2.0.0",
