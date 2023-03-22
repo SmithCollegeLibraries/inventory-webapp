@@ -541,7 +541,6 @@ const NewTray = (props) => {
       localforage.setItem('tray', verified);
       dispatch({ type: 'UPDATE_STAGED', verified: verified});
       dispatch({ type: "RESET" });
-      window.location.reload();
     }
   };
 
