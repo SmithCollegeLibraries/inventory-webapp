@@ -9,7 +9,7 @@ import useDebounce from '../components/debounce';
 import { success, failure, warning } from '../components/toastAlerts';
 
 
-const RapidLoad = (props) => {
+const RapidShelve = (props) => {
   const initialState = {
     current: {
       tray: '',
@@ -23,7 +23,7 @@ const RapidLoad = (props) => {
 
   // TODO: get these numbers from settings
   const TRAY_BARCODE_LENGTH = 8;
-  const MAX_POSITION = 12;
+  const MAX_POSITION = 14;
   const trayStructure = /^1[0-9]{7}$/;
   const shelfStructure = /^[01][0-9][RL][0-9]{4}$/;
 
@@ -637,4 +637,4 @@ const Display = props => (
   })
 );
 
-export default RapidLoad;
+export default RapidShelve;
