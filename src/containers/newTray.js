@@ -833,7 +833,7 @@ const Display = props => (
         </CardBody>
       </Card>
     );
-  });
+  })
 );
 
 export default NewTray;
