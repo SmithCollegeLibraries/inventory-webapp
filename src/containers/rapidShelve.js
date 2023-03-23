@@ -120,13 +120,20 @@ const RapidShelve = (props) => {
   const verifyOnSubmit = tray => {
     if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > MAX_POSITION || parseInt(data.current.position) < 1) {
       failure(`Position should be a number between 1 and ${MAX_POSITION}`);
-    }
-    else if (Object.keys(data.staged).length > 0 && data.staged.some(x => x.shelf === data.current.shelf && x.depth === data.current.depth && x.position === data.current.position)) {
-      failure(`Shelf ${data.current.shelf}, depth ${data.current.depth}, position ${data.current.position} is already occupied`);
       return false;
     }
-    else {
+    else if (Object.keys(data.staged).length === 0) {
       return true;
+    }
+    else {
+      const stagedTrayMatches = Object.keys(data.staged).map(x => data.staged[x].shelf === data.current.shelf && data.staged[x].depth === data.current.depth && data.staged[x].position === data.current.position);
+      if (stagedTrayMatches.includes(true)) {
+        failure(`Shelf ${data.current.shelf}, depth ${data.current.depth}, position ${data.current.position} is already occupied`);
+        return false;
+      }
+      else {
+        return true;
+      }
     }
   };
 
@@ -440,10 +447,11 @@ const RapidShelve = (props) => {
 
   const handleEnter = e => {
     if (e.keyCode === 13) {
+      e.preventDefault();
+      e.persist();
       const form = e.target.form;
       const index = Array.prototype.indexOf.call(form, e.target);
       form.elements[index + 1].focus();
-      e.preventDefault();
     }
   };
 
