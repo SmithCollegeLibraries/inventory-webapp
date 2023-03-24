@@ -1,5 +1,6 @@
 import React, { useReducer, useEffect } from 'react';
 import Load from '../util/load';
+import ContentSearch from '../util/search';
 import { Row, Col, Table, Button, Input, Card, CardBody } from 'reactstrap';
 
 const itemReducer = (state, action) => {
@@ -38,7 +39,7 @@ const ManageItems = () => {
   }, []);
 
   const items = async () => {
-    const items = await Load.viewAllItems();
+    const items = await ContentSearch.items();
     dispatch({ type: "ADD_ITEMS", items: items});
   };
 

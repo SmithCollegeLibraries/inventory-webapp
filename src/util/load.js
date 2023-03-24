@@ -128,12 +128,6 @@ class Load {
   //   return view;
   // }
 
-  // For temporary item management view
-  viewAllItems = async (data) => {
-    const view = await this.handleUpdate(`${itemAPI}view-all-items/`, 'GET', data);
-    return view;
-  }
-
   // transfer = async (data) => {
   //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
   //   return transfer
