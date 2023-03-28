@@ -113,9 +113,9 @@ const Statistics = () => {
           <tr>
             <th>Date</th>
             <th>Total</th>
-            {(data.currentView === NEW_ITEMS && data.newItems.names) ? data.newItems.names.map((name, index) => <th key={index}>{name}</th>) : null}
-            {data.currentView === NEW_TRAYS && data.newTrays.names ? data.newTrays.names.map((name, index) => <th key={index}>{name}</th>) : null}
-            {data.currentView === TRAYS_SHELVED && data.traysShelved.names ? data.traysShelved.names.map((name, index) => <th key={index}>{name}</th>) : null}
+            {(data.currentView === NEW_ITEMS && data.newItems.names) ? data.newItems.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
+            {data.currentView === NEW_TRAYS && data.newTrays.names ? data.newTrays.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
+            {data.currentView === TRAYS_SHELVED && data.traysShelved.names ? data.traysShelved.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
             <th>Other</th>
           </tr>
         </thead>
