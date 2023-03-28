@@ -6,6 +6,8 @@ const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
+const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
+const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
 
 
 class Load {
@@ -210,6 +212,21 @@ class Load {
   //   const update = await this.handleUpdate(insertshelf, 'POST', data)
   //   return update
   // }
+
+  newItemsLog = async () => {
+    const itemsLog = await this.handleUpdate(`${itemLogAPI}statistics/`, 'GET');
+    return itemsLog;
+  }
+
+  newTraysLog = async () => {
+    const traysLog = await this.handleUpdate(`${trayLogAPI}added-statistics/`, 'GET');
+    return traysLog;
+  }
+
+  traysShelvedLog = async () => {
+    const traysShelvedLog = await this.handleUpdate(`${trayLogAPI}updated-statistics/`, 'GET');
+    return traysShelvedLog;
+  }
 
   handleAccount = async (string, method, data) => {
     try {
