@@ -43,6 +43,7 @@ const NewTray = (props) => {
     itemFolioCheckStarted: [],
     itemFolioBad: [],
     itemFolioGood: [],
+    itemAlreadyAlerted: [],
   };
 
   const trayReducer = (state, action) => {
@@ -159,6 +160,7 @@ const NewTray = (props) => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
   const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
+  const debouncedMiddlePaneItems = useDebounce(data.verify.barcodes);
 
 
   // Live verification functions, which also get called again on submission
@@ -196,8 +198,10 @@ const NewTray = (props) => {
       const stagedItems = [].concat.apply([], arrayOfStagedItems);
       for (const barcode of barcodes) {
         if (stagedItems.includes(barcode)) {
-          failure(`Item ${barcode} is already staged`);
-          dispatch({ type: 'ITEM_USED_BAD_STAGED', item: barcode });
+          if (!data.itemAlreadyAlerted.includes(barcode)) {
+            failure(`Item ${barcode} is already staged`);
+            dispatch({ type: 'ITEM_USED_BAD_STAGED', item: barcode });
+          }
           return false;
         }
       }
@@ -221,13 +225,17 @@ const NewTray = (props) => {
       }
       fullResults.forEach(item => {
         if (item["tray"]) {
-          failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}.`);
-          dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
+          if (!data.itemAlreadyAlerted.includes(item["barcode"])) {
+            failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}.`);
+            dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
+          }
           return false;
         }
         else {
-          failure(`Item ${item["barcode"]} is already in the system (untrayed).`);
-          dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
+          if (!data.itemAlreadyAlerted.includes(item["barcode"])) {
+            failure(`Item ${item["barcode"]} is already in the system (untrayed).`);
+            dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
+          }
           return false;
         }
       });
@@ -242,8 +250,10 @@ const NewTray = (props) => {
             dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
           }
           else {
-            failure(`Unable to locate FOLIO record for ${barcode}.`);
-            dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
+            if (!data.itemAlreadyAlerted.includes(barcode)) {
+              failure(`Unable to locate FOLIO record for ${barcode}.`);
+              dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
+            }
             return false;
           }
         }
@@ -256,13 +266,6 @@ const NewTray = (props) => {
     // Once checked, barcodes are saved in state so that multiple API
     // calls aren't made to the FOLIO server every time the input field
     // is changed.
-
-    // Show error if duplicate barcode exists within the same input field
-    if ((new Set(barcodes)).size !== barcodes.length) {
-      // TODO: Show which barcode is duplicated
-      failure("Please double-check that you do not have duplicate barcodes");
-      return false;
-    }
 
     let barcodesToLookupInSystem = [];
     let barcodesToLookupInFolio = [];
@@ -396,6 +399,20 @@ const NewTray = (props) => {
   }, [debouncedLeftPaneItems]);
 
 
+  useEffect(() => {
+    // Play sound if there are duplicate barcodes in either pane
+    const allItemsOriginal = debouncedLeftPaneItems.split('\n').filter(Boolean);
+    const allItemsVerify = debouncedMiddlePaneItems.split('\n').filter(Boolean);
+    // Show error if duplicate barcode exists within the same input field
+    if ((new Set(allItemsOriginal)).size !== allItemsOriginal.length || (new Set(allItemsVerify)).size !== allItemsVerify.length) {
+      // Play error message but don't give popup alert because we are
+      // already showing the duplicate barcode error on screen
+      const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
+      var audio = new Audio(errorPath);
+      audio.play();
+    }
+  }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);
+
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);
     return results;
@@ -507,6 +524,17 @@ const NewTray = (props) => {
     }
     verify[e.target.name] = value;
     dispatch({ type: 'ADD_VERIFY', verify: verify});
+  };
+
+  const locateDuplicates = barcodesAsString => {
+    const barcodes = barcodesAsString.split('\n').filter(Boolean);
+    const duplicates = [];
+    barcodes.forEach((barcode, index) => {
+      if (barcodes.indexOf(barcode) !== index) {
+        duplicates.push(barcode);
+      }
+    });
+    return duplicates.join(', ');
   };
 
   const clearOriginal = e => {
@@ -675,9 +703,10 @@ const NewTray = (props) => {
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0}
+                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0 || locateDuplicates(data.original.barcodes)}
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
                   trayStructure={trayStructure}
+                  locateDuplicates={locateDuplicates}
                   TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
                 />
               </CardBody>
@@ -697,8 +726,9 @@ const NewTray = (props) => {
                 handleTabVerifySubmit={handleTabVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
-                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0}
+                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0 || locateDuplicates(data.verify.barcodes)}
                 trayStructure={trayStructure}
+                locateDuplicates={locateDuplicates}
                 TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
               />
               </CardBody>
@@ -743,8 +773,11 @@ const TrayFormOriginal = props => (
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.original.tray)
-            ? <><Badge color="success">{props.original.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge>
+            ? <Badge color="success">{props.original.tray.length}</Badge>
+            : props.original.tray.length === 0
+              ? <Badge>{props.original.tray.length}</Badge>
+              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              )
           }
         </Label>
         <Input
@@ -764,7 +797,19 @@ const TrayFormOriginal = props => (
       </FormGroup>
       <FormGroup>
         <Label for="barcodes">Items</Label>{ ' ' }
-        <Badge>{props.original.barcodes.split('\n').filter(n => n !== '').length}</Badge>
+        { (new Set(props.original.barcodes.split('\n').filter(Boolean))).size !== props.original.barcodes.split('\n').filter(Boolean).length
+          ?
+          <>
+            <Badge
+              color={(new Set(props.original.barcodes.split('\n').filter(Boolean))).size !== props.original.barcodes.split('\n').filter(Boolean).length ? "danger" : "secondary"}
+            >
+              {props.original.barcodes.split('\n').filter(Boolean).length}
+            </Badge>
+            { ' ' }
+            <span className="text-danger">duplicate: {props.locateDuplicates(props.original.barcodes)}</span>
+          </>
+          : <Badge>{props.original.barcodes.split('\n').filter(Boolean).length}</Badge>
+        }
         <Input
           type="textarea"
           rows="10"
@@ -795,6 +840,13 @@ const TrayFormOriginal = props => (
         Clear
       </Button>
     </Form>
+    <div className="text-danger" style={{paddingTop: '15px'}}>
+      { // List of all barcodes that have thrown errors which are still present
+        props.original.barcodes.split('\n').filter(Boolean).map((barcode, idx) => {
+
+        })
+      }
+    </div>
   </div>
 );
 
@@ -807,8 +859,11 @@ const TrayFormVerify = props => (
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
-            ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
+            ? <Badge color="success">{props.verify.tray.length}</Badge>
+            : props.verify.tray.length === 0
+              ? <Badge>{props.verify.tray.length}</Badge>
+              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              )
           }
       </Label>
       <Input
@@ -827,7 +882,19 @@ const TrayFormVerify = props => (
     </FormGroup>
     <FormGroup>
       <Label for="tray">Items</Label>{ ' ' }
-        <Badge>{props.verify.barcodes.split('\n').filter(n => n !== '').length}</Badge>
+        { (new Set(props.verify.barcodes.split('\n').filter(Boolean))).size !== props.verify.barcodes.split('\n').filter(Boolean).length
+          ?
+          <>
+            <Badge
+              color={(new Set(props.verify.barcodes.split('\n').filter(Boolean))).size !== props.verify.barcodes.split('\n').filter(Boolean).length ? "danger" : "secondary"}
+            >
+              {props.verify.barcodes.split('\n').filter(Boolean).length}
+            </Badge>
+            { ' ' }
+            <span className="text-danger">duplicate: {props.locateDuplicates(props.verify.barcodes)}</span>
+          </>
+          : <Badge>{props.verify.barcodes.split('\n').filter(Boolean).length}</Badge>
+        }
       <Input
         type="textarea"
         rows="10"
