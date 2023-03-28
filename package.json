@@ -30,7 +30,7 @@
     "xlsx": "^0.15.1"
   },
   "scripts": {
-    "start": "export $(cat .env-local | xargs)&& react-scripts start",
+    "start": "export $(cat .env-dev | xargs)&& react-scripts start",
     "build": "export $(cat .env-dev | xargs)&& react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
