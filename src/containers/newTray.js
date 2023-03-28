@@ -401,12 +401,13 @@ const NewTray = (props) => {
     // Don't try to verify barcodes if the item field is empty
     if (debouncedLeftPaneItems && debouncedLeftPaneItems.length > 0) {
       const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
-      // When checking live, don't check the last item if there's no
-      // newline at the end, because that means the barcode may be
-      // incomplete
-      const lastChar = debouncedLeftPaneItems.slice(-1);
-      const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
-      verifyItemsLive(itemsToVerify, false);
+      // When checking live, don't check the last item if it isn't 15
+      // characters long, because it's probably not a complete barcode
+      const lastItem = allItems[allItems.length - 1];
+      const itemsToVerify = lastItem.length < 15 ? allItems.slice(0, -1) : allItems;
+      console.log(lastItem.length);
+      console.log(itemsToVerify);
+      verifyItemsLive(itemsToVerify);
     }
   }, [debouncedLeftPaneItems]);
 
