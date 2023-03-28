@@ -42,7 +42,7 @@ const Statistics = () => {
       const dayToNames = day => day['counts'].map((d) => d['name']);
       const dayToTotalCount = day => day['counts'].map((d) => parseInt(d['count'])).reduce((a, b) => a + b, 0);
       const allNames = new Set(rawData.reduce((a, b) => a.concat(dayToNames(b)), []));
-      const namesWithTotalCounts = Array.from(allNames).map((name) => {
+      const usersWithTotalCounts = Array.from(allNames).map((name) => {
         return {
           name: name,
           count: rawData.reduce(
@@ -51,12 +51,9 @@ const Statistics = () => {
             0),
         };
       });
-      const namesToDisplay = namesWithTotalCounts
-        .filter((d) => d['count'] > countThreshold)
-        .map(p => p['name']);
       const organizedData = rawData.map((day) => {
-        const perUserCounts = namesToDisplay.map(
-          name => day['counts'].filter(p => p['name'] === name)
+        const perUserCounts = usersWithTotalCounts.map(
+          user => day['counts'].filter(p => p['name'] === user['name'])
             .reduce((a, b) => a + parseInt(b['count']), 0));
         return {
           date: day['date'],
@@ -67,7 +64,7 @@ const Statistics = () => {
       });
       // Don't show rows with 0 in each person in counts
       return {
-        names: namesToDisplay,
+        users: usersWithTotalCounts,
         data: organizedData.filter((d) => d['countsByPerson'])
       };
     };
@@ -111,40 +108,64 @@ const Statistics = () => {
           <tr>
             <th>Date</th>
             <th>Total</th>
-            {(data.currentView === NEW_ITEMS && data.newItems.names) ? data.newItems.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
-            {data.currentView === NEW_TRAYS && data.newTrays.names ? data.newTrays.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
-            {data.currentView === TRAYS_SHELVED && data.traysShelved.names ? data.traysShelved.names.map((name, index) => <th key={index}>{name.split(" ")[0]}</th>) : null}
+            {(data.currentView === NEW_ITEMS && data.newItems.users) ? data.newItems.users.map((user, index) => <th key={index}>{user['name'].split(" ")[0]}</th>) : null}
+            {data.currentView === NEW_TRAYS && data.newTrays.users ? data.newTrays.users.map((user, index) => <th key={index}>{user['name'].split(" ")[0]}</th>) : null}
+            {data.currentView === TRAYS_SHELVED && data.traysShelved.users ? data.traysShelved.users.map((user, index) => <th key={index}>{user['name'].split(" ")[0]}</th>) : null}
             <th>Other</th>
           </tr>
         </thead>
         <tbody>
           {data.currentView === NEW_ITEMS && data.newItems.data ?
-            data.newItems.data.map((day, index) => (
-              <tr key={index}>
-                <td>{day.date}</td>
-                <td>{day.total}</td>
-                {day.countsByPerson.map((count, index) => <td key={index}>{count}</td>)}
-                <td>{day.other}</td>
+            <>
+              <tr>
+                <td>All time</td>
+                <td><strong>{data.newItems.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
+                {data.newItems.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
+                <td><strong>{data.newItems.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
               </tr>
-            )) : null}
-            {data.currentView === NEW_TRAYS && data.newItems.data ?
-              data.newTrays.data.map((day, index) => (
+              {data.newItems.data.map((day, index) => (
                 <tr key={index}>
                   <td>{day.date}</td>
-                  <td>{day.total}</td>
+                  <td><strong>{day.total}</strong></td>
                   {day.countsByPerson.map((count, index) => <td key={index}>{count}</td>)}
                   <td>{day.other}</td>
                 </tr>
-              )) : null}
-              {data.currentView === TRAYS_SHELVED && data.newItems.data ?
-                data.traysShelved.data.map((day, index) => (
+              ))}
+            </> : null}
+            {data.currentView === NEW_TRAYS && data.newItems.data ?
+              <>
+                <tr>
+                  <td>All time</td>
+                  <td><strong>{data.newTrays.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
+                  {data.newTrays.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
+                  <td><strong>{data.newTrays.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
+                </tr>
+                {data.newTrays.data.map((day, index) => (
                   <tr key={index}>
                     <td>{day.date}</td>
-                    <td>{day.total}</td>
+                    <td><strong>{day.total}</strong></td>
                     {day.countsByPerson.map((count, index) => <td key={index}>{count}</td>)}
                     <td>{day.other}</td>
                   </tr>
-                )) : null}
+                ))}
+              </> : null}
+              {data.currentView === TRAYS_SHELVED && data.newItems.data ?
+                <>
+                  <tr>
+                    <td>All time</td>
+                    <td><strong>{data.traysShelved.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
+                    {data.traysShelved.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
+                    <td><strong>{data.traysShelved.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
+                  </tr>
+                  {data.traysShelved.data.map((day, index) => (
+                    <tr key={index}>
+                      <td>{day.date}</td>
+                      <td><strong>{day.total}</strong></td>
+                      {day.countsByPerson.map((count, index) => <td key={index}>{count}</td>)}
+                      <td>{day.other}</td>
+                    </tr>
+                  ))}
+                </> : null}
         </tbody>
       </Table>
     </Fragment>
