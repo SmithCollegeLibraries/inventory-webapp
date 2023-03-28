@@ -553,22 +553,6 @@ const NewTray = (props) => {
     }
   };
 
-  const handleTabOriginalSubmit = e => {
-    if (e.keyCode === 9) {
-      e.preventDefault();
-      e.persist();
-      handleOriginalSubmit(e);
-    }
-  };
-
-  const handleTabVerifySubmit = e => {
-    if (e.keyCode === 9) {
-      e.preventDefault();
-      e.persist();
-      handleVerifySubmit(e);
-    }
-  };
-
   const handleOriginalSubmit = (e) => {
     e.preventDefault();
     const original = data.original;
@@ -700,7 +684,6 @@ const NewTray = (props) => {
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleOriginalSubmit={handleOriginalSubmit}
-                  handleTabOriginalSubmit={handleTabOriginalSubmit}
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
@@ -724,7 +707,6 @@ const NewTray = (props) => {
                 verify={data.verify}
                 handleVerifyOnChange={handleVerifyOnChange}
                 handleVerifySubmit={handleVerifySubmit}
-                handleTabVerifySubmit={handleTabVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
                 disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0 || locateDuplicates(data.verify.barcodes)}
@@ -822,7 +804,6 @@ const TrayFormOriginal = props => (
             return false;
           }}
           disabled={props.disabled}
-          onKeyDown={props.handleTabOriginalSubmit}
         />
       </FormGroup>
       <Button
@@ -914,7 +895,6 @@ const TrayFormVerify = props => (
         onClick={(e) => props.handleVerifySubmit(e)}
         color="primary"
         disabled={props.disabled || props.disabledSubmit}
-          onKeyDown={props.handleTabVerifySubmit}
       >
       Add
     </Button>
