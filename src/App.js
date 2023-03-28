@@ -16,7 +16,8 @@ import {
     ManageTrays,
     ManageItems,  // delete later
     // ManageShelves,
-    ManageUsers
+    ManageUsers,
+    Statistics,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -130,11 +131,11 @@ export default class Main extends Component {
                 <Route exact path="/">
                   <Redirect to="/new-tray" />
                 </Route>
+                <Route path="/statistics" render={() => (
+                  <Statistics />
+                )}/>
                 <Route path="/new-tray" render={() => (
-                  <NewTray
-                    collections={this.state.collections}
-                    // settings={settings}
-                  />
+                  <NewTray />
                 )}/>
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />

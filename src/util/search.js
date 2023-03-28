@@ -1,5 +1,6 @@
 import Alerts from '../components/alerts';
 
+const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 
@@ -13,6 +14,11 @@ class ContentSearch {
 
   trays = async (searchTerm) => {
     let search = await this.search(`${trayAPI}search/?query=${searchTerm}`);
+    return search;
+  }
+
+  items = async (searchTerm) => {
+    let search = await this.search(`${itemAPI}browse/?query=${searchTerm ? searchTerm : ''}`);
     return search;
   }
 
