@@ -29,7 +29,7 @@ const Statistics = () => {
   const TRAYS_SHELVED = "Trays shelved";
 
   const initialState = {
-    view: NEW_ITEMS,
+    view: null,
     newItems: {},
     newTrays: {},
     traysShelved: {},
@@ -85,29 +85,27 @@ const Statistics = () => {
   };
 
   // When a view's button is clicked, change the view
-  const changeView = (e) => {
-    dispatch({ type: "CHANGE_VIEW", view: e.target.innerText });
+  const changeView = (v) => {
+    dispatch({ type: "CHANGE_VIEW", view: v });
   };
 
   useEffect(() => {
-    dispatch({ type: "CHANGE_VIEW", view: NEW_ITEMS });
     getData();
   }, []);
 
   return (
     <Fragment>
       <div style={{paddingTop: "20px", paddingBottom: "20px"}}>
-        <Button color={data.currentView === NEW_ITEMS ? "success" : "primary"} onClick={(e) => changeView(e)}>
+        <Button color={data.currentView === NEW_ITEMS ? "success" : "primary"} onClick={(e) => changeView(NEW_ITEMS)}>
           {NEW_ITEMS}
         </Button>{' '}
-        <Button color={data.currentView === NEW_TRAYS ? "success" : "primary"} onClick={(e) => changeView(e)}>
+        <Button color={data.currentView === NEW_TRAYS ? "success" : "primary"} onClick={(e) => changeView(NEW_TRAYS)}>
           {NEW_TRAYS}
         </Button>{' '}
-        <Button color={data.currentView === TRAYS_SHELVED ? "success" : "primary"} onClick={(e) => changeView(e)}>
+        <Button color={data.currentView === TRAYS_SHELVED ? "success" : "primary"} onClick={(e) => changeView(TRAYS_SHELVED)}>
           {TRAYS_SHELVED}
         </Button>
       </div>
-      <h1>{data.view}</h1>
       <Table>
         <thead>
           <tr>
