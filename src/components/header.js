@@ -52,9 +52,11 @@ export default class Header extends Component {
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
               <Nav className="ml-auto" navbar>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/statistics">Statistics</NavLink>
-                </NavItem>
+                {level >= 35 &&
+                  <NavItem>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/statistics">Statistics</NavLink>
+                  </NavItem>
+                }
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
                 </NavItem>
