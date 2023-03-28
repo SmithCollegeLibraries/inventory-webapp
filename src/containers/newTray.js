@@ -15,6 +15,9 @@ const DEFAULT_COLLECTION = 'Smith General Collections';
 const trayStructure = /^1[0-9]{7}$/;
 const itemStructure = /^3101[0-9]{11}$/;
 
+const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
+const errorAudio = new Audio(errorPath);
+
 
 const NewTray = (props) => {
   const initialState = {
@@ -407,9 +410,7 @@ const NewTray = (props) => {
     if ((new Set(allItemsOriginal)).size !== allItemsOriginal.length || (new Set(allItemsVerify)).size !== allItemsVerify.length) {
       // Play error message but don't give popup alert because we are
       // already showing the duplicate barcode error on screen
-      const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
-      var audio = new Audio(errorPath);
-      audio.play();
+      errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);
 
