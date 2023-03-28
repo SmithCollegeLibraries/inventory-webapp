@@ -96,7 +96,7 @@ const Statistics = () => {
 
   return (
     <Fragment>
-      <div style={{paddingBottom: "20px"}}>
+      <div style={{paddingTop: "20px", paddingBottom: "20px"}}>
         <Button color={data.currentView === NEW_ITEMS ? "success" : "primary"} onClick={(e) => changeView(e)}>
           {NEW_ITEMS}
         </Button>{' '}
