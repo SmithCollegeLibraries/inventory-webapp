@@ -763,7 +763,8 @@ const TrayFormOriginal = props => (
         />
       </FormGroup>
       <FormGroup>
-        <Label for="barcodes">Items</Label>
+        <Label for="barcodes">Items</Label>{ ' ' }
+        <Badge>{props.original.barcodes.split('\n').filter(n => n !== '').length}</Badge>
         <Input
           type="textarea"
           rows="10"
@@ -825,7 +826,8 @@ const TrayFormVerify = props => (
       />
     </FormGroup>
     <FormGroup>
-      <Label for="tray">Items</Label>
+      <Label for="tray">Items</Label>{ ' ' }
+        <Badge>{props.verify.barcodes.split('\n').filter(n => n !== '').length}</Badge>
       <Input
         type="textarea"
         rows="10"
