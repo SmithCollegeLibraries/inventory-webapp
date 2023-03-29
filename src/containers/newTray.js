@@ -408,11 +408,13 @@ const NewTray = (props) => {
       const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
       // When checking live, don't check the last item if it isn't 15
       // characters long, because it's probably not a complete barcode
-      const lastItem = allItems[allItems.length - 1];
-      const itemsToVerify = lastItem.length < 15 ? allItems.slice(0, -1) : allItems;
+      const lastItem = allItems ? allItems[allItems.length - 1] : '';
+      const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
       console.log(lastItem.length);
       console.log(itemsToVerify);
-      verifyItemsLive(itemsToVerify);
+      if (itemsToVerify) {
+        verifyItemsLive(itemsToVerify);
+      }
     }
   }, [debouncedLeftPaneItems]);
 
