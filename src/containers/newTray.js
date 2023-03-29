@@ -214,7 +214,6 @@ const NewTray = (props) => {
   const verifyItemsLive = async (barcodes) => {
 
     const verifyItemsFree = async (barcodes) => {
-      console.log("Verifying items free", barcodes);
       // First see whether it already exists in staged trays
       const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
       const stagedItems = [].concat.apply([], arrayOfStagedItems);
@@ -235,11 +234,8 @@ const NewTray = (props) => {
       const resultBarcodes = fullResults.map(item => item["barcode"]);
       // For each barcode that's not in the results, add it to the list
       // of items that are already checked against the system
-      console.log(barcodes);
       for (const barcode of barcodes) {
-        console.log("trying", barcode);
         if (!resultBarcodes.includes(barcode)) {
-          console.log("adding", barcode);
           dispatch({ type: 'ITEM_USED_GOOD', item: barcode });
         }
       }
@@ -483,7 +479,6 @@ const NewTray = (props) => {
         return false;
       }
       else {
-        console.log('Unknown error occurred');
         failure(`An unknown error occurred.`);
         return false;
       }
