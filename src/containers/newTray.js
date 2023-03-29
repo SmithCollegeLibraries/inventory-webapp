@@ -123,6 +123,11 @@ const NewTray = (props) => {
           ...state,
           itemAlreadyAlerted: [...state.itemAlreadyAlerted, action.item],
         };
+      case 'CLEAR_ALREADY_ALERTED':
+        return {
+          ...state,
+          itemAlreadyAlerted: [],
+        };
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -581,6 +586,9 @@ const NewTray = (props) => {
 
   const handleOriginalSubmit = (e) => {
     e.preventDefault();
+    // If the user is clicking verify, we want to show them alerts a
+    // second time if necessary so they know what the exact problem is
+    dispatch({ type: 'CLEAR_ALREADY_ALERTED' });
     const original = data.original;
     // Add a newline character to the bottom of the list of barcodes if necessary
     if (original.barcodes === '' || original.barcodes.slice(-1) !== '\n') {
