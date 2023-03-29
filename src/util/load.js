@@ -75,7 +75,6 @@ class Load {
   }
 
   shelveTray = async (data) => {
-    console.log(data);
     const update = await this.handleUpdate(`${trayAPI}shelve-tray/`, 'POST', data);
     return update;
   }

@@ -410,8 +410,6 @@ const NewTray = (props) => {
       // characters long, because it's probably not a complete barcode
       const lastItem = allItems ? allItems[allItems.length - 1] : '';
       const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
-      console.log(lastItem.length);
-      console.log(itemsToVerify);
       if (itemsToVerify) {
         verifyItemsLive(itemsToVerify);
       }

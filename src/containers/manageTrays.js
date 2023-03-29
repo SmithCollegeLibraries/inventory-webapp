@@ -154,7 +154,6 @@ const ManageTrays = (props) => {
       depth: state.fields.depth || null,
       position: state.fields.position || null,
     };
-    console.log(data);
     const load = await Load.updateTray(data);
     if (load) {
       success(`Tray ${load['barcode']} successfully updated`);
