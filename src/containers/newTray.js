@@ -308,10 +308,10 @@ const NewTray = (props) => {
         brokenBarcodes.push(barcode);
       }
       else {
-        if (!data.itemUsedCheckStarted.includes(barcode)) {
+        if (!data.itemUsedCheckStarted.includes(barcode) && !data.itemUsedGood.includes(barcode)) {
           barcodesToLookupInSystem.push(barcode);
         }
-        if (!data.itemFolioCheckStarted.includes(barcode)) {
+        if (!data.itemFolioCheckStarted.includes(barcode) && !data.itemFolioGood.includes(barcode)) {
           barcodesToLookupInFolio.push(barcode);
         }
       }
