@@ -1,8 +1,8 @@
-import React, { useReducer } from 'react'
-import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap'
-import Load from '../util/load'
-import ContentSearch from '../util/search'
-import { success, failure, warning } from '../components/toastAlerts'
+import React, { useReducer } from 'react';
+import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
+import Load from '../util/load';
+import ContentSearch from '../util/search';
+import { success, failure, warning } from '../components/toastAlerts';
 
 const reducer = (state, action) => {
   switch (action.type) {
