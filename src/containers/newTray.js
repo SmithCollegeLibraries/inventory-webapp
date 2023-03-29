@@ -175,14 +175,14 @@ const NewTray = (props) => {
 
   // Live verification functions, which also get called again on submission
 
-  const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
-  const errorAudio = new Audio(errorPath);
   const failureIfNew = (barcode, message) => {
     if (!data.itemAlreadyAlerted.includes(barcode)) {
       failure(message);
       dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
     }
     else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   };
@@ -427,6 +427,8 @@ const NewTray = (props) => {
     if ((new Set(allItemsOriginal)).size !== allItemsOriginal.length || (new Set(allItemsVerify)).size !== allItemsVerify.length) {
       // Play error message but don't give popup alert because we are
       // already showing the duplicate barcode error on screen
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);

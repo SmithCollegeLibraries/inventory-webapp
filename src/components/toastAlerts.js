@@ -1,8 +1,4 @@
 import { toast } from 'react-toastify';
-const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
-const warningPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233563/warning.mp3";
-const errorAudio = new Audio(errorPath);
-const warningAudio = new Audio(warningPath);
 
 export const success = message => {
     toast.success(message, {
@@ -14,6 +10,8 @@ export const success = message => {
 }
 
 export const failure = message => {
+    const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+    const errorAudio = new Audio(errorPath);
     errorAudio.play();
     toast.error(message, {
         position: "top-right",
@@ -24,6 +22,8 @@ export const failure = message => {
 }
 
 export const warning = message => {
+    const warningPath = process.env.PUBLIC_URL + "/warning.mp3";
+    const warningAudio = new Audio(warningPath);
     warningAudio.play();
     toast.warn(message, {
         position: "top-right",
