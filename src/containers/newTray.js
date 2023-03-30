@@ -43,6 +43,12 @@ const NewTray = (props) => {
     itemFolioCheckStarted: [],
     itemFolioBad: [],
     itemFolioGood: [],
+    itemAlreadyAlerted: [],
+
+    // Containers for the error items we actually display
+    duplicateOriginalItems: "",
+    duplicateVerifyItems: "",
+    errorItems: "",
   };
 
   const trayReducer = (state, action) => {
@@ -117,6 +123,27 @@ const NewTray = (props) => {
           ...state,
           itemFolioGood: [...state.itemFolioGood, action.item],
         };
+      case 'ITEM_ALREADY_ALERTED':
+        return {
+          ...state,
+          itemAlreadyAlerted: [...state.itemAlreadyAlerted, action.item],
+        };
+      case 'CLEAR_ALREADY_ALERTED':
+        return {
+          ...state,
+          itemAlreadyAlerted: [],
+        };
+      case 'UPDATE_DUPLICATES':
+        return {
+          ...state,
+          duplicateOriginalItems: action.duplicateOriginalItems,
+          duplicateVerifyItems: action.duplicateVerifyItems,
+        };
+      case 'UPDATE_BAD_BARCODES':
+        return {
+          ...state,
+          errorItems: action.errorItems,
+        };
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -150,6 +177,12 @@ const NewTray = (props) => {
           itemFolioCheckStarted: [],
           itemFolioBad: [],
           itemFolioGood: [],
+          itemAlreadyAlerted: [],
+
+          // Containers for the error items we actually display
+          duplicateOriginalItems: "",
+          duplicateVerifyItems: "",
+          errorItems: "",
         };
       default:
         return state;
@@ -159,9 +192,22 @@ const NewTray = (props) => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
   const debouncedLeftPaneItems = useDebounce(data.original.barcodes);
+  const debouncedMiddlePaneItems = useDebounce(data.verify.barcodes);
 
 
   // Live verification functions, which also get called again on submission
+
+  const failureIfNew = (barcode, message) => {
+    if (!data.itemAlreadyAlerted.includes(barcode)) {
+      failure(message);
+      dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
+    }
+    else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
+      errorAudio.play();
+    }
+  };
 
   const verifyTrayLive = async (tray) => {
     // First, check that it's not in the list of staged trays
@@ -190,13 +236,12 @@ const NewTray = (props) => {
   const verifyItemsLive = async (barcodes) => {
 
     const verifyItemsFree = async (barcodes) => {
-      console.log("Verifying items free", barcodes);
       // First see whether it already exists in staged trays
       const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
       const stagedItems = [].concat.apply([], arrayOfStagedItems);
       for (const barcode of barcodes) {
         if (stagedItems.includes(barcode)) {
-          failure(`Item ${barcode} is already staged`);
+          failureIfNew(barcode, `Item ${barcode} is already staged`);
           dispatch({ type: 'ITEM_USED_BAD_STAGED', item: barcode });
           return false;
         }
@@ -211,22 +256,19 @@ const NewTray = (props) => {
       const resultBarcodes = fullResults.map(item => item["barcode"]);
       // For each barcode that's not in the results, add it to the list
       // of items that are already checked against the system
-      console.log(barcodes);
       for (const barcode of barcodes) {
-        console.log("trying", barcode);
         if (!resultBarcodes.includes(barcode)) {
-          console.log("adding", barcode);
           dispatch({ type: 'ITEM_USED_GOOD', item: barcode });
         }
       }
       fullResults.forEach(item => {
         if (item["tray"]) {
-          failure(`Item ${item["barcode"]} is already in tray ${item["tray"]}.`);
+          failureIfNew(item["barcode"], `Item ${item["barcode"]} is already in tray ${item["tray"]}.`);
           dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
           return false;
         }
         else {
-          failure(`Item ${item["barcode"]} is already in the system (untrayed).`);
+          failureIfNew(item["barcode"], `Item ${item["barcode"]} is already in the system (untrayed).`);
           dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
           return false;
         }
@@ -242,7 +284,7 @@ const NewTray = (props) => {
             dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
           }
           else {
-            failure(`Unable to locate FOLIO record for ${barcode}.`);
+            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
             dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
             return false;
           }
@@ -257,13 +299,6 @@ const NewTray = (props) => {
     // calls aren't made to the FOLIO server every time the input field
     // is changed.
 
-    // Show error if duplicate barcode exists within the same input field
-    if ((new Set(barcodes)).size !== barcodes.length) {
-      // TODO: Show which barcode is duplicated
-      failure("Please double-check that you do not have duplicate barcodes");
-      return false;
-    }
-
     let barcodesToLookupInSystem = [];
     let barcodesToLookupInFolio = [];
     let brokenBarcodes = [];
@@ -275,25 +310,26 @@ const NewTray = (props) => {
         // These are known to be good, so don't verify them again
       }
       else if (!itemStructure.test(barcode)) {
-        failure(`Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+        failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
         brokenBarcodes.push(barcode);
       }
       else if (data.itemUsedBadStaged.includes(barcode)) {
-        failure(`Item ${barcode} is already staged.`);
+        failureIfNew(barcode, `Item ${barcode} is already staged.`);
         brokenBarcodes.push(barcode);
       }
       else if (data.itemUsedBadSystem.includes(barcode)) {
-        failure(`Item ${barcode} is already in the system.`);
+        failureIfNew(barcode, `Item ${barcode} is already in the system.`);
         brokenBarcodes.push(barcode);
       }
       else if (data.itemFolioBad.includes(barcode)) {
+        failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
         brokenBarcodes.push(barcode);
       }
       else {
-        if (!data.itemUsedCheckStarted.includes(barcode)) {
+        if (!data.itemUsedCheckStarted.includes(barcode) && !data.itemUsedGood.includes(barcode)) {
           barcodesToLookupInSystem.push(barcode);
         }
-        if (!data.itemFolioCheckStarted.includes(barcode)) {
+        if (!data.itemFolioCheckStarted.includes(barcode) && !data.itemFolioGood.includes(barcode)) {
           barcodesToLookupInFolio.push(barcode);
         }
       }
@@ -328,26 +364,26 @@ const NewTray = (props) => {
         }
         else {
           if (data.itemFolioBad.includes(barcode)) {
-            failure(`Unable to locate FOLIO record for ${barcode}.`);
+            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
             return false;
           }
           else {
-            warning(`Verification of item ${barcode} in FOLIO may still ble pending. Please try again in a few seconds, and report this problem if it continues.`);
+            warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
             return false;
           }
         }
       }
       else {
         if (!itemStructure.test(barcode)) {
-          failure(`Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
           return false;
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
-          failure(`Item ${barcode} is already staged.`);
+          failureIfNew(barcode, `Item ${barcode} is already staged.`);
           return false;
         }
         else if (data.itemUsedBadSystem.includes(barcode)) {
-          failure(`Item ${barcode} is already in the system.`);
+          failureIfNew(barcode, `Item ${barcode} is already in the system.`);
           return false;
         }
         else {
@@ -379,6 +415,8 @@ const NewTray = (props) => {
       if (data.original.tray.length === TRAY_BARCODE_LENGTH) {
         failure(`Valid tray barcodes must begin with 1.`);
       }
+      // Don't give popup alert if it's just the wrong length, to avoid
+      // excessive alerts
     }
   }, [data.original.tray]);
 
@@ -386,15 +424,58 @@ const NewTray = (props) => {
     // Don't try to verify barcodes if the item field is empty
     if (debouncedLeftPaneItems && debouncedLeftPaneItems.length > 0) {
       const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
-      // When checking live, don't check the last item if there's no
-      // newline at the end, because that means the barcode may be
-      // incomplete
-      const lastChar = debouncedLeftPaneItems.slice(-1);
-      const itemsToVerify = lastChar === '\n' ? allItems : allItems.slice(0, -1);
-      verifyItemsLive(itemsToVerify, false);
+      // When checking live, don't check the last item if it isn't 15
+      // characters long, because it's probably not a complete barcode
+      const lastItem = allItems ? allItems[allItems.length - 1] : '';
+      const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
+      if (itemsToVerify) {
+        verifyItemsLive(itemsToVerify);
+      }
     }
   }, [debouncedLeftPaneItems]);
 
+
+  useEffect(() => {
+    const locateDuplicates = barcodes => {
+      const duplicates = [];
+      barcodes.forEach((barcode, index) => {
+        if (barcodes.indexOf(barcode) !== index) {
+          duplicates.push(barcode);
+        }
+      });
+      return duplicates.join(', ');
+    };
+
+    // Play sound if there are duplicate barcodes in either pane
+    const allItemsOriginal = debouncedLeftPaneItems.split('\n').filter(Boolean);
+    const allItemsVerify = debouncedMiddlePaneItems.split('\n').filter(Boolean);
+    const originalDuplicates = locateDuplicates(allItemsOriginal);
+    const verifyDuplicates = locateDuplicates(allItemsVerify);
+    dispatch({ type: 'UPDATE_DUPLICATES', duplicateOriginalItems: originalDuplicates, duplicateVerifyItems: verifyDuplicates });
+    // Show error if duplicate barcode exists within the same input field
+    if (originalDuplicates.length > 0 || verifyDuplicates.length > 0) {
+      // Play error message but don't give popup alert because we are
+      // already showing the duplicate barcode error on screen
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
+      errorAudio.play();
+    }
+  }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);
+
+  // For handling bad barcode items in the original pane (these are things
+  // that aren't duplicates, but intrinsically should not be added)
+  useEffect(() => {
+    const barcodes = debouncedLeftPaneItems.split('\n').filter(Boolean);
+    let errorItems = [];
+    barcodes.forEach(barcode => {
+      if (data.itemAlreadyAlerted.includes(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+    });
+    dispatch({ type: 'UPDATE_BAD_BARCODES', errorItems: errorItems.join('\n') });
+  }, [debouncedLeftPaneItems, data.itemAlreadyAlerted]);
 
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);
@@ -416,7 +497,7 @@ const NewTray = (props) => {
   const inspectCollection = () => {
     const { original } = data;
     if (!original.collection) {
-      failure(`You must select a collection`);
+      failure(`You must select a collection.`);
       return false;
     } else {
       return true;
@@ -428,7 +509,7 @@ const NewTray = (props) => {
   const inspectTray = (tray) => {
     const { trayLength } = data;
     if (!trayStructure.test(tray)) {
-      failure(`Tray barcode must be ${trayLength} characters long and begin with 1`);
+      failure(`Tray barcode must be ${trayLength} characters long and begin with 1.`);
       return false;
     }
     else {
@@ -448,7 +529,6 @@ const NewTray = (props) => {
         return false;
       }
       else {
-        console.log('Unknown error occurred');
         failure(`An unknown error occurred.`);
         return false;
       }
@@ -457,14 +537,17 @@ const NewTray = (props) => {
 
   const inspectItems = (barcodes) => {
     if (!barcodes || barcodes.length === 0) {
-      failure(`You cannot add an empty tray`);
+      failure(`You cannot add an empty tray.`);
       return false;
     }
-    else {
-      const itemsAsArray = barcodes.split('\n').filter(Boolean);
-      const verifiedAllItems = verifyItemsOnSubmit(itemsAsArray);
-      return verifiedAllItems;
+    // If there are duplicate barcodes, don't allow the form to submit
+    const itemsAsArray = barcodes.split('\n').filter(Boolean);
+    if ((new Set(itemsAsArray)).size !== itemsAsArray.length) {
+      failure(`You cannot add a tray with duplicate barcodes.`);
+      return false;
     }
+    const verifiedAllItems = verifyItemsOnSubmit(itemsAsArray);
+    return verifiedAllItems;
   }
 
   // Handling interactions with the form
@@ -524,24 +607,11 @@ const NewTray = (props) => {
     }
   };
 
-  const handleTabOriginalSubmit = e => {
-    if (e.keyCode === 9) {
-      e.preventDefault();
-      e.persist();
-      handleOriginalSubmit(e);
-    }
-  };
-
-  const handleTabVerifySubmit = e => {
-    if (e.keyCode === 9) {
-      e.preventDefault();
-      e.persist();
-      handleVerifySubmit(e);
-    }
-  };
-
   const handleOriginalSubmit = (e) => {
     e.preventDefault();
+    // If the user is clicking verify, we want to show them alerts a
+    // second time if necessary so they know what the exact problem is
+    dispatch({ type: 'CLEAR_ALREADY_ALERTED' });
     const original = data.original;
     // Add a newline character to the bottom of the list of barcodes if necessary
     if (original.barcodes === '' || original.barcodes.slice(-1) !== '\n') {
@@ -671,13 +741,14 @@ const NewTray = (props) => {
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleOriginalSubmit={handleOriginalSubmit}
-                  handleTabOriginalSubmit={handleTabOriginalSubmit}
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0}
+                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0 || data.duplicateOriginalItems.length > 0}
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
                   trayStructure={trayStructure}
+                  duplicateOriginalItems={data.duplicateOriginalItems}
+                  errorItems={data.errorItems}
                   TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
                 />
               </CardBody>
@@ -694,11 +765,11 @@ const NewTray = (props) => {
                 verify={data.verify}
                 handleVerifyOnChange={handleVerifyOnChange}
                 handleVerifySubmit={handleVerifySubmit}
-                handleTabVerifySubmit={handleTabVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
-                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0}
+                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0 || data.duplicateVerifyItems.length > 0}
                 trayStructure={trayStructure}
+                duplicateVerifyItems={data.duplicateVerifyItems}
                 TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
               />
               </CardBody>
@@ -743,8 +814,11 @@ const TrayFormOriginal = props => (
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.original.tray)
-            ? <><Badge color="success">{props.original.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge>
+            ? <Badge color="success">{props.original.tray.length}</Badge>
+            : props.original.tray.length === 0
+              ? <Badge>{props.original.tray.length}</Badge>
+              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              )
           }
         </Label>
         <Input
@@ -763,7 +837,18 @@ const TrayFormOriginal = props => (
         />
       </FormGroup>
       <FormGroup>
-        <Label for="barcodes">Items</Label>
+        <Label for="barcodes">Items</Label>{ ' ' }
+        { props.duplicateOriginalItems && props.duplicateOriginalItems.length > 0
+          ?
+          <>
+            <Badge color="danger">
+              {props.original.barcodes.split('\n').filter(Boolean).length}
+            </Badge>
+            { ' ' }
+            <span className="text-danger">duplicate: {props.duplicateOriginalItems}</span>
+          </>
+          : <Badge>{props.original.barcodes.split('\n').filter(Boolean).length}</Badge>
+        }
         <Input
           type="textarea"
           rows="10"
@@ -775,7 +860,6 @@ const TrayFormOriginal = props => (
             return false;
           }}
           disabled={props.disabled}
-          onKeyDown={props.handleTabOriginalSubmit}
         />
       </FormGroup>
       <Button
@@ -794,6 +878,12 @@ const TrayFormOriginal = props => (
         Clear
       </Button>
     </Form>
+    { props.errorItems && props.errorItems.length > 0 ?
+      <div className="text-danger" style={{whiteSpace: 'pre', paddingTop: '15px'}}>
+        { props.errorItems }
+      </div>
+      : null
+    }
   </div>
 );
 
@@ -806,8 +896,11 @@ const TrayFormVerify = props => (
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
           { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
-            ? <><Badge color="success">{props.verify.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge>
+            ? <Badge color="success">{props.verify.tray.length}</Badge>
+            : props.verify.tray.length === 0
+              ? <Badge>{props.verify.tray.length}</Badge>
+              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              )
           }
       </Label>
       <Input
@@ -825,7 +918,18 @@ const TrayFormVerify = props => (
       />
     </FormGroup>
     <FormGroup>
-      <Label for="tray">Items</Label>
+      <Label for="tray">Items</Label>{ ' ' }
+        { props.duplicateVerifyItems && props.duplicateVerifyItems.length > 0
+          ?
+          <>
+            <Badge color="danger" >
+              {props.verify.barcodes.split('\n').filter(Boolean).length}
+            </Badge>
+            { ' ' }
+            <span className="text-danger">duplicate: {props.duplicateVerifyItems}</span>
+          </>
+          : <Badge>{props.verify.barcodes.split('\n').filter(Boolean).length}</Badge>
+        }
       <Input
         type="textarea"
         rows="10"
@@ -844,7 +948,6 @@ const TrayFormVerify = props => (
         onClick={(e) => props.handleVerifySubmit(e)}
         color="primary"
         disabled={props.disabled || props.disabledSubmit}
-          onKeyDown={props.handleTabVerifySubmit}
       >
       Add
     </Button>

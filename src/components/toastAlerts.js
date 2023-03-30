@@ -10,9 +10,9 @@ export const success = message => {
 }
 
 export const failure = message => {
-    const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
-    var audio = new Audio(errorPath);
-    audio.play();
+    const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+    const errorAudio = new Audio(errorPath);
+    errorAudio.play();
     toast.error(message, {
         position: "top-right",
         autoClose: 6000,
@@ -22,9 +22,9 @@ export const failure = message => {
 }
 
 export const warning = message => {
-    const warningPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233563/warning.mp3";
-    var audio = new Audio(warningPath);
-    audio.play();
+    const warningPath = process.env.PUBLIC_URL + "/warning.mp3";
+    const warningAudio = new Audio(warningPath);
+    warningAudio.play();
     toast.warn(message, {
         position: "top-right",
         autoClose: 6000,

@@ -6,6 +6,8 @@ const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
+const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
+const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
 
 
 class Load {
@@ -73,7 +75,6 @@ class Load {
   }
 
   shelveTray = async (data) => {
-    console.log(data);
     const update = await this.handleUpdate(`${trayAPI}shelve-tray/`, 'POST', data);
     return update;
   }
@@ -127,12 +128,6 @@ class Load {
   //   const view = await this.handleUpdate(`${trayAPI}view-all-trays/`, 'GET', data);
   //   return view;
   // }
-
-  // For temporary item management view
-  viewAllItems = async (data) => {
-    const view = await this.handleUpdate(`${itemAPI}view-all-items/`, 'GET', data);
-    return view;
-  }
 
   // transfer = async (data) => {
   //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
@@ -216,6 +211,21 @@ class Load {
   //   const update = await this.handleUpdate(insertshelf, 'POST', data)
   //   return update
   // }
+
+  newItemsLog = async () => {
+    const itemsLog = await this.handleUpdate(`${itemLogAPI}statistics/`, 'GET');
+    return itemsLog;
+  }
+
+  newTraysLog = async () => {
+    const traysLog = await this.handleUpdate(`${trayLogAPI}added-statistics/`, 'GET');
+    return traysLog;
+  }
+
+  traysShelvedLog = async () => {
+    const traysShelvedLog = await this.handleUpdate(`${trayLogAPI}updated-statistics/`, 'GET');
+    return traysShelvedLog;
+  }
 
   handleAccount = async (string, method, data) => {
     try {

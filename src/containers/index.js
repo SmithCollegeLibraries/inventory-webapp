@@ -12,6 +12,7 @@ import ManageCollections from './manageCollections';
 import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
 import ManageUsers from './users';
+import Statistics from './statistics';
 
 export {
   NewTray,
@@ -29,4 +30,5 @@ export {
   ManageItems,
   // ManageShelves,
   ManageUsers,
+  Statistics,
 };
