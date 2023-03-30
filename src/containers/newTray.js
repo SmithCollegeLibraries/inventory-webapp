@@ -123,6 +123,11 @@ const NewTray = (props) => {
           ...state,
           itemAlreadyAlerted: [...state.itemAlreadyAlerted, action.item],
         };
+      case 'CLEAR_ALREADY_ALERTED':
+        return {
+          ...state,
+          itemAlreadyAlerted: [],
+        };
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -170,14 +175,14 @@ const NewTray = (props) => {
 
   // Live verification functions, which also get called again on submission
 
-  const errorPath = "https://res.cloudinary.com/dxfq3iotg/video/upload/v1557233574/error.mp3";
-  const errorAudio = new Audio(errorPath);
   const failureIfNew = (barcode, message) => {
     if (!data.itemAlreadyAlerted.includes(barcode)) {
       failure(message);
       dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
     }
     else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   };
@@ -209,7 +214,6 @@ const NewTray = (props) => {
   const verifyItemsLive = async (barcodes) => {
 
     const verifyItemsFree = async (barcodes) => {
-      console.log("Verifying items free", barcodes);
       // First see whether it already exists in staged trays
       const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
       const stagedItems = [].concat.apply([], arrayOfStagedItems);
@@ -230,11 +234,8 @@ const NewTray = (props) => {
       const resultBarcodes = fullResults.map(item => item["barcode"]);
       // For each barcode that's not in the results, add it to the list
       // of items that are already checked against the system
-      console.log(barcodes);
       for (const barcode of barcodes) {
-        console.log("trying", barcode);
         if (!resultBarcodes.includes(barcode)) {
-          console.log("adding", barcode);
           dispatch({ type: 'ITEM_USED_GOOD', item: barcode });
         }
       }
@@ -303,10 +304,10 @@ const NewTray = (props) => {
         brokenBarcodes.push(barcode);
       }
       else {
-        if (!data.itemUsedCheckStarted.includes(barcode)) {
+        if (!data.itemUsedCheckStarted.includes(barcode) && !data.itemUsedGood.includes(barcode)) {
           barcodesToLookupInSystem.push(barcode);
         }
-        if (!data.itemFolioCheckStarted.includes(barcode)) {
+        if (!data.itemFolioCheckStarted.includes(barcode) && !data.itemFolioGood.includes(barcode)) {
           barcodesToLookupInFolio.push(barcode);
         }
       }
@@ -403,11 +404,11 @@ const NewTray = (props) => {
       const allItems = debouncedLeftPaneItems.split('\n').filter(Boolean);
       // When checking live, don't check the last item if it isn't 15
       // characters long, because it's probably not a complete barcode
-      const lastItem = allItems[allItems.length - 1];
-      const itemsToVerify = lastItem.length < 15 ? allItems.slice(0, -1) : allItems;
-      console.log(lastItem.length);
-      console.log(itemsToVerify);
-      verifyItemsLive(itemsToVerify);
+      const lastItem = allItems ? allItems[allItems.length - 1] : '';
+      const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
+      if (itemsToVerify) {
+        verifyItemsLive(itemsToVerify);
+      }
     }
   }, [debouncedLeftPaneItems]);
 
@@ -420,6 +421,8 @@ const NewTray = (props) => {
     if ((new Set(allItemsOriginal)).size !== allItemsOriginal.length || (new Set(allItemsVerify)).size !== allItemsVerify.length) {
       // Play error message but don't give popup alert because we are
       // already showing the duplicate barcode error on screen
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);
@@ -476,7 +479,6 @@ const NewTray = (props) => {
         return false;
       }
       else {
-        console.log('Unknown error occurred');
         failure(`An unknown error occurred.`);
         return false;
       }
@@ -581,6 +583,9 @@ const NewTray = (props) => {
 
   const handleOriginalSubmit = (e) => {
     e.preventDefault();
+    // If the user is clicking verify, we want to show them alerts a
+    // second time if necessary so they know what the exact problem is
+    dispatch({ type: 'CLEAR_ALREADY_ALERTED' });
     const original = data.original;
     // Add a newline character to the bottom of the list of barcodes if necessary
     if (original.barcodes === '' || original.barcodes.slice(-1) !== '\n') {
