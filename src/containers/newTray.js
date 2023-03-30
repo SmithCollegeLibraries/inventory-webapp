@@ -139,6 +139,11 @@ const NewTray = (props) => {
           duplicateOriginalItems: action.duplicateOriginalItems,
           duplicateVerifyItems: action.duplicateVerifyItems,
         };
+      case 'UPDATE_BAD_BARCODES':
+        return {
+          ...state,
+          errorItems: action.errorItems,
+        };
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -431,6 +436,16 @@ const NewTray = (props) => {
 
 
   useEffect(() => {
+    const locateDuplicates = barcodes => {
+      const duplicates = [];
+      barcodes.forEach((barcode, index) => {
+        if (barcodes.indexOf(barcode) !== index) {
+          duplicates.push(barcode);
+        }
+      });
+      return duplicates.join(', ');
+    };
+
     // Play sound if there are duplicate barcodes in either pane
     const allItemsOriginal = debouncedLeftPaneItems.split('\n').filter(Boolean);
     const allItemsVerify = debouncedMiddlePaneItems.split('\n').filter(Boolean);
@@ -446,6 +461,21 @@ const NewTray = (props) => {
       errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]);
+
+  // For handling bad barcode items in the original pane (these are things
+  // that aren't duplicates, but intrinsically should not be added)
+  useEffect(() => {
+    const barcodes = debouncedLeftPaneItems.split('\n').filter(Boolean);
+    let errorItems = [];
+    barcodes.forEach(barcode => {
+      if (data.itemAlreadyAlerted.includes(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+    });
+    dispatch({ type: 'UPDATE_BAD_BARCODES', errorItems: errorItems.join('\n') });
+  }, [debouncedLeftPaneItems, data.itemAlreadyAlerted]);
 
   const handleLocalStorage = async (key) => {
     const results = await localforage.getItem(key);
@@ -560,29 +590,6 @@ const NewTray = (props) => {
     }
     verify[e.target.name] = value;
     dispatch({ type: 'ADD_VERIFY', verify: verify});
-  };
-
-  const locateDuplicates = barcodes => {
-    const duplicates = [];
-    barcodes.forEach((barcode, index) => {
-      if (barcodes.indexOf(barcode) !== index) {
-        duplicates.push(barcode);
-      }
-    });
-    return duplicates.join(', ');
-  };
-
-  const badBarcodes = barcodesAsString => {
-    const barcodes = barcodesAsString.split('\n').filter(Boolean);
-    const badBarcodes = [];
-    barcodes.forEach(barcode => {
-      if (data.itemAlreadyAlerted.includes(barcode)) {
-        if (!badBarcodes.includes(barcode)) {
-          badBarcodes.push(barcode);
-        }
-      }
-    });
-    return badBarcodes.join('\n');
   };
 
   const clearOriginal = e => {
@@ -741,7 +748,7 @@ const NewTray = (props) => {
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
                   trayStructure={trayStructure}
                   duplicateOriginalItems={data.duplicateOriginalItems}
-                  badBarcodes={badBarcodes}
+                  errorItems={data.errorItems}
                   TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
                 />
               </CardBody>
@@ -871,9 +878,9 @@ const TrayFormOriginal = props => (
         Clear
       </Button>
     </Form>
-    { props.badBarcodes(props.original.barcodes) ?
+    { props.errorItems && props.errorItems.length > 0 ?
       <div className="text-danger" style={{whiteSpace: 'pre', paddingTop: '15px'}}>
-        { props.badBarcodes(props.original.barcodes) }
+        { props.errorItems }
       </div>
       : null
     }
