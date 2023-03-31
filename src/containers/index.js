@@ -9,7 +9,7 @@ import RapidShelve from './rapidShelve';
 // import Search from './search';
 import ManageCollections from './manageCollections';
 // import ManageShelves from './manageShelves';
-import ManageItems from './manageItems';
+// import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
 import ManageUsers from './users';
 import Statistics from './statistics';
@@ -27,7 +27,7 @@ export {
   // Return,
   // Search,
   ManageTrays,
-  ManageItems,
+  // ManageItems,
   // ManageShelves,
   ManageUsers,
   Statistics,
