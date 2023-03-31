@@ -149,10 +149,25 @@ const NewTray = (props) => {
           ...state,
           form: action.form,
         };
+      case 'CLEAR_CHECKS':
+        return {
+          ...state,
+          trayCheckStarted: [],
+          trayBadStaged: [],
+          trayBadSystem: [],
+          trayGood: [],
+          itemUsedCheckStarted: [],
+          itemUsedBadStaged: [],
+          itemUsedBadSystem: [],
+          itemUsedGood: [],
+          itemFolioCheckStarted: [],
+          itemFolioBad: [],
+          itemFolioGood: [],
+          itemAlreadyAlerted: [],
+        };
       case 'RESET':
         return {
           ...state,
-          trayLength: TRAY_BARCODE_LENGTH,
           form: "original",
           original: {
             collection: state.original.collection,
@@ -163,7 +178,7 @@ const NewTray = (props) => {
             tray: '',
             barcodes: '',
           },
-          verified: [],  // List of trays that have been verified and staged
+          // Don't add 'verified' here! That should not be cleared on reset!
 
           // Containers for all the possible states of verifying trays and items
           trayCheckStarted: [],
@@ -434,7 +449,7 @@ const NewTray = (props) => {
         verifyItemsLive(itemsToVerify);
       }
     }
-  }, [debouncedLeftPaneItems, failureIfNew]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedLeftPaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
   useEffect(() => {
@@ -489,14 +504,14 @@ const NewTray = (props) => {
     return results;
   }
 
-  // Anytime the DOM is updated, update local storage
+  // On load, check local storage for any staged items
   useEffect(() => {
     const getLocalItems = async () => {
       const local = await handleLocalStorage('tray') || [];
       dispatch({ type: 'UPDATE_STAGED', verified: local});
     };
     getLocalItems();
-  });
+  }, []);
 
   // Handling interactions with the form
 
@@ -512,8 +527,8 @@ const NewTray = (props) => {
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field;
-    // this is important because the actual barcodes for trays are
+    // Automatically remove non-numeric characters from tray and items
+    // fields; this is important because the actual barcodes for trays are
     // prefixed with SM, which the barcode scanners will add to the input
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
@@ -530,8 +545,8 @@ const NewTray = (props) => {
     e.preventDefault();
     const verify = data.verify;
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field;
-    // this is important because the actual barcodes for trays are
+    // Automatically remove non-numeric characters from tray and items
+    // fields; this is important because the actual barcodes for trays are
     // prefixed with SM, which the barcode scanners will add to the input
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
@@ -722,6 +737,7 @@ const NewTray = (props) => {
         .filter(tray => !trayBarcodes.includes(tray.barcode));
     dispatch({ type: 'UPDATE_STAGED', verified: newTrayList});
     localforage.setItem('tray', newTrayList);
+    dispatch({ type: "CLEAR_CHECKS" });
   };
 
   const clearDisplayGrid = e => {
