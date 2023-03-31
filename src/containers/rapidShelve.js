@@ -6,7 +6,7 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
-import { success, failure, warning } from '../components/toastAlerts';
+import { success, failure } from '../components/toastAlerts';
 
 
 const RapidShelve = (props) => {
@@ -193,7 +193,7 @@ const RapidShelve = (props) => {
     if (trayBarcodeToVerify.length === TRAY_BARCODE_LENGTH && !trayStructure.test(trayBarcodeToVerify)) {
       failure(`Valid tray barcodes must begin with 1.`);
     }
-  }, [debouncedTray]);
+  }, [debouncedTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
