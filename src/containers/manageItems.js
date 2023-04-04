@@ -33,12 +33,13 @@ const reducer = (state, action) => {
       return {
         ...state,
         fields: {
-          tray_barcode: '',
-          new_tray_barcode: '',
+          item_barcode: '',
+          new_item_barcode: '',
+          collection: null,
+          tray: '',
           shelf: '',
           depth: '',
           position: 0,
-          items: [],
         },
       }
     default:
@@ -46,17 +47,18 @@ const reducer = (state, action) => {
   }
 };
 
-const ManageTrays = (props) => {
+const ManageItems = (props) => {
   const initialState = {
     query: '',
     search_results: [],
     fields: {
-      tray_barcode: '',
-      new_tray_barcode: '',
+      item_barcode: '',
+      new_item_barcode: '',
+      collection: null,
+      tray: '',
       shelf: '',
       depth: '',
       position: 0,
-      items: [],
     },
   };
 
@@ -65,17 +67,13 @@ const ManageTrays = (props) => {
   const handleQueryChange = (e) => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field;
-    // this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
-    value = e.target.value.replace(/\D/g,'');
     dispatch({
       type: "QUERY_CHANGE",
       payload: value,
     });
   };
 
-  const handleTrayChange = e => {
+  const handleItemChange = e => {
     e.preventDefault();
     dispatch({
       type: "UPDATE_FIELD",
@@ -86,35 +84,32 @@ const ManageTrays = (props) => {
     });
   };
 
-  const handleTraySelect = (data, e) => {
+  const handleItemSelect = (data, e) => {
     e.preventDefault();
     dispatch({
       type: "UPDATE_SELECTION",
       payload: {
-        tray_barcode: data.barcode,
-        new_tray_barcode: '',
-        shelf: data.shelf,
-        depth: data.depth,
-        position: data.position,
-        items: data.items,
+        item_barcode: data.barcode,
+        new_item_barcode: '',
+        collection: data.collection,
+        tray: data.tray,
       }
     });
   }
 
   const handleSearch = async (showWarnings = false) => {
-    const results = await ContentSearch.trays(state.query);
+    const results = await ContentSearch.items(state.query);
     if (results && results[0]) {
       let items = [];
-      for (let barcode of results[0].items) {
-        items.push(barcode);
-      }
+      console.log(results);
       const fields = {
-        tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
-        new_tray_barcode: "",
+        item_barcode: results[0].item_barcode ? results[0].item_barcode : "",
+        new_item_barcode: "",
+        collection: results[0].collection ? results[0].collection : "",
+        tray: (results[0].tray && results[0].tray.barcode) ? results[0].tray.barcode : "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : 0,
-        items: items,
       }
       dispatch({
         type: 'UPDATE_RESULTS',
@@ -130,8 +125,8 @@ const ManageTrays = (props) => {
         payload: {
           search_results: [],
           fields: {
-            tray_barcode: '',
-            new_tray_barcode: '',
+            item_barcode: '',
+            new_item_barcode: '',
             shelf: '',
             depth: '',
             position: 0,
@@ -145,34 +140,34 @@ const ManageTrays = (props) => {
     }
   };
 
-  const handleTrayUpdate = async (e) => {
+  const handleItemUpdate = async (e) => {
     e.preventDefault();
     const data = {
-      barcode: state.fields.tray_barcode,
-      new_barcode: state.fields.new_tray_barcode || null,
-      shelf: state.fields.shelf || null,
-      depth: state.fields.depth || null,
-      position: state.fields.position || null,
+      barcode: state.fields.item_barcode,
+      new_barcode: state.fields.new_item_barcode || null,
+      collection: state.fields.collection || null,
+      tray: state.fields.tray || null,
     };
-    const load = await Load.updateTray(data);
+    console.log(data);
+    const load = await Load.updateItem(data);
     if (load) {
-      success(`Tray ${load['barcode']} successfully updated`);
+      success(`Item ${load['barcode']} successfully updated`);
       dispatch({ type: 'RESET', payload: ''});
       handleSearch(false);
     } else {
-      failure(`There was an error updating tray ${data.barcode}`);
+      failure(`There was an error updating item ${data.barcode}`);
     }
   };
 
-  const handleTrayDelete = async (barcode, e) => {
+  const handleItemDelete = async (barcode, e) => {
     const data = { barcode: barcode };
-    const deleteTray = await Load.deleteTrayAndItems(data);
-    if (deleteTray && 'active' in deleteTray && !deleteTray.active) {
-      success("Tray and items successfully deleted");
+    const deleteItem = await Load.deleteItem(data);
+    if (deleteItem && 'active' in deleteItem && !deleteItem.active) {
+      success("Item successfully deleted");
       dispatch({ type: 'RESET', payload: '' });
       handleSearch(false);
     } else {
-      failure('There was an error deleting the tray');
+      failure('There was an error deleting the item');
     }
   };
 
@@ -187,13 +182,13 @@ const ManageTrays = (props) => {
       </div>
       <div style={{marginTop: "20px"}}>
         <Row>
-          <Col md="4">
+          <Col md="6">
             { state.search_results
-              ? Object.keys(state.search_results).map((tray, idx) => {
+              ? Object.keys(state.search_results).map((item, idx) => {
                   return (
                     <ResultDisplay
-                      data={state.search_results[tray]}
-                      handleTraySelect={handleTraySelect}
+                      data={state.search_results[item]}
+                      handleItemSelect={handleItemSelect}
                       index={idx}
                       key={idx}
                     />
@@ -202,31 +197,16 @@ const ManageTrays = (props) => {
               : null
             }
           </Col>
-          <Col md="4">
-            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
+          <Col md="6">
+            { state.fields && state.fields.item_barcode && state.fields.item_barcode !== ""
               ? <Card>
                   <CardBody>
-                    <TrayForm
+                    <ItemForm
                       fields={state.fields}
-                      handleTrayChange={handleTrayChange}
-                      handleTrayUpdate={handleTrayUpdate}
-                      handleTrayDelete={handleTrayDelete}
+                      handleItemChange={handleItemChange}
+                      handleItemUpdate={handleItemUpdate}
+                      handleItemDelete={handleItemDelete}
                     />
-                  </CardBody>
-                </Card>
-              : null
-            }
-          </Col>
-          <Col md="4">
-            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
-              ? <Card>
-                  <CardBody>
-                    <dl className="row">
-                      <dt className="col-sm-3">Items</dt>
-                        <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                          {state.fields.items.join('\n')}
-                        </dd>
-                    </dl>
                   </CardBody>
                 </Card>
               : null
@@ -245,7 +225,7 @@ const SearchForm = props => {
         type="text"
         style={{"marginRight": "10px"}}
         name="query"
-        placeholder="Tray barcode"
+        placeholder="Item barcode"
         value={props.query}
         onChange={(e) => props.handleQueryChange(e)}
       />
@@ -258,27 +238,27 @@ const ResultDisplay = (props) => {
   return (
     <Card
       style={{"paddingLeft": "10px", "cursor": "pointer"}}
-      onClick={(e) => props.handleTraySelect(props.data, e)}
+      onClick={(e) => props.handleItemSelect(props.data, e)}
     >
       <CardBody>
         <Row>
           <dl className="row">
             <dt className="col-sm-3">Barcode</dt>
-              <dd className="col-sm-9">
-                {props.data.barcode}
-              </dd>
-              <dt className="col-sm-3">Created</dt>
-              <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                {props.data.created}
-              </dd>
-              <dt className="col-sm-3">Updated</dt>
-              <dd className="col-sm-9">
-                {props.data.updated}
-              </dd>
-              <dt className="col-sm-3">Items</dt>
-              <dd className="col-sm-9">
-                {props.data.items.length}
-              </dd>
+            <dd className="col-sm-9">
+              {props.data.barcode}
+            </dd>
+            <dt className="col-sm-3">Collection</dt>
+            <dd className="col-sm-9">
+              {props.data.collection}
+            </dd>
+            <dt className="col-sm-3">Tray</dt>
+            <dd className="col-sm-9">
+              {props.data.tray ? props.data.tray.barcode : "Not trayed" }
+            </dd>
+            <dt className="col-sm-3">Location</dt>
+            <dd className="col-sm-9">
+              {props.data.tray && props.data.tray.shelf ? `${props.data.tray.shelf} • ${props.data.tray.depth} • ${props.data.tray.position}` : "Not shelved" }
+            </dd>
           </dl>
         </Row>
       </CardBody>
@@ -286,26 +266,26 @@ const ResultDisplay = (props) => {
   );
 }
 
-const TrayForm = (props) => {
+const ItemForm = (props) => {
   return (
     <Row>
       <Col>
         <Form autoComplete="off">
           <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
-            <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
+            <Label for="item" style={{"fontWeight":"bold"}}>Item barcode</Label>
+            <Input type="text" disabled value={props.fields.item_barcode} name="item_barcode" />
           </FormGroup>
           <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
-            <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
+            <Label for="item" style={{"fontWeight":"bold"}}>New item barcode</Label>
+            <Input type="text" value={props.fields.new_item_barcode || ''} onChange={(e) => props.handleItemChange(e)} name="new_item_barcode" />
           </FormGroup>
           <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>Shelf</Label>
-            <Input type="text" value={props.fields.shelf || ''} onChange={(e) => props.handleTrayChange(e)} name="shelf" />
+            <Label for="item" style={{"fontWeight":"bold"}}>Shelf</Label>
+            <Input type="text" value={props.fields.tray.shelf || ''} onChange={(e) => props.handleItemChange(e)} name="shelf" />
           </FormGroup>
           <FormGroup>
             <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
+            <Input type="select" style={{"width":"12em"}} value={props.fields.tray.depth || ''} onChange={(e) => props.handleItemChange(e)} name="depth">
               <option value="">(none)</option>
               <option value="Front">Front</option>
               <option value="Middle">Middle</option>
@@ -314,21 +294,21 @@ const TrayForm = (props) => {
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: make max position not hardcoded */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            {/* TODO: get max position from settings */}
+            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.tray.position || ''} maxLength="2" onChange={e => props.handleItemChange(e)} />
           </FormGroup>
-          <FormGroup style={{"marginTop": "40px"}}>
+          {/* <FormGroup style={{"marginTop": "40px"}}>
             <Button
               color="primary"
               style={{"float": "left"}}
-              onClick={(e) => props.handleTrayUpdate(e)}
-            >Update tray</Button>
+              onClick={(e) => props.handleItemUpdate(e)}
+            >Update item</Button>
             <Button
               color="danger"
               style={{"float": "right"}}
-              onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
-            >Delete tray and all items</Button>
-          </FormGroup>
+              onClick={(e) => {if (window.confirm('Are you sure you want to delete this item from the system?')) {props.handleItemDelete(props.fields.item_barcode, e)}}}
+            >Delete item</Button>
+          </FormGroup> */}
         </Form>
       </Col>
     </Row>
@@ -336,4 +316,4 @@ const TrayForm = (props) => {
 };
 
 
-export default ManageTrays;
+export default ManageItems;
