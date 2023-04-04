@@ -285,16 +285,20 @@ const ItemForm = (props) => {
           </FormGroup>
           <FormGroup>
             <Label for="item" style={{"fontWeight":"bold"}}>Shelf</Label>
-            <Input type="text" disabled={true} value={props.fields.tray && props.fields.shelf ? props.fields.tray.shelf : ''} name="shelf" />
+            <Input type="text" disabled={true} value={props.fields.tray && props.fields.tray.shelf ? props.fields.tray.shelf : ''} name="shelf" />
           </FormGroup>
           <FormGroup>
             <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" disabled={true} style={{"width":"12em"}} value={props.fields.tray && props.fields.depth ? props.fields.tray.depth : '' || ''} name="depth">
+            <Input type="select" disabled={true} style={{"width":"12em"}} value={props.fields.tray && props.fields.tray.depth ? props.fields.tray.depth : '' || ''} name="depth">
+              <option value="">(none)</option>
+              <option value="Front">Front</option>
+              <option value="Middle">Middle</option>
+              <option value="Rear">Rear</option>
             </Input>
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            <Input type="text" disabled={true} style={{"width":"6em"}} name="position" value={props.fields.position && props.fields.position ? props.fields.tray.position : ''} />
+            <Input type="text" disabled={true} style={{"width":"6em"}} name="position" value={props.fields.tray && props.fields.tray.position ? props.fields.tray.position : ''} />
           </FormGroup>
           {/* <FormGroup style={{"marginTop": "40px"}}>
             <Button
