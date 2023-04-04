@@ -280,22 +280,21 @@ const ItemForm = (props) => {
             <Input type="text" value={props.fields.new_item_barcode || ''} onChange={(e) => props.handleItemChange(e)} name="new_item_barcode" />
           </FormGroup>
           <FormGroup>
+            <Label for="item" style={{"fontWeight":"bold"}}>Tray</Label>
+            <Input type="text" value={props.fields.tray && props.fields.tray.barcode ? props.fields.tray.barcode : ''} onChange={(e) => props.handleItemChange(e)} name="tray" />
+          </FormGroup>
+          <FormGroup>
             <Label for="item" style={{"fontWeight":"bold"}}>Shelf</Label>
-            <Input type="text" value={props.fields.tray.shelf || ''} onChange={(e) => props.handleItemChange(e)} name="shelf" />
+            <Input type="text" disabled={true} value={props.fields.tray && props.fields.shelf ? props.fields.tray.shelf : ''} name="shelf" />
           </FormGroup>
           <FormGroup>
             <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" style={{"width":"12em"}} value={props.fields.tray.depth || ''} onChange={(e) => props.handleItemChange(e)} name="depth">
-              <option value="">(none)</option>
-              <option value="Front">Front</option>
-              <option value="Middle">Middle</option>
-              <option value="Rear">Rear</option>
+            <Input type="select" disabled={true} style={{"width":"12em"}} value={props.fields.tray && props.fields.depth ? props.fields.tray.depth : '' || ''} name="depth">
             </Input>
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: get max position from settings */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.tray.position || ''} maxLength="2" onChange={e => props.handleItemChange(e)} />
+            <Input type="text" disabled={true} style={{"width":"6em"}} name="position" value={props.fields.position && props.fields.position ? props.fields.tray.position : ''} />
           </FormGroup>
           {/* <FormGroup style={{"marginTop": "40px"}}>
             <Button
