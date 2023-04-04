@@ -14,7 +14,7 @@ import {
     // Search,
     ManageCollections,
     ManageTrays,
-    // ManageItems,  // delete later
+    ManageItems,
     // ManageShelves,
     ManageUsers,
     Statistics,
@@ -145,11 +145,11 @@ export default class Main extends Component {
                     trays={this.state.trays}
                   />
                 )}/>
-                {/* <Route path="/manage-items" render={() => (
+                <Route path="/manage-items" render={() => (
                   <ManageItems
                     items={this.state.items}
                   />
-                )}/> */}
+                )}/>
                 {/*
                 <Route path="/shelf" render={() => (
                   <Shelf

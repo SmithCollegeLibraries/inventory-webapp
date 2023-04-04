@@ -101,9 +101,9 @@ export default class Header extends Component {
                     <DropdownItem>
                       <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-trays">Trays</NavLink>
                     </DropdownItem>
-                    {/* <DropdownItem>
+                    <DropdownItem>
                       <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-items">Items</NavLink>
-                    </DropdownItem> */}
+                    </DropdownItem>
                     {/* <DropdownItem>
                       <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-shelves">Shelf</NavLink>
                     </DropdownItem> */}
