@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
@@ -6,6 +6,11 @@ import { success, failure, warning } from '../components/toastAlerts';
 
 const reducer = (state, action) => {
   switch (action.type) {
+    case 'ADD_COLLECTIONS':
+      return {
+        ...state,
+        collections: action.collections
+      };
     case 'QUERY_CHANGE':
       return {
         ...state,
@@ -32,10 +37,13 @@ const reducer = (state, action) => {
     case 'RESET':
       return {
         ...state,
+        query: '',
+        search_results: [],
         fields: {
           item_barcode: '',
           new_item_barcode: '',
-          collection: null,
+          collection: '',
+          status: '',
           tray: '',
           shelf: '',
           depth: '',
@@ -49,12 +57,14 @@ const reducer = (state, action) => {
 
 const ManageItems = (props) => {
   const initialState = {
+    collections: [],
     query: '',
     search_results: [],
     fields: {
       item_barcode: '',
       new_item_barcode: '',
-      collection: null,
+      collection: '',
+      status: '',
       tray: '',
       shelf: '',
       depth: '',
@@ -63,6 +73,11 @@ const ManageItems = (props) => {
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
+
+  const getCollections = async () => {
+    const search = await ContentSearch.collections();
+    dispatch({ type: "ADD_COLLECTIONS", collections: search});
+  };
 
   const handleQueryChange = (e) => {
     e.preventDefault();
@@ -92,6 +107,7 @@ const ManageItems = (props) => {
         item_barcode: data.barcode,
         new_item_barcode: '',
         collection: data.collection,
+        status: data.status,
         tray: data.tray,
       }
     });
@@ -100,12 +116,11 @@ const ManageItems = (props) => {
   const handleSearch = async (showWarnings = false) => {
     const results = await ContentSearch.items(state.query);
     if (results && results[0]) {
-      let items = [];
-      console.log(results);
       const fields = {
         item_barcode: results[0].item_barcode ? results[0].item_barcode : "",
         new_item_barcode: "",
         collection: results[0].collection ? results[0].collection : "",
+        status: results[0].status ? results[0].status : "",
         tray: (results[0].tray && results[0].tray.barcode) ? results[0].tray.barcode : "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
@@ -127,10 +142,12 @@ const ManageItems = (props) => {
           fields: {
             item_barcode: '',
             new_item_barcode: '',
+            collection: '',
+            status: '',
+            tray: '',
             shelf: '',
             depth: '',
             position: 0,
-            items: [],
           },
         }
       })
@@ -146,6 +163,7 @@ const ManageItems = (props) => {
       barcode: state.fields.item_barcode,
       new_barcode: state.fields.new_item_barcode || null,
       collection: state.fields.collection || null,
+      status: state.fields.status || null,
       tray: state.fields.tray || null,
     };
     console.log(data);
@@ -170,6 +188,10 @@ const ManageItems = (props) => {
       failure('There was an error deleting the item');
     }
   };
+
+  useEffect(() => {
+    getCollections()
+  }, []);
 
   return (
     <div>
@@ -203,6 +225,7 @@ const ManageItems = (props) => {
                   <CardBody>
                     <ItemForm
                       fields={state.fields}
+                      collections={state.collections}
                       handleItemChange={handleItemChange}
                       handleItemUpdate={handleItemUpdate}
                       handleItemDelete={handleItemDelete}
@@ -251,6 +274,10 @@ const ResultDisplay = (props) => {
             <dd className="col-sm-9">
               {props.data.collection}
             </dd>
+            <dt className="col-sm-3">Status</dt>
+            <dd className="col-sm-9">
+              {props.data.status}
+            </dd>
             <dt className="col-sm-3">Tray</dt>
             <dd className="col-sm-9">
               {props.data.tray ? props.data.tray.barcode : "Not trayed" }
@@ -271,35 +298,61 @@ const ItemForm = (props) => {
     <Row>
       <Col>
         <Form autoComplete="off">
+          <Row>
+            <FormGroup className="col-sm-6">
+              <Label for="item_barcode" style={{"fontWeight":"bold"}}>Item barcode</Label>
+              <Input type="text" disabled name="item_barcode" value={props.fields.item_barcode} />
+            </FormGroup>
+            <FormGroup className="col-sm-6">
+              <Label for="new_item_barcode" style={{"fontWeight":"bold"}}>New item barcode</Label>
+              <Input type="text" name="new_item_barcode" value={props.fields.new_item_barcode || ''} onChange={(e) => props.handleItemChange(e)} />
+            </FormGroup>
+          </Row>
           <FormGroup>
-            <Label for="item" style={{"fontWeight":"bold"}}>Item barcode</Label>
-            <Input type="text" disabled value={props.fields.item_barcode} name="item_barcode" />
-          </FormGroup>
-          <FormGroup>
-            <Label for="item" style={{"fontWeight":"bold"}}>New item barcode</Label>
-            <Input type="text" value={props.fields.new_item_barcode || ''} onChange={(e) => props.handleItemChange(e)} name="new_item_barcode" />
-          </FormGroup>
-          <FormGroup>
-            <Label for="item" style={{"fontWeight":"bold"}}>Tray</Label>
-            <Input type="text" value={props.fields.tray && props.fields.tray.barcode ? props.fields.tray.barcode : ''} onChange={(e) => props.handleItemChange(e)} name="tray" />
-          </FormGroup>
-          <FormGroup>
-            <Label for="item" style={{"fontWeight":"bold"}}>Shelf</Label>
-            <Input type="text" disabled={true} value={props.fields.tray && props.fields.tray.shelf ? props.fields.tray.shelf : ''} name="shelf" />
-          </FormGroup>
-          <FormGroup>
-            <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" disabled={true} style={{"width":"12em"}} value={props.fields.tray && props.fields.tray.depth ? props.fields.tray.depth : '' || ''} name="depth">
-              <option value="">(none)</option>
-              <option value="Front">Front</option>
-              <option value="Middle">Middle</option>
-              <option value="Rear">Rear</option>
+            <Label for="collection" style={{"fontWeight":"bold"}}>Collection</Label>
+            <Input type="select" name="collection" value={props.fields.collection || ''} onChange={(e) => props.handleItemChange(e)}>
+              { props.collections
+                ? Object.keys(props.collections).map((items, idx) => (
+                    <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                  ))
+                : null
+              }
             </Input>
           </FormGroup>
           <FormGroup>
-            <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            <Input type="text" disabled={true} style={{"width":"6em"}} name="position" value={props.fields.tray && props.fields.tray.position ? props.fields.tray.position : ''} />
+            <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
+            <Input type="select" style={{"width":"18em"}} name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
+              <option value={null}>(none)</option>
+              <option value="Trayed">Trayed</option>
+              <option value="Circulating">Circulating</option>
+              <option value="Missing">Returned to campus</option>
+              <option value="Returned to campus">Missing</option>
+            </Input>
           </FormGroup>
+          <FormGroup>
+            <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
+            <Input type="text" style={{"width":"12em"}} name="tray" value={props.fields.tray && props.fields.tray.barcode ? props.fields.tray.barcode : ''} onChange={(e) => props.handleItemChange(e)} />
+          </FormGroup>
+          <Row>
+            <FormGroup className="col-sm-5">
+              <Label for="shelf" style={{"fontWeight":"bold"}}>Shelf</Label>
+              <Input type="text" disabled name="shelf" value={props.fields.tray && props.fields.tray.shelf ? props.fields.tray.shelf : ''} />
+            </FormGroup>
+            <FormGroup className="col-sm-4">
+              <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
+              <Input type="select" disabled name="depth" value={props.fields.tray && props.fields.tray.depth ? props.fields.tray.depth : '' || ''}>
+                <option value="">(none)</option>
+                <option value="Front">Front</option>
+                <option value="Middle">Middle</option>
+                <option value="Rear">Rear</option>
+              </Input>
+            </FormGroup>
+            <FormGroup className="col-sm-3">
+              <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
+              <Input type="text" disabled={true} name="position" value={props.fields.tray && props.fields.tray.position ? props.fields.tray.position : ''} />
+            </FormGroup>
+          </Row>
+
           {/* <FormGroup style={{"marginTop": "40px"}}>
             <Button
               color="primary"
