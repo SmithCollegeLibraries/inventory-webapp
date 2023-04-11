@@ -14,7 +14,7 @@ import {
     // Search,
     ManageCollections,
     ManageTrays,
-    // ManageItems,  // delete later
+    ManageItems,
     // ManageShelves,
     ManageUsers,
     Statistics,
@@ -46,7 +46,7 @@ export default class Main extends Component {
 
   componentDidMount = async () => {
     if (sessionStorage.getItem('account') || this.state.loggedIn === true ) {
-      this.collections();
+      this.getCollections();
       // this.settings();
     }
   };
@@ -56,9 +56,9 @@ export default class Main extends Component {
     return results;
   };
 
-  collections = async () => {
-    const search = await ContentSearch.collections();
-    this.setState({ collections: search });
+  getCollections = async () => {
+    const results = await ContentSearch.collections();
+    this.setState({ collections: results });
   };
 
 
@@ -100,7 +100,7 @@ export default class Main extends Component {
         level: level
       }, () => {
         sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
-        this.collections();
+        this.getCollections();
       })
     } else {
       failure('There was a problem logging in.');
@@ -145,11 +145,11 @@ export default class Main extends Component {
                     trays={this.state.trays}
                   />
                 )}/>
-                {/* <Route path="/manage-items" render={() => (
+                <Route path="/manage-items" render={() => (
                   <ManageItems
                     items={this.state.items}
                   />
-                )}/> */}
+                )}/>
                 {/*
                 <Route path="/shelf" render={() => (
                   <Shelf
@@ -189,7 +189,6 @@ export default class Main extends Component {
                 )}/> */}
                 <Route path="/manage-collections" render={() => (
                   <ManageCollections
-                    collections={this.state.collections}
                     newCollections={this.collections}
                   />
                 )}/>

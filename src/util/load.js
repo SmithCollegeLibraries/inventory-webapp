@@ -168,12 +168,12 @@ class Load {
   }
 
   collectionHasItems = async (data) => {
-    const get = await this.handleUpdate(`${collectionAPI}collection-has-items/`, 'GET', data);
+    const get = await this.handleUpdate(`${collectionAPI}collection-has-items/?query=${data.id}`, 'GET');
     return get;
   }
 
   collectionExists = async (data) => {
-    const get = await this.handleUpdate(`${collectionAPI}collection-exists/`, 'GET', data);
+    const get = await this.handleUpdate(`${collectionAPI}collection-exists/?query=${data.id}`, 'GET');
     return get;
   }
 

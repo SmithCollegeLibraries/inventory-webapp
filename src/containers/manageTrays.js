@@ -222,10 +222,10 @@ const ManageTrays = (props) => {
               ? <Card>
                   <CardBody>
                     <dl className="row">
-                        <dt className="col-sm-3">Items</dt>
-                          <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                            {state.fields.items.join('\n')}
-                          </dd>
+                      <dt className="col-sm-3">Items</dt>
+                        <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+                          {state.fields.items.join('\n')}
+                        </dd>
                     </dl>
                   </CardBody>
                 </Card>
@@ -268,9 +268,9 @@ const ResultDisplay = (props) => {
                 {props.data.barcode}
               </dd>
               <dt className="col-sm-3">Created</dt>
-                <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                  {props.data.created}
-                </dd>
+              <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+                {props.data.created}
+              </dd>
               <dt className="col-sm-3">Updated</dt>
               <dd className="col-sm-9">
                 {props.data.updated}
