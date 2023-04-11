@@ -347,7 +347,7 @@ const NewTray = (props) => {
         }
         fullResults.forEach(item => {
           if (item["tray"]) {
-            failureIfNew(item["barcode"], `Item ${item["barcode"]} is already in tray ${item["tray"]}.`);
+            failureIfNew(item["barcode"], `Item ${item["barcode"]} is already in tray ${item["tray"]["barcode"]}.`);
             dispatch({ type: 'ITEM_USED_BAD_SYSTEM', item: item["barcode"] });
             return false;
           }
@@ -710,13 +710,21 @@ const NewTray = (props) => {
     if (navigator.onLine === true) {
       let submittedTrays = [];
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
+        console.log(tray);
         const response = await Load.newTray(tray);
-        if (response) {
+        console.log(response);
+        if (response === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
           submittedTrays.push(tray.barcode);
         }
+        else {
+          const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+          const errorAudio = new Audio(errorPath);
+          errorAudio.play();
+        }
+        removeItems(submittedTrays);
       }
-      removeItems(submittedTrays);
+
       dispatch({ type: "RESET" });
     }
     else {

@@ -37,10 +37,10 @@ function ManageCollections(props) {
   const [data, dispatch] = useReducer(collectionReducer, initialState);
 
   useEffect(() => {
-    collections()
+    getCollections()
   }, []);
 
-  const collections = async () => {
+  const getCollections = async () => {
     const search = await ContentSearch.collections();
     dispatch({ type: "ADD_COLLECTIONS", collections: search});
   };
@@ -58,8 +58,7 @@ function ManageCollections(props) {
     if (results) {
       success("New collection successfully created");
       dispatch({ type: "UPDATE_COLLECTION_FORM", collections: ""});
-      collections();
-      props.newCollections();
+      getCollections();
     }
   };
 
@@ -78,13 +77,12 @@ function ManageCollections(props) {
         failure("There was a problem updating this collection");
       }
     }
-    collections();
-    props.newCollections();
+    getCollections();
   };
 
   const handleDeleteSubmit = async(e, data) => {
     e.preventDefault();
-    const hasItems = await Load.collectionHasItems(data);
+    const hasItems = await Load.collectionHasItems(data.id);
     if (hasItems) {
       failure("This collection cannot be deleted because it has items tied to it");
     } else {
@@ -97,8 +95,7 @@ function ManageCollections(props) {
         }
       }
     }
-    collections();
-    props.newCollections();
+    getCollections();
   };
 
   return (
@@ -112,7 +109,7 @@ function ManageCollections(props) {
       </div>
       <Card>
         <CardBody>
-          {Object.keys(data.collections).map((items, idx) => {
+          {data.collections ? Object.keys(data.collections).map((items, idx) => {
             return (
               <Display
                 data={data.collections[items]}
@@ -123,7 +120,7 @@ function ManageCollections(props) {
                 handleDeleteSubmit={handleDeleteSubmit}
               />
             );
-          })}
+          }) : null}
         </CardBody>
       </Card>
     </div>
