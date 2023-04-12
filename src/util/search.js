@@ -21,15 +21,16 @@ class ContentSearch {
   items = async (searchTerm) => {
     let results = await this.search(`${itemAPI}browse/?query=${searchTerm ? searchTerm : ''}`);
     // Add title and call number information from FOLIO via the Load.infoFromFolio() method.
-    // We need to get the info from FOLIO one item at a time.
-    for (let i = 0; i < results.length; i++) {
-      let item = results[i];
+    // We want to fetch the information in parallel, so we use Promise.all() to wait for all
+    // the requests to complete.
+    results = await Promise.all(results.map(async item => {
       // Get the info from FOLIO
       let info = await Load.infoFromFolio(item.barcode);
       // Add the info to the item
       item.title = info.title;
       item.callNumber = info.callNumber;
-    }
+      return item;
+    }));
     return results;
   }
 
