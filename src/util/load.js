@@ -120,6 +120,15 @@ class Load {
     return verify;
   };
 
+  // Gets title and call number information from FOLIO
+  infoFromFolio = async (barcode) => {
+    const data = {
+      "barcode": barcode
+    };
+    const info = await this.handleUpdate(`${itemAPI}info-from-folio/`, 'POST', data);
+    return info;
+  };
+
   /**
     * @desc Tray management -- DEPRECATED SECTION
   */
