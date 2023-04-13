@@ -1,4 +1,5 @@
 import Alerts from '../components/alerts';
+import Load from './load';
 
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
@@ -18,8 +19,19 @@ class ContentSearch {
   }
 
   items = async (searchTerm) => {
-    let search = await this.search(`${itemAPI}browse/?query=${searchTerm ? searchTerm : ''}`);
-    return search;
+    let results = await this.search(`${itemAPI}browse/?query=${searchTerm ? searchTerm : ''}`);
+    // Add title and call number information from FOLIO via the Load.infoFromFolio() method.
+    // We want to fetch the information in parallel, so we use Promise.all() to wait for all
+    // the requests to complete.
+    results = await Promise.all(results.map(async item => {
+      // Get the info from FOLIO
+      let info = await Load.infoFromFolio(item.barcode);
+      // Add the info to the item
+      item.title = info.title;
+      item.callNumber = info.callNumber;
+      return item;
+    }));
+    return results;
   }
 
   // setting = async () => {

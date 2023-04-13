@@ -120,6 +120,26 @@ class Load {
     return verify;
   };
 
+  // Gets title and call number information from FOLIO
+  infoFromFolio = async (barcode) => {
+    const data = {
+      "barcode": barcode
+    };
+    const info = await this.handleUpdate(`${itemAPI}info-from-folio/`, 'POST', data);
+    return info;
+  };
+
+  updateItem = async (data, id) => {
+    const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
+    console.log(data);
+    return update;
+  }
+
+  deleteItem = async (data) => {
+    const results = await this.handleUpdate(`${itemAPI}delete-item/`, 'POST', data);
+    return results;
+  }
+
   /**
     * @desc Tray management -- DEPRECATED SECTION
   */

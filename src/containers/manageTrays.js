@@ -160,7 +160,7 @@ const ManageTrays = (props) => {
       dispatch({ type: 'RESET', payload: ''});
       handleSearch(false);
     } else {
-      failure(`There was an error updating tray ${data.barcode}`);
+      // There should already be a 500 popup from the API
     }
   };
 
@@ -172,7 +172,7 @@ const ManageTrays = (props) => {
       dispatch({ type: 'RESET', payload: '' });
       handleSearch(false);
     } else {
-      failure('There was an error deleting the tray');
+      // There should already be a 500 popup from the API
     }
   };
 
