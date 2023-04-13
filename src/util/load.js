@@ -129,6 +129,17 @@ class Load {
     return info;
   };
 
+  updateItem = async (data, id) => {
+    const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
+    console.log(data);
+    return update;
+  }
+
+  deleteItem = async (data) => {
+    const results = await this.handleUpdate(`${itemAPI}delete-item/`, 'POST', data);
+    return results;
+  }
+
   /**
     * @desc Tray management -- DEPRECATED SECTION
   */
