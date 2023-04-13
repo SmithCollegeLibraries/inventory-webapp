@@ -93,6 +93,11 @@ const NewTray = (props) => {
           ...state,
           itemUsedCheckStarted: [...state.itemUsedCheckStarted, action.item],
         };
+      case 'ITEM_USED_CHECK_CLEAR':
+        return {
+          ...state,
+          itemUsedCheckStarted: [],
+        };
       case 'ITEM_USED_BAD_STAGED':
         return {
           ...state,
@@ -112,6 +117,11 @@ const NewTray = (props) => {
         return {
           ...state,
           itemFolioCheckStarted: [...state.itemFolioCheckStarted, action.item],
+        };
+      case 'ITEM_FOLIO_CHECK_CLEAR':
+        return {
+          ...state,
+          itemFolioCheckStarted: [],
         };
       case 'ITEM_FOLIO_BAD':
         return {
@@ -357,6 +367,7 @@ const NewTray = (props) => {
             return false;
           }
         });
+        dispatch({ type: 'ITEM_USED_CHECK_CLEAR' });
         return true;
       };
 
@@ -374,6 +385,9 @@ const NewTray = (props) => {
             }
           }
         }
+        // After getting the results, clear that we've started checking
+        // so that we don't get a "perpetual pending" error
+        dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
         return true;
       };
 
