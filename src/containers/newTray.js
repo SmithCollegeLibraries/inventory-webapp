@@ -91,7 +91,7 @@ const NewTray = (props) => {
       case 'ITEM_USED_CHECK_STARTED':
         return {
           ...state,
-          itemUsedCheckStarted: [...state.itemUsedCheckStarted, action.item],
+          itemUsedCheckStarted: [...state.itemUsedCheckStarted, ...action.items],
         };
       case 'ITEM_USED_CHECK_CLEAR':
         return {
@@ -116,7 +116,7 @@ const NewTray = (props) => {
       case 'ITEM_FOLIO_CHECK_STARTED':
         return {
           ...state,
-          itemFolioCheckStarted: [...state.itemFolioCheckStarted, action.item],
+          itemFolioCheckStarted: [...state.itemFolioCheckStarted, ...action.items],
         };
       case 'ITEM_FOLIO_CHECK_CLEAR':
         return {
@@ -330,6 +330,8 @@ const NewTray = (props) => {
     const verifyItemsLive = async (barcodes) => {
 
       const verifyItemsFree = async (barcodes) => {
+        // Tell the system that we have started checking these items
+        dispatch({ type: 'ITEM_USED_CHECK_STARTED', items: barcodes });
         // First see whether it already exists in staged trays
         const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
         const stagedItems = [].concat.apply([], arrayOfStagedItems);
@@ -372,6 +374,7 @@ const NewTray = (props) => {
       };
 
       const verifyFolioRecord = async (barcodes) => {
+        dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', items: barcodes });
         for (const barcode of barcodes) {
           if (barcode.length > 0) {
             const itemInFolio = await Load.itemInFolio(barcode);
@@ -433,13 +436,7 @@ const NewTray = (props) => {
         }
       }
 
-      for (const barcode of barcodesToLookupInSystem) {
-        dispatch({ type: 'ITEM_USED_CHECK_STARTED', item: barcode });
-      }
       let allItemsFree = verifyItemsFree(barcodesToLookupInSystem);
-      for (const barcode of barcodesToLookupInFolio) {
-        dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', item: barcode });
-      }
       let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio);
       if (await allItemsFree !== true) {
         return false;
