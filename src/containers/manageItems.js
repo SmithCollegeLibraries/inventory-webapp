@@ -40,6 +40,7 @@ const reducer = (state, action) => {
         query: '',
         search_results: [],
         fields: {
+          new_item: false,
           item_barcode: '',
           new_item_barcode: '',
           title: '',
@@ -63,6 +64,7 @@ const ManageItems = (props) => {
     query: '',
     search_results: [],
     fields: {
+      new_item: false,
       item_barcode: '',
       new_item_barcode: '',
       title: '',
@@ -108,6 +110,7 @@ const ManageItems = (props) => {
     dispatch({
       type: "UPDATE_SELECTION",
       payload: {
+        new_item: false,
         item_barcode: data.barcode,
         new_item_barcode: '',
         title: data.title,
@@ -122,10 +125,32 @@ const ManageItems = (props) => {
     });
   }
 
+  const handleNewItemSelect = (e) => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_SELECTION",
+      payload: {
+        new_item: true,
+        item_barcode: '',
+        new_item_barcode: '',
+        title: '',
+        call_number: '',
+        collection: '',
+        status: '',
+        tray: '',
+        shelf: '',
+        depth: '',
+        position: 0,
+      }
+    });
+  }
+
   const handleSearch = async (showWarnings = false) => {
+    dispatch({ type: 'RESET' });
     const results = await ContentSearch.items(state.query);
     if (results && results[0]) {
       const fields = {
+        new_item: false,
         item_barcode: results[0].item_barcode ? results[0].item_barcode : "",
         new_item_barcode: "",
         title: results[0].title ? results[0].title : "",
@@ -151,6 +176,7 @@ const ManageItems = (props) => {
         payload: {
           search_results: [],
           fields: {
+            new_item: false,
             item_barcode: '',
             new_item_barcode: '',
             title: '',
@@ -181,10 +207,32 @@ const ManageItems = (props) => {
     };
     console.log(data);
     const newBarcode = state.fields.new_item_barcode;
-    if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
+    if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
       if (load) {
         success(`Item ${load['barcode']} successfully updated`);
+        dispatch({ type: 'RESET', payload: ''});
+        handleSearch(false);
+      } else {
+        // There should already be a 500 popup from the API
+      }
+    }
+  };
+
+  const handleCreateItem = async (e) => {
+    e.preventDefault();
+    const data = {
+      barcode: state.fields.new_item_barcode,
+      collection: state.fields.collection,
+      status: state.fields.status,
+      tray: state.fields.tray || null,
+    };
+    console.log(data);
+    const newBarcode = state.fields.new_item_barcode;
+    if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
+      const load = await Load.newItem(data);
+      if (load) {
+        success(`Item ${load['barcode']} successfully added`);
         dispatch({ type: 'RESET', payload: ''});
         handleSearch(false);
       } else {
@@ -212,11 +260,14 @@ const ManageItems = (props) => {
   return (
     <div>
       <div className="container-fluid" style={{paddingTop: "20px"}}>
-        <SearchForm
-          query={state.query}
-          handleSearch={handleSearch}
-          handleQueryChange={handleQueryChange}
-        />
+        <Row>
+          <SearchForm
+            query={state.query}
+            handleSearch={handleSearch}
+            handleQueryChange={handleQueryChange}
+          />
+          <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
+        </Row>
       </div>
       <div style={{marginTop: "20px"}}>
         <Row>
@@ -236,7 +287,7 @@ const ManageItems = (props) => {
             }
           </Col>
           <Col md="6">
-            { state.fields && state.fields.item_barcode && state.fields.item_barcode !== ""
+            { state.fields && ((state.fields.item_barcode && state.fields.item_barcode !== "") || state.fields.new_item)
               ? <Card>
                   <CardBody>
                     <ItemForm
@@ -245,6 +296,7 @@ const ManageItems = (props) => {
                       handleItemChange={handleItemChange}
                       handleItemUpdate={handleItemUpdate}
                       handleItemDelete={handleItemDelete}
+                      handleCreateItem={handleCreateItem}
                     />
                   </CardBody>
                 </Card>
@@ -268,7 +320,7 @@ const SearchForm = props => {
         value={props.query}
         onChange={(e) => props.handleQueryChange(e)}
       />
-      <Button color="primary">Search</Button>
+      <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
     </Form>
   );
 };
@@ -315,25 +367,30 @@ const ItemForm = (props) => {
       <Col>
         <Form autoComplete="off">
           <Row>
-            <FormGroup className="col-sm-6">
-              <Label for="item_barcode" style={{"fontWeight":"bold"}}>Item barcode</Label>
-              <Input type="text" disabled name="item_barcode" value={props.fields.item_barcode} />
-            </FormGroup>
+            { !props.fields.new_item &&
+              <FormGroup className="col-sm-6">
+                <Label for="item_barcode" style={{"fontWeight":"bold"}}>Item barcode</Label>
+                <Input type="text" disabled name="item_barcode" value={props.fields.item_barcode} />
+              </FormGroup>
+            }
             <FormGroup className="col-sm-6">
               <Label for="new_item_barcode" style={{"fontWeight":"bold"}}>New item barcode</Label>
               <Input type="text" name="new_item_barcode" value={props.fields.new_item_barcode || ''} onChange={(e) => props.handleItemChange(e)} />
             </FormGroup>
           </Row>
-          <Row>
-            <FormGroup className="col-sm-12">
-              <Label for="title" style={{"fontWeight":"bold"}}>Title</Label>
-              <Input type="text" disabled name="title" value={props.fields.title} />
-            </FormGroup>
-          </Row>
+          { !props.fields.new_item &&
+            <Row>
+              <FormGroup className="col-sm-12">
+                <Label for="title" style={{"fontWeight":"bold"}}>Title</Label>
+                <Input type="text" disabled name="title" value={props.fields.title} />
+              </FormGroup>
+            </Row>
+          }
           <Row>
             <FormGroup className="col-sm-6">
               <Label for="collection" style={{"fontWeight":"bold"}}>Collection</Label>
               <Input type="select" name="collection" value={props.fields.collection || ''} onChange={(e) => props.handleItemChange(e)}>
+                <option value={null}>(none)</option>
                 { props.collections
                   ? Object.keys(props.collections).map((items, idx) => (
                       <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
@@ -342,10 +399,12 @@ const ItemForm = (props) => {
                 }
               </Input>
             </FormGroup>
-            <FormGroup className="col-sm-6">
-              <Label for="call_number" style={{"fontWeight":"bold"}}>Call number</Label>
-              <Input type="text" disabled name="call_number" value={props.fields.call_number} />
-            </FormGroup>
+            { !props.fields.new_item &&
+              <FormGroup className="col-sm-6">
+                <Label for="call_number" style={{"fontWeight":"bold"}}>Call number</Label>
+                <Input type="text" disabled name="call_number" value={props.fields.call_number} />
+              </FormGroup>
+            }
           </Row>
           <Row>
             <FormGroup className="col-sm-6">
@@ -363,37 +422,42 @@ const ItemForm = (props) => {
               <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
             </FormGroup>
           </Row>
-          <Row>
-            <FormGroup className="col-sm-5">
-              <Label for="shelf" style={{"fontWeight":"bold"}}>Shelf</Label>
-              <Input type="text" disabled name="shelf" value={props.fields.shelf || ''} />
-            </FormGroup>
-            <FormGroup className="col-sm-4">
-              <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-              <Input type="select" disabled name="depth" value={props.fields.depth || ''}>
-                <option value="">(none)</option>
-                <option value="Front">Front</option>
-                <option value="Middle">Middle</option>
-                <option value="Rear">Rear</option>
-              </Input>
-            </FormGroup>
-            <FormGroup className="col-sm-3">
-              <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-              <Input type="text" disabled={true} name="position" value={props.fields.position || 0} />
-            </FormGroup>
-          </Row>
-
-          <FormGroup style={{"marginTop": "40px"}}>
+          { !props.fields.new_item &&
+            <Row>
+              <FormGroup className="col-sm-5">
+                <Label for="shelf" style={{"fontWeight":"bold"}}>Shelf</Label>
+                <Input type="text" disabled name="shelf" value={props.fields.shelf || ''} />
+              </FormGroup>
+              <FormGroup className="col-sm-4">
+                <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
+                <Input type="select" disabled name="depth" value={props.fields.depth || ''}>
+                  <option value="">(none)</option>
+                  <option value="Front">Front</option>
+                  <option value="Middle">Middle</option>
+                  <option value="Rear">Rear</option>
+                </Input>
+              </FormGroup>
+              <FormGroup className="col-sm-3">
+                <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
+                <Input type="text" disabled={true} name="position" value={props.fields.position || 0} />
+              </FormGroup>
+            </Row>
+          }
+          <FormGroup style={{"marginTop": "10px"}}>
             <Button
               color="primary"
               style={{"float": "left"}}
-              onClick={(e) => props.handleItemUpdate(e)}
-            >Update item</Button>
-            <Button
-              color="danger"
-              style={{"float": "right"}}
-              onClick={(e) => {if (window.confirm('Are you sure you want to delete this item from the system?')) {props.handleItemDelete(props.fields.item_barcode, e)}}}
-            >Delete item</Button>
+              onClick={(e) => props.fields.new_item ? props.handleCreateItem(e) : props.handleItemUpdate(e) }
+            >{ props.fields.new_item ? "Create item" : "Update item" }</Button>
+            { !props.fields.new_item &&
+              <Button
+                color="danger"
+                style={{"float": "right"}}
+                onClick={(e) => {if (window.confirm('Are you sure you want to delete this item from the system?')) {props.handleItemDelete(props.fields.item_barcode, e)}}}
+              >
+                Delete item
+              </Button>
+            }
           </FormGroup>
 
           {/* If changing the barcode, popup confirm that the item isn't already in FOLIO. */}
