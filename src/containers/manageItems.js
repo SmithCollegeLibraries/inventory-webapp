@@ -149,7 +149,11 @@ const ManageItems = (props) => {
   }
 
   const handleSearch = async (showWarnings = false) => {
-    const results = await ContentSearch.items(state.query);
+    // We don't want to show the results of an empty search (i.e. the most
+    // recent items) just because the user updated or created an item, but
+    // never clicked the search button. However, we do show results if they
+    // were already showing, or if there is anything in the search box.
+    const results = (showWarnings === true || state.search_results || state.query) ? await ContentSearch.items(state.query) : [];
     if (results && results[0]) {
       const fields = {
         new_item: false,
