@@ -91,7 +91,12 @@ const NewTray = (props) => {
       case 'ITEM_USED_CHECK_STARTED':
         return {
           ...state,
-          itemUsedCheckStarted: [...state.itemUsedCheckStarted, action.item],
+          itemUsedCheckStarted: [...state.itemUsedCheckStarted, ...action.items],
+        };
+      case 'ITEM_USED_CHECK_CLEAR':
+        return {
+          ...state,
+          itemUsedCheckStarted: [],
         };
       case 'ITEM_USED_BAD_STAGED':
         return {
@@ -111,7 +116,12 @@ const NewTray = (props) => {
       case 'ITEM_FOLIO_CHECK_STARTED':
         return {
           ...state,
-          itemFolioCheckStarted: [...state.itemFolioCheckStarted, action.item],
+          itemFolioCheckStarted: [...state.itemFolioCheckStarted, ...action.items],
+        };
+      case 'ITEM_FOLIO_CHECK_CLEAR':
+        return {
+          ...state,
+          itemFolioCheckStarted: [],
         };
       case 'ITEM_FOLIO_BAD':
         return {
@@ -320,6 +330,8 @@ const NewTray = (props) => {
     const verifyItemsLive = async (barcodes) => {
 
       const verifyItemsFree = async (barcodes) => {
+        // Tell the system that we have started checking these items
+        dispatch({ type: 'ITEM_USED_CHECK_STARTED', items: barcodes });
         // First see whether it already exists in staged trays
         const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].items);
         const stagedItems = [].concat.apply([], arrayOfStagedItems);
@@ -357,10 +369,12 @@ const NewTray = (props) => {
             return false;
           }
         });
+        dispatch({ type: 'ITEM_USED_CHECK_CLEAR' });
         return true;
       };
 
       const verifyFolioRecord = async (barcodes) => {
+        dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', items: barcodes });
         for (const barcode of barcodes) {
           if (barcode.length > 0) {
             const itemInFolio = await Load.itemInFolio(barcode);
@@ -374,6 +388,9 @@ const NewTray = (props) => {
             }
           }
         }
+        // After getting the results, clear that we've started checking
+        // so that we don't get a "perpetual pending" error
+        dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
         return true;
       };
 
@@ -419,13 +436,7 @@ const NewTray = (props) => {
         }
       }
 
-      for (const barcode of barcodesToLookupInSystem) {
-        dispatch({ type: 'ITEM_USED_CHECK_STARTED', item: barcode });
-      }
       let allItemsFree = verifyItemsFree(barcodesToLookupInSystem);
-      for (const barcode of barcodesToLookupInFolio) {
-        dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', item: barcode });
-      }
       let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio);
       if (await allItemsFree !== true) {
         return false;

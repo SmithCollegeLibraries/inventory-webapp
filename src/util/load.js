@@ -135,6 +135,12 @@ class Load {
     return update;
   }
 
+  newItem = async (data, id) => {
+    const update = await this.handleUpdate(`${itemAPI}new-item/`, 'POST', data);
+    console.log(data);
+    return update;
+  }
+
   deleteItem = async (data) => {
     const results = await this.handleUpdate(`${itemAPI}delete-item/`, 'POST', data);
     return results;
