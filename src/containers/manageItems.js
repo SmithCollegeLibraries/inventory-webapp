@@ -34,11 +34,14 @@ const reducer = (state, action) => {
         ...state,
         fields: data,
       };
-    case 'RESET':
+    case 'RESET_RESULTS':
       return {
         ...state,
-        query: '',
         search_results: [],
+      };
+    case 'RESET_SELECTION':
+      return {
+        ...state,
         fields: {
           new_item: false,
           item_barcode: '',
@@ -146,7 +149,6 @@ const ManageItems = (props) => {
   }
 
   const handleSearch = async (showWarnings = false) => {
-    dispatch({ type: 'RESET' });
     const results = await ContentSearch.items(state.query);
     if (results && results[0]) {
       const fields = {
@@ -196,6 +198,12 @@ const ManageItems = (props) => {
     }
   };
 
+  const handleSearchButton = (e) => {
+    e.preventDefault();
+    dispatch({ type: 'RESET_RESULTS' });
+    handleSearch(true);
+  };
+
   const handleItemUpdate = async (e) => {
     e.preventDefault();
     const data = {
@@ -211,7 +219,7 @@ const ManageItems = (props) => {
       const load = await Load.updateItem(data);
       if (load) {
         success(`Item ${load['barcode']} successfully updated`);
-        dispatch({ type: 'RESET', payload: ''});
+        dispatch({ type: 'RESET_SELECTION' });
         handleSearch(false);
       } else {
         // There should already be a 500 popup from the API
@@ -233,7 +241,7 @@ const ManageItems = (props) => {
       const load = await Load.newItem(data);
       if (load) {
         success(`Item ${load['barcode']} successfully added`);
-        dispatch({ type: 'RESET', payload: ''});
+        dispatch({ type: 'RESET_SELECTION' });
         handleSearch(false);
       } else {
         // There should already be a 500 popup from the API
@@ -246,7 +254,7 @@ const ManageItems = (props) => {
     const deleteItem = await Load.deleteItem(data);
     if (deleteItem && 'active' in deleteItem && !deleteItem.active) {
       success("Item successfully deleted");
-      dispatch({ type: 'RESET', payload: '' });
+      dispatch({ type: 'RESET_SELECTION' });
       handleSearch(false);
     } else {
       // There should already be a 500 popup from the API
@@ -263,7 +271,7 @@ const ManageItems = (props) => {
         <Row>
           <SearchForm
             query={state.query}
-            handleSearch={handleSearch}
+            handleSearchButton={handleSearchButton}
             handleQueryChange={handleQueryChange}
           />
           <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
@@ -311,7 +319,7 @@ const ManageItems = (props) => {
 
 const SearchForm = props => {
   return (
-    <Form inline autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearchButton(e)}}>
       <Input
         type="text"
         style={{"marginRight": "10px"}}
