@@ -210,15 +210,15 @@ const ManageItems = (props) => {
 
   const handleItemUpdate = async (e) => {
     e.preventDefault();
+    const newBarcode = state.fields.new_item_barcode.trim();
     const data = {
       barcode: state.fields.item_barcode,
-      new_barcode: state.fields.new_item_barcode || null,
+      new_barcode: newBarcode || null,
       collection: state.fields.collection || null,
       status: state.fields.status || null,
       tray: state.fields.tray || null,
     };
     console.log(data);
-    const newBarcode = state.fields.new_item_barcode;
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
       if (load) {
