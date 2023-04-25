@@ -2,7 +2,7 @@ import React, { useReducer, useEffect, Fragment } from 'react';
 import Load from '../util/load';
 import { Table, Button } from 'reactstrap';
 
-const COUNT_THRESHOLD = 10;
+const COUNT_THRESHOLD = 60;
 
 const itemReducer = (state, action) => {
   switch (action.type) {
@@ -50,7 +50,7 @@ const Statistics = () => {
               .reduce((a, b) => a + parseInt(b['count']), 0),
             0),
         };
-      });
+      }).filter((user) => user['count'] > countThreshold).sort((a, b) => b['count'] - a['count']);
       const organizedData = rawData.map((day) => {
         const perUserCounts = usersWithTotalCounts.map(
           user => day['counts'].filter(p => p['name'] === user['name'])
