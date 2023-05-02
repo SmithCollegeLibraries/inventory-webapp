@@ -312,7 +312,7 @@ const TableBodySkeleton = () => (
 )
 
 const SearchDisplay = ({ data, addToPaging, loading }) => (
-    <Table responsive stripped>
+    <Table responsive striped>
         <TableHead />
         <tbody>
         {loading === false
