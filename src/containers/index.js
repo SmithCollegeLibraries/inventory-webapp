@@ -6,7 +6,7 @@ import RapidShelve from './rapidShelve';
 // import History from './history';
 // import Reports from './reports';
 // import Return from './return';
-// import Search from './search';
+import ItemSearch from './itemSearch';
 import ManageCollections from './manageCollections';
 // import ManageShelves from './manageShelves';
 import ManageItems from './manageItems';
@@ -25,7 +25,7 @@ export {
   // PagingDisplay,
   // Reports,
   // Return,
-  // Search,
+  ItemSearch,
   ManageTrays,
   ManageItems,
   // ManageShelves,
