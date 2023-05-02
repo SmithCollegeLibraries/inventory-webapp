@@ -11,7 +11,7 @@ import {
     // PagingDisplay,
     // Reports,
     // History,
-    // Search,
+    ItemSearch,
     ManageCollections,
     ManageTrays,
     ManageItems,
@@ -139,6 +139,9 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />
+                )}/>
+                <Route path="/item-search" render={() => (
+                  <ItemSearch />
                 )}/>
                 <Route path="/manage-trays" render={() => (
                   <ManageTrays

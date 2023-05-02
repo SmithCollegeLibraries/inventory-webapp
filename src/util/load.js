@@ -111,6 +111,11 @@ class Load {
     return search;
   };
 
+  itemSearchLocations = async (data) => {
+    const search = await this.handleUpdate(`${itemAPI}search-locations/`, 'POST', data);
+    return search;
+  };
+
   // Returns a simple true/false whether an item is in FOLIO
   itemInFolio = async (barcode) => {
     const data = {
