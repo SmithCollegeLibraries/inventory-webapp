@@ -39,6 +39,8 @@ const reducer = (state, action) => {
           depth: '',
           position: 0,
           items: [],
+          trayer: '',
+          created: '',
         },
       }
     default:
@@ -57,6 +59,8 @@ const ManageTrays = (props) => {
       depth: '',
       position: 0,
       items: [],
+      trayer: '',
+      created: '',
     },
   };
 
@@ -97,6 +101,8 @@ const ManageTrays = (props) => {
         depth: data.depth,
         position: data.position,
         items: data.items,
+        trayer: data.trayer,
+        created: data.created,
       }
     });
   }
@@ -115,6 +121,8 @@ const ManageTrays = (props) => {
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : 0,
         items: items,
+        trayer: results[0].trayer ? results[0].trayer : "",
+        created: results[0].created ? results[0].created : "",
       }
       dispatch({
         type: 'UPDATE_RESULTS',
@@ -136,6 +144,8 @@ const ManageTrays = (props) => {
             depth: '',
             position: 0,
             items: [],
+            trayer: '',
+            created: '',
           },
         }
       })
@@ -221,6 +231,14 @@ const ManageTrays = (props) => {
             { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
               ? <Card>
                   <CardBody>
+                    <dl className="row">
+                      <dt className="col-sm-3">Trayer</dt>
+                      <dd className="col-sm-9">{state.fields.trayer.split(" ")[0]}</dd>
+                    </dl>
+                    <dl className="row">
+                      <dt className="col-sm-3">Date</dt>
+                      <dd className="col-sm-9">{state.fields.created}</dd>
+                    </dl>
                     <dl className="row">
                       <dt className="col-sm-3">Items</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
