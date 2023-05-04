@@ -236,7 +236,7 @@ const ManageItems = (props) => {
     const data = {
       barcode: state.fields.new_item_barcode,
       collection: state.fields.collection,
-      status: state.fields.status,
+      status: "New",
       tray: state.fields.tray || null,
     };
     console.log(data);
@@ -421,18 +421,27 @@ const ItemForm = (props) => {
           <Row>
             <FormGroup className="col-sm-6">
               <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
-              <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
-                <option value={null}>(none)</option>
-                <option value="Trayed">Trayed</option>
-                <option value="Circulating">Circulating</option>
-                <option value="Returned to campus">Returned to campus</option>
-                <option value="Missing">Missing</option>
-              </Input>
+              { props.fields.new_item
+                ?
+                <Input type="select" name="status" value="New" disabled={true}>
+                  <option value="New">New</option>
+                </Input>
+                :
+                <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
+                  <option value={null}>(none)</option>
+                  <option value="Trayed">Trayed</option>
+                  <option value="Circulating">Circulating</option>
+                  <option value="Returned to campus">Returned to campus</option>
+                  <option value="Missing">Missing</option>
+                </Input>
+              }
             </FormGroup>
-            <FormGroup className="col-sm-6">
-              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
-              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
-            </FormGroup>
+            { !props.fields.new_item &&
+              <FormGroup className="col-sm-6">
+                <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
+                <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+              </FormGroup>
+            }
           </Row>
           { !props.fields.new_item &&
             <Row>

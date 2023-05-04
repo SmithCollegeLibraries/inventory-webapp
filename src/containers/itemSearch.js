@@ -163,7 +163,7 @@ const TableRow = ({ item, idx }) => (
     <td>{item.barcode}</td>
     {/* <td></td>
     <td></td> */}
-    <td>{item.system ? item.system : 'not in SIS'}</td>
+    <td>{item.system ? item.system : 'Not in SIS'}</td>
     <td>{item.status ? item.status : '-'}</td>
     <td>{item.tray ? item.tray : '-'}</td>
     <td>{item.shelf ? item.shelf : '-'}</td>
