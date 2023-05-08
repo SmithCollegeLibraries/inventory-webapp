@@ -118,7 +118,7 @@ const Statistics = () => {
           {data.currentView === NEW_ITEMS && data.newItems.data ?
             <>
               <tr>
-                <td>All time</td>
+                <td>Past two weeks</td>
                 <td><strong>{data.newItems.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
                 {data.newItems.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
                 <td><strong>{data.newItems.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
@@ -135,7 +135,7 @@ const Statistics = () => {
             {data.currentView === NEW_TRAYS && data.newItems.data ?
               <>
                 <tr>
-                  <td>All time</td>
+                  <td>Past two weeks</td>
                   <td><strong>{data.newTrays.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
                   {data.newTrays.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
                   <td><strong>{data.newTrays.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
@@ -152,7 +152,7 @@ const Statistics = () => {
               {data.currentView === TRAYS_SHELVED && data.newItems.data ?
                 <>
                   <tr>
-                    <td>All time</td>
+                    <td>Past two weeks</td>
                     <td><strong>{data.traysShelved.data.reduce((a, b) => a + b['total'], 0)}</strong></td>
                     {data.traysShelved.users.map((user, index) => <td key={index}><strong>{user['count']}</strong></td>)}
                     <td><strong>{data.traysShelved.data.reduce((a, b) => a + b['other'], 0)}</strong></td>
