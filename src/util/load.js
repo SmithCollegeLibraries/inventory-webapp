@@ -89,6 +89,11 @@ class Load {
     return results;
   }
 
+  trayCount = async () => {
+    const count = await this.handleUpdate(`${trayAPI}total-count/`, 'GET');
+    return count;
+  }
+
 
   // deleteTray = async (data, id) => {
   //   const historyItems = {
@@ -151,43 +156,11 @@ class Load {
     return results;
   }
 
-  /**
-    * @desc Tray management -- DEPRECATED SECTION
-  */
+  itemCount = async () => {
+    const count = await this.handleUpdate(`${itemAPI}total-count/`, 'GET');
+    return count;
+  }
 
-  // viewAllTrays = async (data) => {
-  //   const view = await this.handleUpdate(`${trayAPI}view-all-trays/`, 'GET', data);
-  //   return view;
-  // }
-
-  // transfer = async (data) => {
-  //   const transfer = await this.handleUpdate(`${trayAPI}transfer-tray-items/`, 'POST', data)
-  //   return transfer
-  // }
-
-  // deleteTrayAndUnlink = async (data) => {
-  //   const deleteUnlink = await this.handleUpdate(`${trayAPI}handle-tray-delete-and-unlink/`, 'POST', data)
-  //   return deleteUnlink
-  // }
-
-  // updateIndividualTrayItems = async (data) => {
-  //   const update = await this.handleUpdate(`${trayAPI}update-individual-items/`, 'POST', data)
-  //   return update
-  // }
-
-  // deleteIndividualTrayItems = async (data) => {
-  //   const deleteItem = await this.handleUpdate(`${trayAPI}delete-individual-items/`, 'POST', data)
-  //   return deleteItem
-  // }
-
-  // deleteMultiple = async (data) => {
-  //   const deleteMultiple = await this.handleUpdate(`${trayAPI}delete-multiple-barcodes/`, 'POST', data)
-  //   return deleteMultiple
-  // }
-
-  // inProcessPaging = async (data) => {
-  //   return await this.handleUpdate(`${inProcess}create`, 'POST', data)
-  // }
 
   /**
     * @desc Collection management

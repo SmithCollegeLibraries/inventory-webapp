@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
@@ -9,7 +9,7 @@ const reducer = (state, action) => {
     case 'QUERY_CHANGE':
       return {
         ...state,
-        query: action.payload
+        query: action.payload,
       };
     case 'UPDATE_RESULTS':
       return {
@@ -27,7 +27,12 @@ const reducer = (state, action) => {
       data[action.payload.field] = action.payload.value;
       return {
         ...state,
-        fields: data
+        fields: data,
+      };
+    case 'UPDATE_COUNT':
+      return {
+        ...state,
+        count: action.payload,
       };
     case 'RESET':
       return {
@@ -61,6 +66,7 @@ const ManageTrays = (props) => {
       items: [],
       trayer: '',
       created: '',
+      total: null,
     },
   };
 
@@ -186,15 +192,32 @@ const ManageTrays = (props) => {
     }
   };
 
+  // Get the total number of trays via the API on load
+  useEffect(() => {
+    async function fetchTrayCount() {
+      const totalTrayCount = await Load.trayCount();
+      if (totalTrayCount) {
+        dispatch({
+          type: 'UPDATE_COUNT',
+          payload: totalTrayCount,
+        });
+      }
+    }
+    fetchTrayCount();
+  }, []);
+
   return (
     <div>
-      <div className="container-fluid" style={{paddingTop: "20px"}}>
+      <Row style={{"display": "flex", "paddingTop": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
         <SearchForm
           query={state.query}
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
-      </div>
+        { state.count &&
+          <Button inline color="gray" onClick={(e) => {e.preventDefault()}} style={{"cursor": "default", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
+        }
+      </Row>
       <div style={{marginTop: "20px"}}>
         <Row>
           <Col md="4">
@@ -258,7 +281,7 @@ const ManageTrays = (props) => {
 
 const SearchForm = props => {
   return (
-    <Form inline autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Input
         type="text"
         style={{"marginRight": "10px"}}
@@ -267,7 +290,7 @@ const SearchForm = props => {
         value={props.query}
         onChange={(e) => props.handleQueryChange(e)}
       />
-      <Button color="primary">Search</Button>
+      <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
     </Form>
   );
 };
