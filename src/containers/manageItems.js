@@ -34,6 +34,11 @@ const reducer = (state, action) => {
         ...state,
         fields: data,
       };
+    case 'UPDATE_COUNT':
+      return {
+        ...state,
+        count: action.payload,
+      };
     case 'RESET_RESULTS':
       return {
         ...state,
@@ -78,6 +83,7 @@ const ManageItems = (props) => {
       shelf: '',
       depth: '',
       position: 0,
+      count: null,
     },
   };
 
@@ -269,18 +275,33 @@ const ManageItems = (props) => {
     getCollections()
   }, []);
 
+  // Get the total number of trays via the API on load
+  useEffect(() => {
+    async function fetchItemCount() {
+      const totalItemCount = await Load.itemCount();
+      if (totalItemCount) {
+        dispatch({
+          type: 'UPDATE_COUNT',
+          payload: totalItemCount,
+        });
+      }
+    }
+    fetchItemCount();
+  }, []);
+
   return (
     <div>
-      <div className="container-fluid" style={{paddingTop: "20px"}}>
-        <Row>
-          <SearchForm
-            query={state.query}
-            handleSearchButton={handleSearchButton}
-            handleQueryChange={handleQueryChange}
-          />
-          <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
-        </Row>
-      </div>
+      <Row style={{"display": "flex", "paddingTop": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+        <SearchForm
+          query={state.query}
+          handleSearchButton={handleSearchButton}
+          handleQueryChange={handleQueryChange}
+        />
+        <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
+        { state.count &&
+          <Button inline color="gray" onClick={(e) => {e.preventDefault()}} style={{"cursor": "default", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
+        }
+      </Row>
       <div style={{marginTop: "20px"}}>
         <Row>
           <Col md="6">
@@ -323,7 +344,7 @@ const ManageItems = (props) => {
 
 const SearchForm = props => {
   return (
-    <Form inline autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearchButton(e)}}>
+    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearchButton(e)}}>
       <Input
         type="text"
         style={{"marginRight": "10px"}}
