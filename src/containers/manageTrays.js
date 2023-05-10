@@ -208,7 +208,7 @@ const ManageTrays = (props) => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
         <SearchForm
           query={state.query}
           handleSearch={handleSearch}
