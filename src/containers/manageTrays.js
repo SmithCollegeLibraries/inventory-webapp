@@ -215,7 +215,7 @@ const ManageTrays = (props) => {
           handleQueryChange={handleQueryChange}
         />
         { state.count &&
-          <Button inline color="gray" onClick={(e) => {e.preventDefault()}} style={{"cursor": "default", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
+          <Button color="gray" onClick={() => {navigator.clipboard.writeText(`${state.count} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} trays total`}</Button>
         }
       </Row>
       <div style={{marginTop: "20px"}}>

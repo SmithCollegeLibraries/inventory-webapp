@@ -299,7 +299,7 @@ const ManageItems = (props) => {
         />
         <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
         { state.count &&
-          <Button inline color="gray" onClick={(e) => {e.preventDefault()}} style={{"cursor": "default", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
+          <Button color="gray" onClick={() => {navigator.clipboard.writeText(`${state.count} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
         }
       </Row>
       <div style={{marginTop: "20px"}}>
