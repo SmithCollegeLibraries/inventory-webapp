@@ -735,8 +735,6 @@ const NewTray = (props) => {
         }
         removeItems(submittedTrays);
       }
-
-      dispatch({ type: "RESET" });
     }
     else {
       failure("You must be connected to the internet to process trays. Please check your internet connection.");
