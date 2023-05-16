@@ -157,11 +157,11 @@ const RapidShelve = (props) => {
         failure(`Tray ${tray} does not exist in the system`);
         return false;
       }
-      // Check that it's not shelved already
-      else if (results.shelf !== null) {
-        failure(`Tray ${tray} is already marked as being on shelf ${results.shelf}`);
-        return false;
-      }
+      // // Check that it's not shelved already
+      // else if (results.shelf !== null) {
+      //   failure(`Tray ${tray} is already marked as being on shelf ${results.shelf}`);
+      //   return false;
+      // }
       // Check that the tray is not empty
       else if (results.items.length === 0) {
         failure(`Tray ${tray} is empty and should not be shelved`);
