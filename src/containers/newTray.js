@@ -868,8 +868,10 @@ const TrayFormOriginal = props => (
           value={props.original.tray}
           onChange={(e) => props.handleOriginalOnChange(e)}
           onPaste={(e)=>{
-            e.preventDefault();
-            return false;
+            if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+              e.preventDefault();
+              return false;
+            }
           }}
           onKeyDown={(e) => props.handleEnter(e)}
           disabled={props.disabled}
@@ -896,8 +898,10 @@ const TrayFormOriginal = props => (
           value={props.original.barcodes}
           onChange={(e) => props.handleOriginalOnChange(e)}
           onPaste={(e) => {
-            e.preventDefault();
-            return false;
+            if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+              e.preventDefault();
+              return false;
+            }
           }}
           disabled={props.disabled}
         />
@@ -950,8 +954,10 @@ const TrayFormVerify = props => (
         value={props.verify.tray}
         onChange={(e) => props.handleVerifyOnChange(e)}
         onPaste={(e)=>{
-          e.preventDefault();
-          return false;
+          if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+            e.preventDefault();
+            return false;
+          }
         }}
         onKeyDown={(e) => props.handleEnter(e)}
         disabled={props.disabled}
@@ -977,8 +983,10 @@ const TrayFormVerify = props => (
         value={props.verify.barcodes}
         onChange={(e) => props.handleVerifyOnChange(e)}
         onPaste={(e)=>{
-          e.preventDefault();
-          return false;
+          if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+            e.preventDefault();
+            return false;
+          }
         }}
         disabled={props.disabled}
       />
