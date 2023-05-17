@@ -376,5 +376,4 @@ const TrayForm = (props) => {
   );
 };
 
-
 export default ManageTrays;
