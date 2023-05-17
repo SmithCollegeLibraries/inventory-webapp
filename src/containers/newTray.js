@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 import Load from '../util/load';
 // import { getFormattedDate } from '../util/date';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
-import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
@@ -510,19 +509,26 @@ const NewTray = (props) => {
     }
   }, [debouncedLeftPaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleLocalStorage = async (key) => {
-    const results = await localforage.getItem(key);
-    return results;
-  }
-
   // On load, check local storage for any staged items
   useEffect(() => {
-    const getLocalItems = async () => {
-      const local = await handleLocalStorage('tray') || [];
-      dispatch({ type: 'UPDATE_STAGED', verified: local});
-    };
-    getLocalItems();
+    updateStagedFromLocalStorage();
   }, []);
+
+  const updateStagedFromLocalStorage = () => {
+    let localTrays = [];
+    // Narrow in only on things relevant to the new tray form
+    Object.keys(localStorage).forEach(function(key, index) {
+      if (key.includes('newtray-')) {
+        try {
+          localTrays.push(JSON.parse(localStorage[key]));
+        }
+        catch (e) {
+          console.error(e);
+        }
+      }
+    });
+    dispatch({type: 'UPDATE_STAGED', verified: localTrays});
+  }
 
   // Handling interactions with the form
 
@@ -690,50 +696,34 @@ const NewTray = (props) => {
       failure(`Item mismatch! Please check ${mismatches.join(', ')}`);
     }
     else {
-      let verified = data.verified;
-      verified[data.verified.length] = {
-        collection: data.original.collection,
+      addTrayToStaged({
         barcode: data.verify.tray,
+        collection: data.original.collection,
         items: originalItemsAsArray
-      };
-      localforage.setItem('tray', verified);
-      dispatch({ type: 'UPDATE_STAGED', verified: verified});
+      });
+      updateStagedFromLocalStorage();
       dispatch({ type: "RESET" });
     }
   };
 
   // Staged items area
 
-  const handleDisplayChange = (e, key) => {
-    const verified = data.verified;
-    const values = {
-      ...verified[key],
-      [e.currentTarget.name]: e.currentTarget.value,
-    };
-
-    verified[key] = values;
-    localforage.setItem('tray', verified);
-    dispatch({ type: 'UPDATE_STAGED', verified: verified});
-  };
-
   const handleProcessTrays = async (e) => {
     e.preventDefault();
     if (navigator.onLine === true) {
-      let submittedTrays = [];
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
         console.log(tray);
         const response = await Load.newTray(tray);
         console.log(response);
         if (response === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
-          submittedTrays.push(tray.barcode);
+          removeTrayFromStaged(tray.barcode);
         }
         else {
           const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
           const errorAudio = new Audio(errorPath);
           errorAudio.play();
         }
-        removeItems(submittedTrays);
       }
     }
     else {
@@ -741,27 +731,21 @@ const NewTray = (props) => {
     }
   };
 
-  // We want to be able to remove more than one tray at a time from the
-  // staging list because after submitting, we are keeping track of
-  // which ones have been submitted and need to remove all the submitted
-  // trays at once
-  const removeItems = (trayBarcodes) => {
-    const stagedTrays = data.verified;
-    // Create list of verified trays staged for submission,
-    // without the trays that were just removed
-    const newTrayList = Object.keys(stagedTrays)
-        .map(key => stagedTrays[key])
-        .filter(tray => !trayBarcodes.includes(tray.barcode));
-    dispatch({ type: 'UPDATE_STAGED', verified: newTrayList});
-    localforage.setItem('tray', newTrayList);
-    dispatch({ type: "CLEAR_CHECKS" });
+  const addTrayToStaged = (trayInfo) => {
+    localStorage['newtray-' + trayInfo.barcode] = JSON.stringify(trayInfo);
   };
 
-  const clearDisplayGrid = e => {
-    if (window.confirm('Are you sure you want to clear all staged trays as well as the current tray? This action cannot be undone.')) {
-      dispatch({ type: "RESET" });
-      dispatch({ type: 'UPDATE_STAGED', verified: []});
-      localforage.setItem('tray', {});
+  const removeTrayFromStaged = (trayBarcode) => {
+    delete localStorage['newtray-' + trayBarcode];
+    updateStagedFromLocalStorage();
+  };
+
+  const clearStagedTrays = () => {
+    if (window.confirm('Are you sure you want to clear all staged trays? This action cannot be undone.')) {
+      for (const tray of Object.keys(localStorage).filter(key => key.includes('newtray-'))) {
+        delete localStorage[tray];
+      }
+      updateStagedFromLocalStorage();
     }
   };
 
@@ -817,13 +801,12 @@ const NewTray = (props) => {
             <Display
               data={data.verified}
               // collections={props.collections}
-              handleDisplayChange={handleDisplayChange}
-              removeItems={removeItems}
+              removeTrayFromStaged={removeTrayFromStaged}
             />
             { Object.keys(data.verified).map(items => items).length
               ? <>
                 <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process all</Button>
-                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Delete all</Button>
+                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearStagedTrays(e)}>Delete all</Button>
               </>
               : ''
             }
@@ -1030,7 +1013,7 @@ const Display = props => (
           <Button color="danger" onClick={
               function () {
                 if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeItems([props.data[tray].barcode]);
+                  props.removeTrayFromStaged(props.data[tray].barcode);
                 }
               }}>
             Delete
