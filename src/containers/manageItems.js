@@ -275,7 +275,7 @@ const ManageItems = (props) => {
     getCollections()
   }, []);
 
-  // Get the total number of trays via the API on load
+  // Get the total number of items via the API on load
   useEffect(() => {
     async function fetchItemCount() {
       const totalItemCount = await Load.itemCount();
@@ -299,7 +299,7 @@ const ManageItems = (props) => {
         />
         <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
         { state.count &&
-          <Button color="gray" onClick={() => {navigator.clipboard.writeText(`${state.count} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
+          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} items total`}</Button>
         }
       </Row>
       <div style={{marginTop: "20px"}}>
