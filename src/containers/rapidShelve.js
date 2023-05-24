@@ -357,9 +357,6 @@ const RapidShelve = (props) => {
       localforage.setItem('load', newStaged);
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
-      // Go back to the first element in the form
-      const form = e.target.form;
-      form.elements[0].focus();
     }
 
     if (verifyTrayLive(data.current.tray) === true &&
@@ -460,6 +457,9 @@ const RapidShelve = (props) => {
       e.preventDefault();
       e.persist();
       handleSubmit(e);
+      // Go back to the first element in the form
+      const form = e.target.form;
+      form.elements[0].focus();
     }
   };
 
