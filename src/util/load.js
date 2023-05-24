@@ -265,7 +265,7 @@ class Load {
       case 200:
       case 201:
       case 304:
-        return await response.json();
+        return info;
       case 204:
         return {};
       case 400:
