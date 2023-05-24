@@ -176,7 +176,7 @@ const ManageTrays = (props) => {
       dispatch({ type: 'RESET', payload: ''});
       handleSearch(false);
     } else {
-      // There should already be a 500 popup from the API
+      // There should already be a 400/403 popup from the API
     }
   };
 
@@ -188,7 +188,7 @@ const ManageTrays = (props) => {
       dispatch({ type: 'RESET', payload: '' });
       handleSearch(false);
     } else {
-      // There should already be a 500 popup from the API
+      // There should already be a 400/403 popup from the API
     }
   };
 
