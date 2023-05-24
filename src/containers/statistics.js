@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, Fragment } from 'react';
 import Load from '../util/load';
-import { Table, Button } from 'reactstrap';
+import { Row, Table, Button } from 'reactstrap';
 
 const COUNT_THRESHOLD = 60;
 
@@ -17,6 +17,16 @@ const itemReducer = (state, action) => {
       return {
         ...state,
         currentView: action.view,
+      };
+    case 'UPDATE_ITEM_COUNT':
+      return {
+        ...state,
+        itemCount: action.payload,
+      };
+    case 'UPDATE_TRAY_COUNT':
+      return {
+        ...state,
+        trayCount: action.payload,
       };
     default:
       return state;
@@ -86,23 +96,77 @@ const Statistics = () => {
     dispatch({ type: "CHANGE_VIEW", view: v });
   };
 
+  // Get the total number of items and trays via the API on load
+  useEffect(() => {
+    async function fetchItemCount() {
+      const totalItemCount = await Load.itemCount();
+      if (totalItemCount) {
+        dispatch({
+          type: 'UPDATE_ITEM_COUNT',
+          payload: totalItemCount,
+        });
+      }
+    }
+    async function fetchTrayCount() {
+      const totalTrayCount = await Load.trayCount();
+      if (totalTrayCount) {
+        dispatch({
+          type: 'UPDATE_TRAY_COUNT',
+          payload: totalTrayCount,
+        });
+      }
+    }
+    fetchItemCount();
+    fetchTrayCount();
+  }, []);
+
+  // Get accessioning and shelving data via the API on load
   useEffect(() => {
     getData();
   }, []);
 
   return (
-    <Fragment>
-      <div style={{paddingTop: "20px", paddingBottom: "20px"}}>
-        <Button color={data.currentView === NEW_ITEMS ? "success" : "primary"} onClick={(e) => changeView(NEW_ITEMS)}>
+    <div>
+      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px", "paddingBottom": "15px"}}>
+        <Button
+            color={data.currentView === NEW_ITEMS ? "success" : "primary"}
+            style={{"marginRight": "7px"}}
+            onClick={(e) => changeView(NEW_ITEMS)}
+          >
           {NEW_ITEMS}
-        </Button>{' '}
-        <Button color={data.currentView === NEW_TRAYS ? "success" : "primary"} onClick={(e) => changeView(NEW_TRAYS)}>
+        </Button>
+        <Button
+            color={data.currentView === NEW_TRAYS ? "success" : "primary"}
+            style={{"marginRight": "7px"}}
+            onClick={(e) => changeView(NEW_TRAYS)}
+          >
           {NEW_TRAYS}
-        </Button>{' '}
-        <Button color={data.currentView === TRAYS_SHELVED ? "success" : "primary"} onClick={(e) => changeView(TRAYS_SHELVED)}>
+        </Button>
+        <Button
+            color={data.currentView === TRAYS_SHELVED ? "success" : "primary"}
+            onClick={(e) => changeView(TRAYS_SHELVED)}
+          >
           {TRAYS_SHELVED}
         </Button>
-      </div>
+        { data.itemCount &&
+          <Button
+              color="info"
+              onClick={() => {navigator.clipboard.writeText(`${data.itemCount} items`)}}
+              style={{"marginRight": "7px", "cursor": "grab", "marginLeft": "auto"}}
+            >
+            {`${data.itemCount} items total`}
+          </Button>
+        }
+        { data.trayCount &&
+          <Button
+              color="info"
+              onClick={() => {navigator.clipboard.writeText(`${data.trayCount} trays`)}}
+              style={{"cursor": "grab"}}
+            >
+            {`${data.trayCount} trays total`}
+          </Button>
+        }
+      </Row>
       <Table>
         <thead>
           <tr>
@@ -168,7 +232,7 @@ const Statistics = () => {
                 </> : null}
         </tbody>
       </Table>
-    </Fragment>
+    </div>
   );
 };
 
