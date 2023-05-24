@@ -127,17 +127,17 @@ const Statistics = () => {
 
   return (
     <div>
-      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px", "paddingBottom": "15px"}}>
+      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
         <Button
             color={data.currentView === NEW_ITEMS ? "success" : "primary"}
-            style={{"marginRight": "7px"}}
+            style={{"marginRight": "8px"}}
             onClick={(e) => changeView(NEW_ITEMS)}
           >
           {NEW_ITEMS}
         </Button>
         <Button
             color={data.currentView === NEW_TRAYS ? "success" : "primary"}
-            style={{"marginRight": "7px"}}
+            style={{"marginRight": "8px"}}
             onClick={(e) => changeView(NEW_TRAYS)}
           >
           {NEW_TRAYS}
@@ -152,7 +152,7 @@ const Statistics = () => {
           <Button
               color="info"
               onClick={() => {navigator.clipboard.writeText(`${data.itemCount} items`)}}
-              style={{"marginRight": "7px", "cursor": "grab", "marginLeft": "auto"}}
+              style={{"marginRight": "8px", "cursor": "grab", "marginLeft": "auto"}}
             >
             {`${data.itemCount} items total`}
           </Button>
