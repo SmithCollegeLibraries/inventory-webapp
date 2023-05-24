@@ -260,21 +260,27 @@ class Load {
   }
 
   responseHandling = async response => {
+    const info = await response.json();
     switch (response.status) {
       case 200:
       case 201:
       case 304:
-        return await response.json();
+        return info;
       case 204:
         return {};
       case 400:
+        failure(info.message ? info.message : response.statusText);
+        break;
       case 401:
+        failure(info.message ? info.message : response.statusText);
+        break;
       case 403:
+        failure(info.message ? info.message : response.statusText);
+        break;
       case 404:
       case 405:
       case 422:
       case 500:
-        const info = await response.json();
         failure(info.message ? info.message : response.statusText);
         break;
       default:

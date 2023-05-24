@@ -232,7 +232,7 @@ const ManageItems = (props) => {
         dispatch({ type: 'RESET_SELECTION' });
         handleSearch(false);
       } else {
-        // There should already be a 500 popup from the API
+        // There should already be a 400/403 popup from the API
       }
     }
   };
@@ -254,7 +254,7 @@ const ManageItems = (props) => {
         dispatch({ type: 'RESET_SELECTION' });
         handleSearch(false);
       } else {
-        // There should already be a 500 popup from the API
+        // There should already be a 400/403 popup from the API
       }
     }
   };
@@ -267,7 +267,7 @@ const ManageItems = (props) => {
       dispatch({ type: 'RESET_SELECTION' });
       handleSearch(false);
     } else {
-      // There should already be a 500 popup from the API
+      // There should already be a 400/403 popup from the API
     }
   };
 
