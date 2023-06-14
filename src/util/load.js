@@ -8,6 +8,7 @@ const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
 const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
+const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
 
 
 class Load {
@@ -161,6 +162,49 @@ class Load {
     return count;
   }
 
+  /**
+   * @desc Picklist management
+  */
+
+  getPicklist = async () => {
+    const get = await this.handleUpdate(`${picklistAPI}get-picklist/`, 'GET');
+    return get;
+  }
+
+  addFromFolio = async () => {
+    const add = await this.handleUpdate(`${picklistAPI}add-from-folio/`, 'POST');
+    return add;
+  }
+
+  addItems = async (data) => {
+    const add = await this.handleUpdate(`${picklistAPI}add-items/`, 'POST', data);
+    return add;
+  }
+
+  removeItems = async (data) => {
+    const remove = await this.handleUpdate(`${picklistAPI}remove-items/`, 'POST', data);
+    return remove;
+  }
+
+  assignItems = async (data) => {
+    const assign = await this.handleUpdate(`${picklistAPI}assign-items/`, 'POST', data);
+    return assign;
+  }
+
+  unassignItems = async (data) => {
+    const unassign = await this.handleUpdate(`${picklistAPI}unassign-items/`, 'POST', data);
+    return unassign;
+  }
+
+  assignAllToMe = async () => {
+    const assign = await this.handleUpdate(`${picklistAPI}assign-all-to-me/`, 'POST');
+    return assign;
+  }
+
+  unassignMine = async () => {
+    const unassign = await this.handleUpdate(`${picklistAPI}unassign-mine/`, 'POST');
+    return unassign;
+  }
 
   /**
     * @desc Collection management
