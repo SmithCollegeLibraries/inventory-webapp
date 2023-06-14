@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, Fragment } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import Load from '../util/load';
 import { Row, Table, Button } from 'reactstrap';
 
@@ -129,21 +129,21 @@ const Statistics = () => {
     <div>
       <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
         <Button
-            color={data.currentView === NEW_ITEMS ? "success" : "primary"}
+            color={data.currentView === NEW_ITEMS ? "success" : "secondary"}
             style={{"marginRight": "8px"}}
             onClick={(e) => changeView(NEW_ITEMS)}
           >
           {NEW_ITEMS}
         </Button>
         <Button
-            color={data.currentView === NEW_TRAYS ? "success" : "primary"}
+            color={data.currentView === NEW_TRAYS ? "success" : "secondary"}
             style={{"marginRight": "8px"}}
             onClick={(e) => changeView(NEW_TRAYS)}
           >
           {NEW_TRAYS}
         </Button>
         <Button
-            color={data.currentView === TRAYS_SHELVED ? "success" : "primary"}
+            color={data.currentView === TRAYS_SHELVED ? "success" : "secondary"}
             onClick={(e) => changeView(TRAYS_SHELVED)}
           >
           {TRAYS_SHELVED}

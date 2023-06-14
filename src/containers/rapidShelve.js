@@ -300,7 +300,7 @@ const RapidShelve = (props) => {
     return results;
   }
 
-  const handleOnChange = e => {
+  const handleOnChange = (e) => {
     e.preventDefault();
     e.persist();
 
