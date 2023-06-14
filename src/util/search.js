@@ -76,11 +76,6 @@ class ContentSearch {
   //   return search
   // }
 
-  // searchAleph = async (data) => {
-  //   let search = await this.search(`${searchaleph}?${data}`)
-  //   return search
-  // }
-
   // trayShelfSearch = async (value) => {
   //   let search = await this.search(`${shelfmanagement}?query=${value.replace(/[^0-9]+/g, '')}`)
   //   return search
