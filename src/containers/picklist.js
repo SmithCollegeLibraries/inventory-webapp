@@ -1,16 +1,8 @@
-import React, { useReducer, useEffect, useRef } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { Button, Card, CardBody, Form, Input, Row, Col } from 'reactstrap';
 import BootstrapTable from 'react-bootstrap-table-next';
 import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
-
-// const useDidMountEffect = (func, deps) => {
-//   const didMount = useRef(false);
-//   useEffect(() => {
-//     if (didMount.current) func();
-//     else didMount.current = true;
-//   }, deps);  // eslint-disable-line
-// }
 
 const truncate = (str, n) => {
   return (str.length > n) ? str.substr(0, n-1) + '…' : str;
@@ -63,7 +55,7 @@ const reducer = (state, action) => {
       };
     case 'UPDATE_PICKLIST':
       if (!localStorage['rungMinimum']) {
-        localStorage.setItem('rungMinimum', 7);
+        localStorage.setItem('rungMinimum', 0);
       }
       if (!localStorage['rungMaximum']) {
         localStorage.setItem('rungMaximum', 19);
@@ -81,6 +73,22 @@ const reducer = (state, action) => {
         ...state,
         folioWaiting: action.payload,
       };
+    case 'UPDATE_OLD_SYSTEM':
+      return {
+        ...state,
+        notInNewSystem: action.payload,
+      };
+    case 'CLEAR_OLD_SYSTEM':
+      return {
+        ...state,
+        notInNewSystem: [],
+        oldSystemCopied: false,
+      };
+    case 'OLD_SYSTEM_COPIED':
+      return {
+        ...state,
+        oldSystemCopied: action.payload,
+      };
     default:
       throw new Error();
   }
@@ -90,6 +98,8 @@ const Picklist = () => {
   const initialState = {
     user_id: null,
     newBarcode: '',
+    notInNewSystem: [],
+    oldSystemCopied: false,
     picklistComplete: [],
     picklistUnassigned: [],
     picklistVisibleComplete: [],
@@ -104,6 +114,7 @@ const Picklist = () => {
 
   useEffect(() => {
     getPicklist();
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
   }, []);
 
   const getPicklist = async () => {
@@ -143,10 +154,22 @@ const Picklist = () => {
 
   const handleAddAllFromFolio = async (e) => {
     e.preventDefault();
+    dispatch({ type: "CLEAR_OLD_SYSTEM" });
     dispatch({ type: "FOLIO_WAITING", payload: true });
-    await Load.addFromFolio();
+    const results = await Load.addFromFolio();
+    dispatch({ type: "UPDATE_OLD_SYSTEM", payload: results['notInSystem'] });
     getPicklist();
     dispatch({ type: "FOLIO_WAITING", payload: false });
+  };
+
+  const copyOldSystemBarcodes = () => {
+    navigator.clipboard.writeText(`${state.notInNewSystem.join('\n')}`);
+    dispatch({ type: "OLD_SYSTEM_COPIED", payload: true });
+  }
+
+  const handleClearOldSystem = (e) => {
+    e.preventDefault();
+    dispatch({ type: "CLEAR_OLD_SYSTEM" });
   };
 
   const handleShowUnassigned = (e) => {
@@ -176,6 +199,68 @@ const Picklist = () => {
     getPicklist();
   };
 
+  const handleToggleHide = (e) => {
+    e.preventDefault();
+    dispatch({ type: "HEIGHT_LIMITED", heightLimited: !state.heightLimited });
+    getPicklist();
+  };
+
+  const handleChangeMinimum = (e) => {
+    e.preventDefault();
+    localStorage.setItem('rungMinimum', e.target.value);
+    getPicklist();
+  };
+
+  const handleChangeMaximum = (e) => {
+    e.preventDefault();
+    localStorage.setItem('rungMaximum', e.target.value);
+    getPicklist();
+  };
+
+  const handleClaim = async (e, barcode) => {
+    e.preventDefault();
+    await Load.assignItems({"barcodes": [barcode]});
+    getPicklist();
+  };
+
+  const handleUnclaim = async (e, barcode) => {
+    e.preventDefault();
+    // If the item is staged, remove that first
+    if (localStorage.getItem('picklist-'+barcode)) {
+      localStorage.removeItem('picklist-'+barcode);
+    }
+    await Load.unassignItems({"barcodes": [barcode]});
+    getPicklist();
+  };
+
+  const handleRemove = async (e, barcode, title, volume) => {
+    e.preventDefault();
+    const titleAndVolume = volume ? `${title} • ${volume}` : title;
+    // Ask for confirmation
+    if (window.confirm(`Are you sure you want to the following item from the picklist?\n${titleAndVolume}\n${barcode}`)) {
+      Load.removeItems({"barcodes": [barcode]});
+      getPicklist();
+    }
+  };
+
+  const handleMarkPicked = async (e, barcode) => {
+    e.preventDefault();
+    localStorage.setItem('picklist-'+barcode, 'Picked');
+    getPicklist();
+  };
+
+  const handleMarkMissing = async (e, barcode) => {
+    e.preventDefault();
+    localStorage.setItem('picklist-'+barcode, 'Missing');
+    getPicklist();
+  };
+
+  const handleUnmark = async (e, barcode) => {
+    e.preventDefault();
+    localStorage.removeItem('picklist-'+barcode);
+    getPicklist();
+  };
+
   return (
     <div>
       <Row style={{"display": "flex", "paddingTop": "20px", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
@@ -195,37 +280,80 @@ const Picklist = () => {
       </Row>
       <div style={{marginTop: "20px"}}>
         <Row>
-          <Col md="12">
-            <Card style={{"cursor": state.folioWaiting ? "progress" : "default"}}>
-              <CardBody>
-                <Row style={{"display": "flex", "paddingTop": "10px", "paddingBottom": "20px", "paddingLeft": "15px", "paddingRight": "15px"}}>
-                  <h1 style={{"fontSize": "150%", "lineHeight": "1", "paddingTop": "6px", "paddingBotton": "6px", "marginRight": "15px" }}>
-                    Picks
-                  </h1>
-                  { state.showingAll
-                    ? <Button onClick={handleShowUnassigned} color="success" style={{"marginRight": "10px"}}>Showing all</Button>
-                    : <Button onClick={handleShowAll} color="secondary" style={{"marginRight": "10px"}}>Showing unassigned</Button>
+          {/* If there were any items in FOLIO that aren't in the new system yet,
+            * show them here. */
+            state.notInNewSystem.length > 0 &&
+            <Col md="12">
+              <Card style={{"cursor": state.folioWaiting ? "progress" : "default"}}>
+                <CardBody>
+                  <Row style={{"display": "flex", "paddingTop": "10px", "paddingBottom": "20px", "paddingLeft": "15px", "paddingRight": "15px"}}>
+                    <h1 style={{"fontSize": "150%", "lineHeight": "1", "paddingTop": "6px", "paddingBotton": "6px", "marginRight": "15px" }}>
+                      Old system
+                    </h1>
+                  </Row>
+                  <p>The following items are not in the new system yet. You can copy these barcodes and paste them into the old system’s search form.</p>
+                  {/* Don't show this option if there are no items in the list */}
+                  <Input type="textarea" disabled rows={state.notInNewSystem ? state.notInNewSystem.length : 1} style={{"width":"15em"}} value={state.notInNewSystem.join('\n')}></Input>
+                  <Button color={state.oldSystemCopied ? "info" : "secondary"} style={{"cursor": "grab", "marginTop": "10px", "marginRight": "10px"}} onClick={copyOldSystemBarcodes}>{state.oldSystemCopied ? "Copied" : "Copy"}</Button>
+                  <Button color="warning" style={{"marginTop": "10px"}} onClick={handleClearOldSystem}>Clear</Button>
+                </CardBody>
+              </Card>
+            </Col>
+          }
+          { /* Don't show this if there aren't any picks at all that aren't assigned to the current user */
+            state.picklistComplete.length > 0 &&
+            <Col md="12">
+              <Card style={{"cursor": state.folioWaiting ? "progress" : "default"}}>
+                <CardBody>
+                  <Row style={{"display": "flex", "paddingTop": "10px", "paddingBottom": "20px", "paddingLeft": "15px", "paddingRight": "15px"}}>
+                    <h1 style={{"fontSize": "150%", "lineHeight": "1", "paddingTop": "6px", "paddingBotton": "6px", "marginRight": "15px" }}>
+                      Outstanding picks
+                    </h1>
+                    { state.showingAll
+                      ? <Button onClick={handleShowUnassigned} color="success" style={{"marginRight": "10px"}}>Showing all</Button>
+                      : <Button onClick={handleShowAll} color="secondary" style={{"marginRight": "10px"}}>Showing unassigned</Button>
+                    }
+                    <Button
+                        color="primary"
+                        disabled={state.showingAll ? state.picklistVisibleComplete.length === 0 : state.picklistVisibleUnassigned.length === 0}
+                        style={{"marginLeft": "auto" }}
+                        onClick={handleClaimAllVisible}
+                    >
+                      Claim all
+                    </Button>
+                  </Row>
+                  {/* Don't show this option if there are no items in the list */}
+                  { state.picklistUnassigned.length > 0 || (state.showingAll && state.picklistComplete.length > 0)
+                    ? <div style={{"paddingBottom": "20px", "cursor": "default"}}>
+                      {/* double-not (!!) needed to convert from null to true to false */}
+                        <input type="checkbox" readOnly checked={!!state.heightLimited} id="heightCheckbox" onClick={handleToggleHide} style={{"marginRight": "10px", "height": "18px", "width": "18px", "marginBottom": "4px", "verticalAlign": "middle"}} />
+                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>Hide items in trays below height</span>
+                        <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["rungMinimum"]} onChange={handleChangeMinimum} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em", "color": state.heightLimited ? "black" : "gray"}} />
+                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>and above height</span>
+                        <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["rungMaximum"]} onChange={handleChangeMaximum} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em", "color": state.heightLimited ? "black" : "gray"}} />
+                      </div>
+                    : null
                   }
-                  <Button color="primary" disabled={state.showingAll ? state.picklistVisibleComplete.length === 0 : state.picklistVisibleUnassigned.length === 0} style={{"marginLeft": "auto" }} onClick={handleClaimAllVisible}>Claim all</Button>
-                </Row>
-                {/* Don't show this option if there are no items in the list */}
-                { state.picklistUnassigned.length > 0 || (state.showingAll && state.picklistComplete.length > 0)
-                  ? <div style={{"paddingBottom": "20px", "cursor": "default"}}>
-                      <input type="checkbox" value={state.heightLimited} id="heightCheckbox" style={{"marginRight": "10px", "height": "18px", "width": "18px", "marginBottom": "4px", "verticalAlign": "middle"}} />
-                      <span style={{"color": state.heightLimited ? "black" : "gray"}}>Hide items in trays below height</span>
-                      <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["minimumHeight"]} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em"}} />
-                      <span style={{"color": state.heightLimited ? "black" : "gray"}}>and above height</span>
-                      <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["maximumHeight"]} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em"}} />
-                    </div>
-                  : null
-                }
-                { state.showingAll
-                  ? <PicklistLeftPane picklist={ state.picklistComplete } user_id={JSON.parse(sessionStorage.getItem('account')).account.id} />
-                  : <PicklistLeftPane picklist={ state.picklistUnassigned } />
-                }
-              </CardBody>
-            </Card>
-          </Col>
+                  <PicklistLeftPane
+                    picklist={ state.showingAll ?
+                                ( state.heightLimited ?
+                                  state.picklistVisibleComplete :
+                                  state.picklistComplete
+                                ) :
+                                ( state.heightLimited ?
+                                  state.picklistVisibleUnassigned :
+                                  state.picklistUnassigned
+                                )
+                              }
+                    user_id={JSON.parse(sessionStorage.getItem('account')).account.id}
+                    handleClaim={handleClaim}
+                    handleUnclaim={handleUnclaim}
+                    handleRemove={handleRemove}
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          }
           <Col md="12">
             <Card>
               <CardBody>
@@ -233,10 +361,23 @@ const Picklist = () => {
                   <h1 style={{"fontSize": "150%", "lineHeight": "1", "paddingTop": "6px", "paddingBotton": "6px", "marginRight": "15px" }}>
                     My items to page
                   </h1>
-                  <Button color="warning" disabled={state.picklistMine.length === 0} style={{"marginRight": "10px" }} onClick={handleUnclaimAll}>Unclaim all</Button>
+                  <Button
+                      color="warning"
+                      disabled={state.picklistMine.length === 0}
+                      style={{"marginRight": "10px" }}
+                      onClick={handleUnclaimAll}
+                  >
+                    Unclaim all
+                  </Button>
                   <Button color="primary" style={{"marginLeft": "auto" }}>Process all</Button>
                 </Row>
-                <PicklistRightPane picklist={state.picklistMine} />
+                <PicklistRightPane
+                  picklist={state.picklistMine}
+                  handleUnclaim={handleUnclaim}
+                  handleMarkPicked={handleMarkPicked}
+                  handleMarkMissing={handleMarkMissing}
+                  handleUnmark={handleUnmark}
+                />
               </CardBody>
             </Card>
           </Col>
@@ -263,14 +404,6 @@ const AddForm = props => {
 };
 
 const PicklistLeftPane = (props) => {
-
-  const handleClaim = async (e, id) => {
-    e.preventDefault();
-  };
-
-  const handleRemove = async (e, id) => {
-    e.preventDefault();
-  };
 
   const leftPaneColumns = [
     {
@@ -324,7 +457,7 @@ const PicklistLeftPane = (props) => {
                   color="warning"
                   size="sm"
                   style={{"margin": "5px"}}
-                  onClick={(e) => handleClaim(e, row.id)}
+                  onClick={(e) => props.handleUnclaim(e, row.barcode)}
                 >
                 Unclaim
               </Button>
@@ -332,7 +465,7 @@ const PicklistLeftPane = (props) => {
                   color="primary"
                   size="sm"
                   style={{"margin": "5px"}}
-                  onClick={(e) => handleClaim(e, row.id)}
+                  onClick={(e) => props.handleClaim(e, row.barcode)}
                 >
                 Claim
               </Button>
@@ -341,7 +474,7 @@ const PicklistLeftPane = (props) => {
                 color="danger"
                 size="sm"
                 style={{"margin": "5px"}}
-                onClick={(e) => handleRemove(e, row.id)}
+                onClick={(e) => props.handleRemove(e, row.barcode, row.title, row.volume)}
               >
               Remove
             </Button>
@@ -354,7 +487,7 @@ const PicklistLeftPane = (props) => {
     props.picklist.length > 0
     ? <BootstrapTable
         keyField='id'
-        classes="align-middle"
+        classes="align-middle table-hover"
         data={ props.picklist }
         columns={ leftPaneColumns }
         defaultSorted={[
@@ -366,18 +499,6 @@ const PicklistLeftPane = (props) => {
 };
 
 const PicklistRightPane = (props) => {
-
-  const handleUnclaim = async (e, id) => {
-    e.preventDefault();
-  };
-
-  const handleMarkPicked = async (e, id) => {
-    e.preventDefault();
-  };
-
-  const handleMarkMissing = async (e, id) => {
-    e.preventDefault();
-  };
 
   const rightPaneColumns = [
     {
@@ -450,6 +571,7 @@ const PicklistRightPane = (props) => {
                 className={localStorage.getItem('picklist-'+row.barcode) === 'Picked' ? "btn-outline-primary" : "btn-outline-secondary"}
                 size="sm"
                 style={{"margin": "5px"}}
+                onClick={(e) => props.handleUnmark(e, row.barcode)}
             >
               {"Unmark " + localStorage.getItem('picklist-'+row.barcode)}
             </Button>
@@ -459,7 +581,7 @@ const PicklistRightPane = (props) => {
                 color="warning"
                 size="sm"
                 style={{"margin": "5px"}}
-                onClick={(e) => handleUnclaim(e, row.id)}
+                onClick={(e) => props.handleUnclaim(e, row.barcode)}
               >
               Unclaim
             </Button>
@@ -467,7 +589,7 @@ const PicklistRightPane = (props) => {
                 color="primary"
                 size="sm"
                 style={{"margin": "5px"}}
-                onClick={(e) => handleMarkPicked(e, row.id)}
+                onClick={(e) => props.handleMarkPicked(e, row.barcode)}
               >
               Picked
             </Button>
@@ -475,7 +597,7 @@ const PicklistRightPane = (props) => {
                 color="secondary"
                 size="sm"
                 style={{"margin": "5px"}}
-                onClick={(e) => handleMarkMissing(e, row.id)}
+                onClick={(e) => props.handleMarkMissing(e, row.barcode)}
               >
               Missing
             </Button>
@@ -511,7 +633,7 @@ const PicklistRightPane = (props) => {
     props.picklist.length > 0
     ? <BootstrapTable
         keyField='id'
-        classes="align-middle"
+        classes="align-middle table-hover"
         data={ props.picklist }
         columns={ rightPaneColumns }
         defaultSorted={[
