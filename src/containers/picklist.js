@@ -442,14 +442,14 @@ const PicklistLeftPane = (props) => {
                 Claim
               </Button>
             }
-            <Button
+            {!row.user_id && <Button
                 color="danger"
                 size="sm"
                 style={{"margin": "5px"}}
                 onClick={(e) => props.handleRemove(e, row.barcode, row.title, row.volume)}
               >
               Remove
-            </Button>
+            </Button>}
           </div>
         );
       }
