@@ -1,8 +1,10 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button, Card, CardBody, Form, Input, Row, Col } from 'reactstrap';
 import BootstrapTable from 'react-bootstrap-table-next';
 import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 const truncate = (str, n) => {
   return (str.length > n) ? str.substr(0, n-1) + '…' : str;
@@ -12,90 +14,8 @@ const firstName = (str) => {
   return str.split(' ')[0];
 };
 
-const getStagedItems = () => {
-  let stagedItems = [];
-  // Narrow in only on things relevant to the picklist form
-  Object.keys(localStorage).forEach(function(key, index) {
-    if (key.includes('picklist-')) {
-      try {
-        stagedItems.push({
-          barcode: key.split('-')[1],
-          status: localStorage.getItem(key),
-        });
-      }
-      catch (e) {
-        console.error(e);
-      }
-    }
-  });
-  return stagedItems;
-};
-
-const reducer = (state, action) => {
-  switch (action.type) {
-    case 'SHOWING_ALL':
-      return {
-        ...state,
-        showingAll: action.value,
-      };
-    case 'BARCODE_CHANGE':
-      return {
-        ...state,
-        newBarcode: action.newBarcode,
-      };
-    case 'BARCODE_RESET':
-      return {
-        ...state,
-        newBarcode: '',
-      };
-    case 'HEIGHT_LIMITED':
-      return {
-        ...state,
-        heightLimited: action.heightLimited,
-      };
-    case 'UPDATE_PICKLIST':
-      if (!localStorage['rungMinimum']) {
-        localStorage.setItem('rungMinimum', 0);
-      }
-      if (!localStorage['rungMaximum']) {
-        localStorage.setItem('rungMaximum', 19);
-      }
-      return {
-        ...state,
-        picklistComplete: action.picklist.filter(i => i['user_id'] !== action.user_id),
-        picklistUnassigned: action.picklist.filter(i => i['user_id'] === null),
-        picklistVisibleComplete: state.heightLimited ? action.picklist.filter(i => i['rung'] > localStorage['rungMinimum'] && i['rung'] < localStorage['rungMaximum'] && i['user_id'] !== action.user_id) : action.picklist.filter(i => i['user_id'] !== action.user_id),
-        picklistVisibleUnassigned: state.heightLimited ? action.picklist.filter(i => i['rung'] > localStorage['rungMinimum'] && i['rung'] < localStorage['rungMaximum'] && i['user_id'] === null) : action.picklist.filter(i => i['user_id'] === null),
-        picklistMine: action.picklist.filter(i => i['user_id'] === action.user_id),
-      };
-    case 'FOLIO_WAITING':
-      return {
-        ...state,
-        folioWaiting: action.payload,
-      };
-    case 'UPDATE_OLD_SYSTEM':
-      return {
-        ...state,
-        notInNewSystem: action.payload,
-      };
-    case 'CLEAR_OLD_SYSTEM':
-      return {
-        ...state,
-        notInNewSystem: [],
-        oldSystemCopied: false,
-      };
-    case 'OLD_SYSTEM_COPIED':
-      return {
-        ...state,
-        oldSystemCopied: action.payload,
-      };
-    default:
-      throw new Error();
-  }
-};
-
-const Picklist = () => {
-  const initialState = {
+const usePicklist = create((set) => {
+  return {
     user_id: null,
     newBarcode: '',
     notInNewSystem: [],
@@ -108,27 +28,70 @@ const Picklist = () => {
     showingAll: false,
     heightLimited: false,
     folioWaiting: false,  // The "Add all from FOLIO" button is disabled while we're waiting for the results from FOLIO so that there is some visual feedback
-  };
 
-  const [ state, dispatch ] = useReducer(reducer, initialState);
+    setShowingAll: (showingAll) => set({ showingAll }),
+    setNewBarcode: (newBarcode) => set({ newBarcode }),
+    resetNewBarcode: () => set({ newBarcode: '' }),
+    toggleHeightLimited: (heightLimited) => set((state) => ({ heightLimited: !state.heightLimited })),
+    updatePicklist: (picklist, user_id) => {
+      if (!localStorage['rungMinimum']) {
+        localStorage.setItem('rungMinimum', 0);
+      }
+      if (!localStorage['rungMaximum']) {
+        localStorage.setItem('rungMaximum', 19);
+      }
+      set((state) => ({
+        picklistComplete: picklist.filter(i => i['user_id'] !== user_id),
+        picklistUnassigned: picklist.filter(i => i['user_id'] === null),
+        picklistVisibleComplete: state.heightLimited ? picklist.filter(i => i['rung'] > localStorage["rungMinimum"] && i['rung'] < localStorage["rungMinimum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
+        picklistVisibleUnassigned: state.heightLimited ? picklist.filter(i => i['rung'] > localStorage["rungMaximum"] && i['rung'] < localStorage["rungMaximum"] && i['user_id'] === null) : picklist.filter(i => i['user_id'] === null),
+        picklistMine: picklist.filter(i => i['user_id'] === user_id),
+      }));
+    },
+    setFolioWaiting: (folioWaiting) => set({ folioWaiting }),
+    updateOldSystem: (notInNewSystem) => set({ notInNewSystem }),
+    clearOldSystem: () => set({ notInNewSystem: [], oldSystemCopied: false }),
+    setOldSystemCopied: (oldSystemCopied) => set({ oldSystemCopied }),
+  }
+});
 
-  useEffect(() => {
-    getPicklist();
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
-  }, []);
+const useStagedItems = create(
+  persist(
+    (set, get) => ({
+      picked: [],
+      missing: [],
+      markPicked: (barcode) => set({ picked: [...get().picked, barcode] }),
+      markMissing: (barcode) => set({ missing: [...get().missing, barcode] }),
+      remove: (barcodeList) => set({
+        picked: get().picked.filter(i => !barcodeList.includes(i)),
+        missing: get().missing.filter(i => !barcodeList.includes(i)),
+      }),
+      getAll: () => get().picked.concat(get().missing),
+    }),
+    {
+      name: 'staged-picks',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
+
+const Picklist = () => {
+  const state = usePicklist();
+  const staged = useStagedItems();
 
   const getPicklist = async () => {
     const user_id = JSON.parse(sessionStorage.getItem('account')).account.id
     const picklist = await Load.getPicklist();
-    dispatch({ type: "UPDATE_PICKLIST", picklist: picklist, user_id: user_id });
+    state.updatePicklist(picklist, user_id);
   };
+
+  useEffect(() => {
+    getPicklist();
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBarcodeChange = (e) => {
     e.preventDefault();
-    dispatch({
-      type: "BARCODE_CHANGE",
-      newBarcode: e.target.value,
-    });
+    state.setNewBarcode(e.target.value);
   };
 
   const handleAddToPicklist = async (e) => {
@@ -141,45 +104,45 @@ const Picklist = () => {
     // a warning.
     else if (state.picklistComplete.find(i => i['barcode'] === state.newBarcode)) {
       warning(`Item ${state.newBarcode} is already in picklist`);
-      dispatch({ type: "BARCODE_RESET" });
+      state.resetNewBarcode();
     }
     // Otherwise, make an API call. The API will give an error if the
     // barcode is invalid.
     else {
       await Load.addItems({"barcodes": [state.newBarcode]});
-      dispatch({ type: "BARCODE_RESET" });
+      state.resetNewBarcode();
       getPicklist();
     }
   };
 
   const handleAddAllFromFolio = async (e) => {
     e.preventDefault();
-    dispatch({ type: "CLEAR_OLD_SYSTEM" });
-    dispatch({ type: "FOLIO_WAITING", payload: true });
+    state.clearOldSystem();
+    state.setFolioWaiting(true);
     const results = await Load.addFromFolio();
-    dispatch({ type: "UPDATE_OLD_SYSTEM", payload: results['notInSystem'] });
+    state.updateOldSystem(results['notInSystem']);
     getPicklist();
-    dispatch({ type: "FOLIO_WAITING", payload: false });
+    state.setFolioWaiting(false);
   };
 
   const copyOldSystemBarcodes = () => {
     navigator.clipboard.writeText(`${state.notInNewSystem.join('\n')}`);
-    dispatch({ type: "OLD_SYSTEM_COPIED", payload: true });
+    state.setOldSystemCopied(true);
   }
 
   const handleClearOldSystem = (e) => {
     e.preventDefault();
-    dispatch({ type: "CLEAR_OLD_SYSTEM" });
+    state.clearOldSystem();
   };
 
   const handleShowUnassigned = (e) => {
     e.preventDefault();
-    dispatch({ type: "SHOWING_ALL", value: false });
+    state.setShowingAll(false);
   };
 
   const handleShowAll = (e) => {
     e.preventDefault();
-    dispatch({ type: "SHOWING_ALL", value: true });
+    state.setShowingAll(true);
   };
 
   const handleClaimAllVisible = async (e) => {
@@ -193,15 +156,14 @@ const Picklist = () => {
   const handleUnclaimAll = async (e) => {
     e.preventDefault();
     const allMyBarcodes = state.picklistMine.map(i => i['barcode']);
-    const stagedItems = getStagedItems().map(i => i['barcode']);
-    const myUnstagedBarcodes = allMyBarcodes.filter(i => !stagedItems.includes(i));
+    const myUnstagedBarcodes = allMyBarcodes.filter(i => !staged.getAll().includes(i));
     await Load.unassignItems({"barcodes": myUnstagedBarcodes});
     getPicklist();
   };
 
   const handleToggleHide = (e) => {
     e.preventDefault();
-    dispatch({ type: "HEIGHT_LIMITED", heightLimited: !state.heightLimited });
+    state.toggleHeightLimited();
     getPicklist();
   };
 
@@ -226,9 +188,7 @@ const Picklist = () => {
   const handleUnclaim = async (e, barcode) => {
     e.preventDefault();
     // If the item is staged, remove that first
-    if (localStorage.getItem('picklist-'+barcode)) {
-      localStorage.removeItem('picklist-'+barcode);
-    }
+    staged.remove([barcode]);
     await Load.unassignItems({"barcodes": [barcode]});
     getPicklist();
   };
@@ -245,19 +205,26 @@ const Picklist = () => {
 
   const handleMarkPicked = async (e, barcode) => {
     e.preventDefault();
-    localStorage.setItem('picklist-'+barcode, 'Picked');
+    staged.markPicked(barcode);
     getPicklist();
   };
 
   const handleMarkMissing = async (e, barcode) => {
     e.preventDefault();
-    localStorage.setItem('picklist-'+barcode, 'Missing');
+    staged.markMissing(barcode);
     getPicklist();
   };
 
   const handleUnmark = async (e, barcode) => {
     e.preventDefault();
-    localStorage.removeItem('picklist-'+barcode);
+    staged.remove([barcode]);
+    getPicklist();
+  };
+
+  const handleProcessAll = async (e) => {
+    e.preventDefault();
+    // Submit via the API
+    // Confirm the items that were processed and then remove those from staging
     getPicklist();
   };
 
@@ -369,7 +336,7 @@ const Picklist = () => {
                   >
                     Unclaim all
                   </Button>
-                  <Button color="primary" style={{"marginLeft": "auto" }}>Process all</Button>
+                  <Button color="primary" style={{"marginLeft": "auto" }} onClick={handleProcessAll}>Process all</Button>
                 </Row>
                 <PicklistRightPane
                   picklist={state.picklistMine}
@@ -432,6 +399,11 @@ const PicklistLeftPane = (props) => {
         var noSideB = fieldB.replace(/[^\d]/, '');
         return noSideA - noSideB;
       },
+    },
+    {
+      dataField: 'status',
+      text: 'Status',
+      sort: true,
     },
     {
       dataField: 'user_id',
@@ -499,6 +471,7 @@ const PicklistLeftPane = (props) => {
 };
 
 const PicklistRightPane = (props) => {
+  const staged = useStagedItems();
 
   const rightPaneColumns = [
     {
@@ -506,7 +479,7 @@ const PicklistRightPane = (props) => {
       text: 'Barcode',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: localStorage.getItem('picklist-'+cell) ? "lightgray" : "black"}}>{cell}</span>;
+        return <span style={{color: staged.getAll().includes(cell) ? "lightgray" : "black"}}>{cell}</span>;
       }
     },
     {
@@ -514,7 +487,7 @@ const PicklistRightPane = (props) => {
       text: 'Title',
       sort: true,
       formatter: (cell, row) => {
-        if (localStorage.getItem('picklist-'+row.barcode)) {
+        if (staged.getAll().includes(row.barcode)) {
           return <span style={{"color": "lightgray"}}>{truncate(cell, 64)} {row.volume}</span>;
         }
         else {
@@ -527,7 +500,7 @@ const PicklistRightPane = (props) => {
       text: 'Shelf',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: localStorage.getItem('picklist-'+row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
         // When sorting by shelf, ignore the R or L designating row
@@ -549,7 +522,7 @@ const PicklistRightPane = (props) => {
       text: 'Position',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: localStorage.getItem('picklist-'+row.barcode) ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
+        return <span style={{color: staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
       }
     },
     {
@@ -557,7 +530,15 @@ const PicklistRightPane = (props) => {
       text: 'Tray',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: localStorage.getItem('picklist-'+row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+      },
+    },
+    {
+      dataField: 'status',
+      text: 'Status',
+      sort: true,
+      formatter: (cell, row) => {
+        return <span style={{color: staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
     },
     {
@@ -566,14 +547,14 @@ const PicklistRightPane = (props) => {
       sort: true,
       formatter: (cell, row) => {
         return (
-          localStorage.getItem('picklist-'+row.barcode)
+          staged.getAll().includes(row.barcode)
           ? <Button
-                className={localStorage.getItem('picklist-'+row.barcode) === 'Picked' ? "btn-outline-primary" : "btn-outline-secondary"}
+                className={staged.picked.includes(row.barcode) ? "btn-outline-primary" : "btn-outline-secondary"}
                 size="sm"
                 style={{"margin": "5px"}}
                 onClick={(e) => props.handleUnmark(e, row.barcode)}
             >
-              {"Unmark " + localStorage.getItem('picklist-'+row.barcode)}
+              {"Unmark " + (staged.picked.includes(row.barcode) ? "picked" : "missing")}
             </Button>
           :
           <div>
@@ -606,10 +587,10 @@ const PicklistRightPane = (props) => {
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
         // Items that are marked missing or picked go to the bottom
-        if (localStorage.getItem('picklist-'+rowA.barcode) && !localStorage.getItem('picklist-'+rowB.barcode)) {
+        if (staged.getAll().includes(rowA.barcode) && !staged.getAll().includes(rowB.barcode)) {
           return 1;
         }
-        else if (localStorage.getItem('picklist-'+rowB.barcode) && !localStorage.getItem('picklist-'+rowA.barcode)) {
+        else if (staged.getAll().includes(rowB.barcode) && !staged.getAll().includes(rowA.barcode)) {
           return -1;
         }
         else {
