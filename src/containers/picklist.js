@@ -5,6 +5,9 @@ import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { get } from 'lodash';
+
+const REFRESH_INTERVAL = 6000;
 
 const truncate = (str, n) => {
   return (str.length > n) ? str.substr(0, n-1) + '…' : str;
@@ -88,6 +91,14 @@ const Picklist = () => {
   useEffect(() => {
     getPicklist();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getPicklist();
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBarcodeChange = (e) => {
     e.preventDefault();
