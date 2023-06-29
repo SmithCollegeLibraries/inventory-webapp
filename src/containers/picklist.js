@@ -72,7 +72,6 @@ const useStagedItems = create(
             }, {}
           ),
       })),
-      getAll: () => get().picked.concat(get().missing),
     }),
     {
       name: 'staged-picks',
@@ -172,7 +171,7 @@ const Picklist = () => {
   const handleUnclaimAll = async (e) => {
     e.preventDefault();
     const allMyBarcodes = state.picklistMine.map(i => i['barcode']);
-    const myUnstagedBarcodes = allMyBarcodes.filter(i => !staged.getAll().includes(i));
+    const myUnstagedBarcodes = allMyBarcodes.filter(i => !staged.barcodes[i]);
     await Load.unassignItems({"barcodes": myUnstagedBarcodes});
     getPicklist();
   };
