@@ -5,7 +5,6 @@ import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { get } from 'lodash';
 
 const REFRESH_INTERVAL = 6000;
 
