@@ -34,7 +34,7 @@ const usePicklist = create((set) => {
     setShowingAll: (showingAll) => set({ showingAll }),
     setNewBarcode: (newBarcode) => set({ newBarcode }),
     resetNewBarcode: () => set({ newBarcode: '' }),
-    toggleHeightLimited: (heightLimited) => set((state) => ({ heightLimited: !state.heightLimited })),
+    toggleHeightLimited: () => set((state) => ({ heightLimited: !state.heightLimited })),
     updatePicklist: (picklist, user_id) => {
       if (!localStorage['rungMinimum']) {
         localStorage.setItem('rungMinimum', 0);
@@ -60,14 +60,18 @@ const usePicklist = create((set) => {
 const useStagedItems = create(
   persist(
     (set, get) => ({
-      picked: [],
-      missing: [],
-      markPicked: (barcode) => set({ picked: [...get().picked, barcode] }),
-      markMissing: (barcode) => set({ missing: [...get().missing, barcode] }),
-      remove: (barcodeList) => set({
-        picked: get().picked.filter(i => !barcodeList.includes(i)),
-        missing: get().missing.filter(i => !barcodeList.includes(i)),
-      }),
+      barcodes: {},
+      markPicked: (barcode) => set((staged) => ({ barcodes: {...staged.barcodes, [barcode]: "picked"} })),
+      markMissing: (barcode) => set((staged) => ({ barcodes: {...staged.barcodes, [barcode]: "missing"} })),
+      remove: (barcodeList) => set((staged) => ({
+        barcodes: Object.keys(staged.barcodes)
+          .filter(key => !barcodeList.includes(key))
+          .reduce((obj, key) => {
+              obj[key] = staged.barcodes[key];
+              return obj;
+            }, {}
+          ),
+      })),
       getAll: () => get().picked.concat(get().missing),
     }),
     {
@@ -91,6 +95,8 @@ const Picklist = () => {
     getPicklist();
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Refresh the picklist every 6 seconds, in order to fetch any claims
+  // or new items from other users.
   useEffect(() => {
     const interval = setInterval(() => {
       getPicklist();
@@ -216,19 +222,16 @@ const Picklist = () => {
   const handleMarkPicked = async (e, barcode) => {
     e.preventDefault();
     staged.markPicked(barcode);
-    getPicklist();
   };
 
   const handleMarkMissing = async (e, barcode) => {
     e.preventDefault();
     staged.markMissing(barcode);
-    getPicklist();
   };
 
   const handleUnmark = async (e, barcode) => {
     e.preventDefault();
     staged.remove([barcode]);
-    getPicklist();
   };
 
   const handleProcessAll = async (e) => {
@@ -488,7 +491,7 @@ const PicklistRightPane = (props) => {
       text: 'Barcode',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.getAll().includes(cell) ? "lightgray" : "black"}}>{cell}</span>;
+        return <span style={{color: props.staged.barcodes[cell] ? "lightgray" : "black"}}>{cell}</span>;
       }
     },
     {
@@ -496,7 +499,7 @@ const PicklistRightPane = (props) => {
       text: 'Title',
       sort: true,
       formatter: (cell, row) => {
-        if (props.staged.getAll().includes(row.barcode)) {
+        if (props.staged.barcodes[row.barcode]) {
           return <span style={{"color": "lightgray"}}>{truncate(cell, 64)} {row.volume}</span>;
         }
         else {
@@ -509,7 +512,7 @@ const PicklistRightPane = (props) => {
       text: 'Shelf',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
         // When sorting by shelf, ignore the R or L designating row
@@ -531,7 +534,7 @@ const PicklistRightPane = (props) => {
       text: 'Position',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
+        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
       }
     },
     {
@@ -539,7 +542,7 @@ const PicklistRightPane = (props) => {
       text: 'Tray',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
     },
     {
@@ -547,7 +550,7 @@ const PicklistRightPane = (props) => {
       text: 'Status',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.getAll().includes(row.barcode) ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
     },
     {
@@ -556,14 +559,14 @@ const PicklistRightPane = (props) => {
       sort: true,
       formatter: (cell, row) => {
         return (
-          props.staged.getAll().includes(row.barcode)
+          props.staged.barcodes[row.barcode]
           ? <Button
-                className={props.staged.picked.includes(row.barcode) ? "btn-outline-primary" : "btn-outline-secondary"}
+                className={props.staged.barcodes[row.barcode] === 'picked' ? "btn-outline-primary" : "btn-outline-secondary"}
                 size="sm"
                 style={{"margin": "5px"}}
                 onClick={(e) => props.handleUnmark(e, row.barcode)}
             >
-              {"Unmark " + (props.staged.picked.includes(row.barcode) ? "picked" : "missing")}
+              {"Unmark " + (props.staged.barcodes[row.barcode])}
             </Button>
           :
           <div>
@@ -596,10 +599,10 @@ const PicklistRightPane = (props) => {
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
         // Items that are marked missing or picked go to the bottom
-        if (props.staged.getAll().includes(rowA.barcode) && !props.staged.getAll().includes(rowB.barcode)) {
+        if (props.staged.barcodes[rowA.barcode] && !props.staged.barcodes[rowB.barcode]) {
           return 1;
         }
-        else if (props.staged.getAll().includes(rowB.barcode) && !props.staged.getAll().includes(rowA.barcode)) {
+        else if (props.staged.barcodes[rowB.barcode] && !props.staged.barcodes[rowA.barcode]) {
           return -1;
         }
         else {
@@ -624,7 +627,20 @@ const PicklistRightPane = (props) => {
     ? <BootstrapTable
         keyField='id'
         classes="align-middle table-hover"
-        data={ props.picklist }
+        data={ props.picklist.map((item) => {
+          return {
+            id: item.id,
+            barcode: item.barcode,
+            title: item.title,
+            volume: item.volume,
+            shelf: item.shelf,
+            position: item.position,
+            depth: item.depth,
+            tray: item.tray,
+            status: item.status,
+            actions: props.staged.barcodes[item.barcode],
+          };
+         }) }
         columns={ rightPaneColumns }
         defaultSorted={[
           {dataField: 'actions', order: 'asc'},
