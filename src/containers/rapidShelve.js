@@ -200,7 +200,7 @@ const RapidShelve = (props) => {
       return null;
     }
     else {
-      return data.staged[Object.keys(data.staged).length - 1];
+      return data.staged[0];
     }
   }
 
@@ -352,8 +352,7 @@ const RapidShelve = (props) => {
     }
 
     const processSubmit = async () => {
-      let newStaged = data.staged;
-      newStaged[Object.keys(data.staged).length] = data.current;
+      const newStaged = [data.current].concat(data.staged);
       localforage.setItem('load', newStaged);
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
@@ -495,17 +494,19 @@ const RapidShelve = (props) => {
               </CardBody>
             </Card>
           </Col>
-          <Col>
+          <Col md="6">
             <Display
               data={data.staged}
               handleDisplayChange={handleDisplayChange}
               removeTrays={removeTrays}
             />
-            { Object.keys(data.staged).map(items => items).length
-              ? <>
-                <Button style={{marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process all</Button>
-                <Button style={{marginRight: '10px'}} onClick={(e) => handleUndo(e)} color="warning">Undo last</Button>
-                <Button style={{marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Delete all</Button>
+          </Col>
+          <Col md="2">
+            { Object.keys(data.staged).map(items => items).length ?
+              <>
+                <Button style={{marginBottom: '60px', marginRight: '10px'}} onClick={(e) => handleProcessTrays(e)} color="primary">Process all</Button>
+                <Button style={{marginBottom: '10px', marginRight: '10px'}} onClick={(e) => handleUndo(e)} color="warning">Undo last</Button>
+                <Button style={{marginBottom: '10px', marginRight: '10px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Delete all</Button>
               </>
               : ''
             }
