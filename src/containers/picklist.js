@@ -162,7 +162,16 @@ const Picklist = () => {
 
   const handleClaimAllVisible = async (e) => {
     e.preventDefault();
+    await getPicklist();  // Try to refresh the current claims before grabbing them all
     const listToPick = state.showingAll ? state.picklistVisibleComplete : state.picklistVisibleUnassigned;
+    // If there are any items in the list that are claimed by someone else,
+    // give a warning before allowing the user to claim all of them.
+    const itemsAlreadyClaimed = listToPick.filter(i => i['user_id'] !== null).length;
+    if (itemsAlreadyClaimed > 0) {
+      if (!window.confirm(`${itemsAlreadyClaimed === 1 ? "One item in the list is" : "Multiple items are"} already claimed by someone else. Are you sure you want to claim all items?`)) {
+        return;
+      }
+    }
     const barcodes = listToPick.map(i => i['barcode']);
     await Load.assignItems({"barcodes": barcodes});
     getPicklist();
@@ -196,6 +205,13 @@ const Picklist = () => {
 
   const handleClaim = async (e, barcode) => {
     e.preventDefault();
+    // If the item is already claimed by someone else, ask for confirmation
+    const item = state.picklistComplete.find(i => i['barcode'] === barcode);
+    if (item['user_id'] !== null) {
+      if (!window.confirm(`Item ${barcode} is already claimed by someone else. Are you sure you want to claim it?`)) {
+        return;
+      }
+    }
     await Load.assignItems({"barcodes": [barcode]});
     getPicklist();
   };
