@@ -251,8 +251,32 @@ const Picklist = () => {
 
   const handleProcessAll = async (e) => {
     e.preventDefault();
-    // Submit via the API
-    // Confirm the items that were processed and then remove those from staging
+
+    const barcodesWithStatus = (dict, status) => Object.keys(dict).filter(b => dict[b] === status);
+
+    const stagedPicked = barcodesWithStatus(staged.barcodes, "picked");
+    const stagedMissing = barcodesWithStatus(staged.barcodes, "missing");
+    // Process picked items and remove them from staging
+    if (stagedPicked.length > 0) {
+      const confirmedPicked = await Load.bulkUpdate({
+        "barcodes": stagedPicked,
+        "status": "Circulating",
+      });
+      staged.remove(confirmedPicked);
+      // Remove from picklist
+      Load.removeItems({"barcodes": confirmedPicked});
+    }
+    // Process missing items and remove them from staging
+    if (stagedMissing.length > 0) {
+      const confirmedMissing = await Load.bulkUpdate({
+        "barcodes": stagedMissing,
+        "status": "Missing",
+      });
+      staged.remove(confirmedMissing);
+      // Remove from picklist
+      Load.removeItems({"barcodes": confirmedMissing});
+    }
+
     getPicklist();
   };
 

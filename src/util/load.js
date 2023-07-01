@@ -144,23 +144,28 @@ class Load {
     const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
     console.log(data);
     return update;
-  }
+  };
 
   newItem = async (data, id) => {
     const update = await this.handleUpdate(`${itemAPI}new-item/`, 'POST', data);
     console.log(data);
     return update;
-  }
+  };
 
   deleteItem = async (data) => {
     const results = await this.handleUpdate(`${itemAPI}delete-item/`, 'POST', data);
     return results;
-  }
+  };
 
   itemCount = async () => {
     const count = await this.handleUpdate(`${itemAPI}total-count/`, 'GET');
     return count;
-  }
+  };
+
+  bulkUpdate = async (data) => {
+    const update = await this.handleUpdate(`${itemAPI}bulk-update/`, 'POST', data);
+    return update;
+  };
 
   /**
    * @desc Picklist management
