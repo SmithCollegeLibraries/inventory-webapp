@@ -88,7 +88,10 @@ export default class Header extends Component {
                 </NavItem>
                 */}
                 <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Rapid shelve</NavLink>
+                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
                 </NavItem>
                 { level >= 35 &&
                   <NavItem>
