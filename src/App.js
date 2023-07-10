@@ -6,16 +6,11 @@ import 'react-s-alert/dist/s-alert-default.css';
 import {
     NewTray,
     RapidShelve,
-    // Shelf,
-    // AddPaging,
-    // PagingDisplay,
-    // Reports,
-    // History,
     ItemSearch,
     ManageCollections,
     ManageTrays,
     ManageItems,
-    // ManageShelves,
+    Picklist,
     ManageUsers,
     Statistics,
   } from './containers';
@@ -91,10 +86,11 @@ export default class Main extends Component {
       password: this.state.password
     };
     const account = await Load.getAccount(data);
-    const { name, access_token, level } = account || '';
+    const { id, name, access_token, level } = account || '';
     if (account && account.access_token) {
       this.setState({
         loggedIn: true,
+        id: id,
         name: name,
         access_key: access_token,
         level: level
@@ -152,6 +148,9 @@ export default class Main extends Component {
                   <ManageItems
                     items={this.state.items}
                   />
+                )}/>
+                <Route path="/picklist" render={() => (
+                  <Picklist />
                 )}/>
                 {/*
                 <Route path="/shelf" render={() => (

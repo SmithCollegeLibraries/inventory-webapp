@@ -1,8 +1,7 @@
 import React, { useReducer } from 'react';
 import { Button, Form, Input, Row, Col, Table } from 'reactstrap';
-import Skeleton from 'react-loading-skeleton'
 import Load from '../util/load';
-import { success, failure, warning } from '../components/toastAlerts';
+import { warning } from '../components/toastAlerts';
 
 const reducer = (state, action) => {
   switch (action.type) {
