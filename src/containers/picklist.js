@@ -45,7 +45,7 @@ const usePicklist = create((set) => {
       set((state) => ({
         picklistComplete: picklist.filter(i => i['user_id'] !== user_id),
         picklistUnassigned: picklist.filter(i => i['user_id'] === null),
-        picklistVisibleComplete: state.heightLimited ? picklist.filter(i => parseInt(['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
+        picklistVisibleComplete: state.heightLimited ? picklist.filter(i => parseInt(i['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
         picklistVisibleUnassigned: state.heightLimited ? picklist.filter(i => parseInt(i['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] === null) : picklist.filter(i => i['user_id'] === null),
         picklistMine: picklist.filter(i => i['user_id'] === user_id),
       }));
