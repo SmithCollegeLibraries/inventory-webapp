@@ -45,8 +45,8 @@ const usePicklist = create((set) => {
       set((state) => ({
         picklistComplete: picklist.filter(i => i['user_id'] !== user_id),
         picklistUnassigned: picklist.filter(i => i['user_id'] === null),
-        picklistVisibleComplete: state.heightLimited ? picklist.filter(i => i['rung'] > localStorage["rungMinimum"] && i['rung'] < localStorage["rungMinimum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
-        picklistVisibleUnassigned: state.heightLimited ? picklist.filter(i => i['rung'] > localStorage["rungMaximum"] && i['rung'] < localStorage["rungMaximum"] && i['user_id'] === null) : picklist.filter(i => i['user_id'] === null),
+        picklistVisibleComplete: state.heightLimited ? picklist.filter(i => parseInt(['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
+        picklistVisibleUnassigned: state.heightLimited ? picklist.filter(i => parseInt(i['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] === null) : picklist.filter(i => i['user_id'] === null),
         picklistMine: picklist.filter(i => i['user_id'] === user_id),
       }));
     },
@@ -346,10 +346,11 @@ const Picklist = () => {
                     ? <div style={{"paddingBottom": "20px", "cursor": "default"}}>
                       {/* double-not (!!) needed to convert from null to true to false */}
                         <input type="checkbox" readOnly checked={!!state.heightLimited} id="heightCheckbox" onClick={handleToggleHide} style={{"marginRight": "10px", "height": "18px", "width": "18px", "marginBottom": "4px", "verticalAlign": "middle"}} />
-                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>Hide items in trays below height</span>
+                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>Only show items between heights</span>
                         <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["rungMinimum"]} onChange={handleChangeMinimum} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em", "color": state.heightLimited ? "black" : "gray"}} />
-                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>and above height</span>
+                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>and</span>
                         <input disabled={!state.heightLimited} type="number" min="0" max="33" value={localStorage["rungMaximum"]} onChange={handleChangeMaximum} style={{"marginLeft": "10px", "marginRight": "10px", "width": "3em", "color": state.heightLimited ? "black" : "gray"}} />
+                        <span style={{"color": state.heightLimited ? "black" : "gray"}} onClick={handleToggleHide}>(inclusive)</span>
                       </div>
                     : null
                   }
