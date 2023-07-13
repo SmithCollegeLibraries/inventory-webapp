@@ -135,7 +135,13 @@ const Picklist = () => {
     state.clearOldSystem();
     state.setFolioWaiting(true);
     const results = await Load.addFromFolio();
-    state.updateOldSystem(results['notInSystem']);
+    const oldResults = results['notInSystem'];
+    if (typeof oldResults === 'object') {
+      state.updateOldSystem(Object.keys(oldResults).map((key) => oldResults[key]));
+    }
+    else {
+      state.updateOldSystem(results['notInSystem']);
+    }
     getPicklist();
     state.setFolioWaiting(false);
   };
