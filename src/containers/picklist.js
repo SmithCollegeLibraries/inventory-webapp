@@ -72,6 +72,15 @@ const useStagedItems = create(
             }, {}
           ),
       })),
+      removeNotInList: (barcodeList) => set((staged) => ({
+        barcodes: Object.keys(staged.barcodes)
+          .filter(key => barcodeList.includes(key))
+          .reduce((obj, key) => {
+              obj[key] = staged.barcodes[key];
+              return obj;
+            }, {}
+          ),
+      })),
     }),
     {
       name: 'staged-picks',
@@ -84,10 +93,37 @@ const Picklist = () => {
   const state = usePicklist();
   const staged = useStagedItems();
 
-  const getPicklist = async () => {
+  // Get updated picklist data from the server; asyncrhonously update
+  // the picklist information in state, and also return that data
+  // so that it can be used by getPicklist accurately
+  const fetchPicklist = async () => {
     const user_id = JSON.parse(sessionStorage.getItem('account')).account.id
     const picklist = await Load.getPicklist();
     state.updatePicklist(picklist, user_id);
+    return {
+      picklistComplete: picklist.filter(i => i['user_id'] !== user_id),
+      picklistUnassigned: picklist.filter(i => i['user_id'] === null),
+      picklistVisibleComplete: state.heightLimited ? picklist.filter(i => parseInt(i['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] !== user_id) : picklist.filter(i => i['user_id'] !== user_id),
+      picklistVisibleUnassigned: state.heightLimited ? picklist.filter(i => parseInt(i['rung']) >= localStorage["rungMinimum"] && parseInt(i['rung']) <= localStorage["rungMaximum"] && i['user_id'] === null) : picklist.filter(i => i['user_id'] === null),
+      picklistMine: picklist.filter(i => i['user_id'] === user_id),
+    };
+  };
+
+  // Get accurate updated picklists; asynchronously updated the staged items,
+  // and also return the new staged lists so that they can be used
+  // reliably by Process All (we don't want that information to be out
+  // of date)
+  const getPicklist = async () => {
+    const newPicklists = await fetchPicklist();
+    const myBarcodes = newPicklists.picklistMine.map(i => i['barcode']);
+    staged.removeNotInList(myBarcodes);
+
+    return {
+      'picked': Object.keys(staged.barcodes)
+        .filter(key => myBarcodes.includes(key) && staged.barcodes[key] === 'picked'),
+      'missing': Object.keys(staged.barcodes)
+        .filter(key => myBarcodes.includes(key) && staged.barcodes[key] === 'missing'),
+    };
   };
 
   useEffect(() => {
@@ -162,8 +198,8 @@ const Picklist = () => {
 
   const handleClaimAllVisible = async (e) => {
     e.preventDefault();
-    await getPicklist();  // Try to refresh the current claims before grabbing them all
-    const listToPick = state.showingAll ? state.picklistVisibleComplete : state.picklistVisibleUnassigned;
+    const fetched = await fetchPicklist();  // We want to be sure that we have the current claims
+    const listToPick = state.showingAll ? fetched.picklistVisibleComplete : fetched.picklistVisibleUnassigned;
     // If there are any items in the list that are claimed by someone else,
     // give a warning before allowing the user to claim all of them.
     const itemsAlreadyClaimed = listToPick.filter(i => i['user_id'] !== null).length;
@@ -254,15 +290,17 @@ const Picklist = () => {
 
     const barcodesWithStatus = (dict, status) => Object.keys(dict).filter(b => dict[b] === status);
 
-    const stagedPicked = barcodesWithStatus(staged.barcodes, "picked");
-    const stagedMissing = barcodesWithStatus(staged.barcodes, "missing");
+    const stagedBarcodes = await getPicklist();
+
+    const stagedPicked = stagedBarcodes['picked'] || [];
+    const stagedMissing = stagedBarcodes['missing'] || [];
+
     // Process picked items and remove them from staging
     if (stagedPicked.length > 0) {
       const confirmedPicked = await Load.bulkUpdate({
         "barcodes": stagedPicked,
         "status": "Circulating",
       });
-      staged.remove(confirmedPicked);
       // Remove from picklist
       Load.removeItems({"barcodes": confirmedPicked});
     }
@@ -272,7 +310,6 @@ const Picklist = () => {
         "barcodes": stagedMissing,
         "status": "Missing",
       });
-      staged.remove(confirmedMissing);
       // Remove from picklist
       Load.removeItems({"barcodes": confirmedMissing});
     }
