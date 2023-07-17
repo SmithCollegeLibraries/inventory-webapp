@@ -288,8 +288,6 @@ const Picklist = () => {
   const handleProcessAll = async (e) => {
     e.preventDefault();
 
-    const barcodesWithStatus = (dict, status) => Object.keys(dict).filter(b => dict[b] === status);
-
     const stagedBarcodes = await getPicklist();
 
     const stagedPicked = stagedBarcodes['picked'] || [];
