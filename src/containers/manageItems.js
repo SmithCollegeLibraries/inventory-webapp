@@ -452,6 +452,7 @@ const ItemForm = (props) => {
                   <option value={null}>(none)</option>
                   <option value="Trayed">Trayed</option>
                   <option value="Circulating">Circulating</option>
+                  <option value="To return to campus">To return to campus</option>
                   <option value="Returned to campus">Returned to campus</option>
                   <option value="Missing">Missing</option>
                 </Input>
