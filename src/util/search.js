@@ -1,8 +1,10 @@
 import Alerts from '../components/alerts';
 import Load from './load';
 
-const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
+const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
+const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/traylog-api/`
+const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/itemlog-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 
 
@@ -32,6 +34,16 @@ class ContentSearch {
       return item;
     }));
     return results;
+  }
+
+  trayLogs = async (barcode, action, details) => {
+    let search = await this.searchPost(`${trayLogAPI}browse`, {barcode, action, details});
+    return search;
+  }
+
+  itemLogs = async (barcode, action, details) => {
+    let search = await this.searchPost(`${itemLogAPI}browse`, {barcode, action, details});
+    return search;
   }
 
   // setting = async () => {
