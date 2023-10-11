@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 import { Button,
     Form,
     FormGroup,
@@ -14,35 +14,55 @@ import { Button,
 import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
 import classnames from 'classnames';
+import { create } from 'zustand';
 
-function ManageUsers() {
-  const [users, setUsers] = useState([]);
-  const [, setLevel] = useState(0);
-  const [, setPassword] = useState("");
-  const [activeTab, setActiveTab ] = useState("user_update");
+const manageUsers = create((set) => {
+  return {
+    activeTab: "update",
+    users: [],
+    newUser: {
+      email: '',
+      password: '',
+      name: '',
+      level: '',
+    },
+
+    setActiveTab: (activeTab) => set({ activeTab }),
+    loadUsers: async () => { set( { users: await Load.getUsers()} ) },
+    updateUserLevel: (index, level) => set((state) => ({
+      ...state,
+      users: [ ...state.users.slice(0, index),
+               { ...state.users[index],
+                level: level
+               },
+               ...state.users.slice(index + 1, state.users.length)
+             ],
+    })),
+    updateUserPassword: (index, password) => set((state) => ({
+      ...state,
+      users: [ ...state.users.slice(0, index),
+               { ...state.users[index],
+                 password: password
+               },
+               ...state.users.slice(index + 1, state.users.length)
+             ],
+    })),
+  };
+});
+
+function Users() {
+  const state = manageUsers();
 
   useEffect(() => {
-    getUsers();
-  }, []);
-
-  const toggle = tab => {
-    if (activeTab !== tab) {
-      setActiveTab(tab);
-    }
-    getUsers();
-  }
-
-  async function getUsers() {
-    const search = await Load.getUsers();
-    setUsers(search);
-  };
+    state.loadUsers();
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e, index) => {
     e.preventDefault();
-    const data = users[index];
+    const data = state.users[index];
     const update = await Load.accountUpdate(data);
-    users[index].password = "";
-    setPassword("");
+    state.users[index].password = "";
+    state.updateUserPassword(index, "");
     if (update) {
       success("Account successfully updated");
     } else {
@@ -52,26 +72,50 @@ function ManageUsers() {
 
   const updateLevel = (e, index) => {
     e.preventDefault();
-    users[index].level = e.target.value;
-    setLevel(e.target.value);
+    state.updateUserLevel(index, e.target.value);
   };
 
   const updatePassword = (e, index) => {
     e.preventDefault();
-    users[index].password = e.target.value;
-    setPassword(e.target.value);
+    state.updateUserPassword(index, e.target.value);
   };
 
   const handleDelete = (e, index) => {
     e.preventDefault();
     if (window.confirm("Delete this user? This action can only be undone by the database administrator.")) {
-      const data = users[index];
+      const data = state.users[index];
       const deleteAccount = Load.accountDelete(data);
       if (deleteAccount) {
           success('Account successfully deleted');
-          getUsers();
+          state.loadUsers();
       } else {
         failure("There was an error deleting this account");
+      }
+    }
+  };
+
+  const handleCreationChange = (e) => {
+    state.setNewUser({
+      ...state.newUser,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleAccountCreationSubmit = async (e) => {
+    e.preventDefault();
+    const data = {
+      email: state.newUser.email,
+    };
+    const account = await Load.verifyAccount(data);
+    if (account) {
+      failure("An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.");
+    } else {
+      const create = await Load.createAccount(state.newUser);
+      if (create) {
+        state.setNewUser({});  // reset new user form
+        success('Account successfully created');
+      } else {
+        failure("There was a problem creating this account");
       }
     }
   };
@@ -82,36 +126,58 @@ function ManageUsers() {
         <Nav tabs>
           <NavItem>
             <NavLink
-                className={classnames({ active: activeTab === 'user_update' })}
-                onClick={() => { toggle('user_update'); }}
+                className={classnames({ active: state.activeTab === 'update' })}
+                onClick={() => { state.setActiveTab('update'); }}
                 style={{cursor:'pointer'}}
               >
-            Users
+            Update users
             </NavLink>
           </NavItem>
           <NavItem>
             <NavLink
-                className={classnames({ active: activeTab === 'user_creation' })}
-                onClick={() => { toggle('user_creation'); }}
-                style={{cursor:'pointer'}}
+                className={classnames({ active: state.activeTab === 'create' })}
+                onClick={() => { state.setActiveTab('create'); }}
+                style={{cursor: 'pointer'}}
               >
               Create new user
             </NavLink>
           </NavItem>
         </Nav>
         <br />
-        <TabContent activeTab={activeTab}>
-          <TabPane tabId="user_update">
-            <UserUpdate
-              users={users}
-              updatePassword={updatePassword}
-              updateLevel={updateLevel}
-              handleSubmit={handleSubmit}
-              handleDelete={handleDelete}
-            />
+        <TabContent activeTab={state.activeTab}>
+          <TabPane tabId="update">
+            <Table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Password</th>
+                  <th>Level</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.users && state.users.length ? Object.keys(state.users).map((items, index) =>
+                  <tr key={index}>
+                    <td>{state.users[items].name}</td>
+                    <td>{state.users[items].email}</td>
+                    <td><Input type="password" name="password" value={state.users[items].password} onChange={e => updatePassword(e, index)} /></td>
+                    <td><Input type="number" name="level" value={state.users[items].level} min="0" max="100" onChange={e => updateLevel(e, index)} /></td>
+                    <td>
+                      <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"marginRight": "10px"}}>Update</Button>
+                      <Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button>
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </Table>
           </TabPane>
-          <TabPane tabId="user_creation">
-            <UserCreation />
+          <TabPane tabId="create">
+            <CreateUser
+              newUser={state.newUser}
+              handleCreationChange={handleCreationChange}
+              handleAccountCreationSubmit={handleAccountCreationSubmit}
+            />
           </TabPane>
         </TabContent>
       </div>
@@ -119,104 +185,7 @@ function ManageUsers() {
   );
 };
 
-const UserUpdate = ({ users, updatePassword, updateLevel, handleSubmit, handleDelete }) => {
-  return (
-    <Table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Password</th>
-          <th>Level</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users && users.length ? Object.keys(users).map((items, index) =>
-          <tr key={index}>
-            <td>{users[items].name}</td>
-            <td>{users[items].email}</td>
-            <td><Input type="password" name="password" value={users[items].password} onChange={e => updatePassword(e, index)} /></td>
-            <td><Input type="number" name="level" value={users[items].level} min="0" max="100" onChange={e => updateLevel(e, index)} /></td>
-            <td>
-              <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"marginRight": "10px"}}>Update</Button>
-              <Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button>
-            </td>
-          </tr>
-        ) : null}
-      </tbody>
-    </Table>
-  );
-}
-
-const UserCreation = () => {
-
-  const initialState = {
-    createNewAccount : {
-      email: '',
-      password: '',
-      name: '',
-      level: '',
-    }
-  };
-
-  const reducer = (state, action) => {
-    switch (action.type) {
-      case 'CREATE_ACCOUNT':
-        const createNewAccount = state.createNewAccount;
-        createNewAccount[action.payload.name] = action.payload.value;
-        return {
-          ...state,
-          createNewAccount,
-        };
-      case 'RESET':
-        return {
-          ...state,
-          createNewAccount: {
-            email: '',
-            password: '',
-            name: '',
-            level: '',
-          }
-        };
-      default:
-        throw new Error();
-    }
-  };
-
-  const [ state, dispatch ] = useReducer(reducer, initialState);
-
-  const handleCreationChange = e => {
-    dispatch({
-      type: 'CREATE_ACCOUNT',
-      payload: {
-        name: e.target.name,
-        value: e.target.value,
-      }});
-  };
-
-  const handleAccountCreationSubmit = async (e) => {
-    e.preventDefault();
-    const data = {
-      email: state.createNewAccount.email,
-    };
-    const account = await Load.verifyAccount(data);
-    if (account) {
-      failure("An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.");
-    } else {
-      const create = await Load.createAccount(state.createNewAccount);
-      if (create) {
-        dispatch({
-          type: 'RESET',
-          payload: {}
-        });
-        success('Account successfully created');
-      } else {
-        failure("There was a problem creating this account");
-      }
-    }
-  };
-
+const CreateUser = (newUser, handleCreationChange, handleAccountCreationSubmit) => {
   return (
     <div>
       <Form className="form-signin" autoComplete="off">
@@ -224,7 +193,7 @@ const UserCreation = () => {
           <Label for="email">Email address</Label>
           <Input
               type="email"
-              value={state.createNewAccount.email}
+              value={newUser.email}
               pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
               name="new-user-email"
               onChange={(e) => handleCreationChange(e)}
@@ -239,7 +208,7 @@ const UserCreation = () => {
           <Input
               type="password"
               name="new-user-password"
-              value={state.createNewAccount.password}
+              value={newUser.password}
               onChange={(e) => handleCreationChange(e)}
               required
             />
@@ -249,7 +218,7 @@ const UserCreation = () => {
           <Input
               type="text"
               name="name"
-              value={state.createNewAccount.name}
+              value={newUser.name}
               onChange={(e) => handleCreationChange(e)}
               required
             />
@@ -261,7 +230,7 @@ const UserCreation = () => {
               name="level"
               min="0"
               max="100"
-              value={state.createNewAccount.level}
+              value={newUser.level}
               onChange={e => handleCreationChange(e)}
               required
             />
@@ -279,4 +248,4 @@ const UserCreation = () => {
   );
 }
 
-export default ManageUsers;
+export default Users;
