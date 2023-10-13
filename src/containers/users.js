@@ -174,7 +174,7 @@ function Users() {
                     <td>{state.users[items].name}</td>
                     <td>{state.users[items].email}</td>
                     <td><Input type="password" name="password" value={state.users[items].password} onChange={e => updatePassword(e, index)} /></td>
-                    <td><Input type="number" name="level" value={state.users[items].level} min="0" max="100" onChange={e => updateLevel(e, index)} /></td>
+                    <td><Input type="number" name="level" value={state.users[items].level} min="1" max="100" onChange={e => updateLevel(e, index)} /></td>
                     <td>
                       <Button color="primary" onClick={(e) => handleSubmit(e, index)} style={{"marginRight": "10px"}}>Update</Button>
                       <Button color="danger" onClick={(e) => handleDelete(e, index)}>Delete</Button>
@@ -225,7 +225,7 @@ function Users() {
                   <Input
                       type="number"
                       name="new-user-level"
-                      min="0"
+                      min="1"
                       max="100"
                       value={state.newUser.level}
                       onChange={e => handleCreationChange(e)}
