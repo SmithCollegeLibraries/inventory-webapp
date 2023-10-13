@@ -28,7 +28,7 @@ class Load {
   };
 
   verifyAccount = async (data) => {
-    const get = await this.handleAccount(`${account}account-exists/`, 'GET', data);
+    const get = await this.handleAccount(`${account}account-exists/`, 'POST', data);
     return get;
   };
 
@@ -281,15 +281,11 @@ class Load {
   }
 
   handleAccount = async (string, method, data) => {
-    try {
-      let response =  await fetch(string, {
-        method: `${method}`,
-        body: JSON.stringify(data)
-      });
-      return this.responseHandling(response);
-    } catch(e) {
-      this.catchError('', e);
-    }
+    let response =  await fetch(string, {
+      method: `${method}`,
+      body: JSON.stringify(data)
+    });
+    return this.responseHandling(response);
   }
 
   handleUpdate = async (string, method, data) => {

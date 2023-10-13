@@ -47,6 +47,15 @@ const manageUsers = create((set) => {
                ...state.users.slice(index + 1, state.users.length)
              ],
     })),
+    setNewUser: (newUser) => set({ newUser }),
+    resetNewUser: () => set({
+      newUser: {
+        email: '',
+        password: '',
+        name: '',
+        level: '',
+      }
+    }),
   };
 });
 
@@ -95,9 +104,10 @@ function Users() {
   };
 
   const handleCreationChange = (e) => {
+    let nameOfField = e.target.name.replace('new-user-', '');
     state.setNewUser({
       ...state.newUser,
-      [e.target.name]: e.target.value,
+      [nameOfField]: e.target.value,
     });
   };
 
@@ -106,15 +116,17 @@ function Users() {
     const data = {
       email: state.newUser.email,
     };
-    const account = await Load.verifyAccount(data);
-    if (account) {
+    const accountExists = await Load.verifyAccount(data);
+    if (accountExists) {
       failure("An account with this email address already exists. If it does not appear in the list, it may have been deleted. Contact the system administrator to restore a deleted account if necessary.");
     } else {
       const create = await Load.createAccount(state.newUser);
       if (create) {
-        state.setNewUser({});  // reset new user form
+        state.resetNewUser();
+        state.loadUsers();
         success('Account successfully created');
-      } else {
+      }
+      else {
         failure("There was a problem creating this account");
       }
     }
@@ -173,79 +185,68 @@ function Users() {
             </Table>
           </TabPane>
           <TabPane tabId="create">
-            <CreateUser
-              newUser={state.newUser}
-              handleCreationChange={handleCreationChange}
-              handleAccountCreationSubmit={handleAccountCreationSubmit}
-            />
+            <div>
+              <Form className="form-signin" autoComplete="off">
+                <FormGroup>
+                  <Label for="name">Name</Label>
+                  <Input
+                      type="text"
+                      name="new-user-name"
+                      value={state.newUser.name}
+                      onChange={(e) => handleCreationChange(e)}
+                      required
+                    />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="email">Email address</Label>
+                  <Input
+                      type="email"
+                      value={state.newUser.email}
+                      name="new-user-email"
+                      onChange={(e) => handleCreationChange(e)}
+                      required
+                      autoFocus
+                      autoComplete="new-user-email"
+                      // onFocus={e => { if (e.target.autocomplete) { e.target.autocomplete = "no-auto-email"; }}}
+                    />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="password">Password</Label>
+                  <Input
+                      type="password"
+                      name="new-user-password"
+                      value={state.newUser.password}
+                      onChange={(e) => handleCreationChange(e)}
+                      required
+                    />
+                </FormGroup>
+                <FormGroup>
+                  <Label for="level">Level</Label>
+                  <Input
+                      type="number"
+                      name="new-user-level"
+                      min="0"
+                      max="100"
+                      value={state.newUser.level}
+                      onChange={e => handleCreationChange(e)}
+                      required
+                    />
+                </FormGroup>
+                <Button
+                    color="primary"
+                    className="btn-block"
+                    onClick={(e) => handleAccountCreationSubmit(e)}
+                    type="submit"
+                  >
+                  Create account
+                </Button>
+              </Form>
+            </div>
           </TabPane>
         </TabContent>
       </div>
     </div>
   );
 };
-
-const CreateUser = (newUser, handleCreationChange, handleAccountCreationSubmit) => {
-  return (
-    <div>
-      <Form className="form-signin" autoComplete="off">
-        <FormGroup>
-          <Label for="email">Email address</Label>
-          <Input
-              type="email"
-              value={newUser.email}
-              pattern="/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
-              name="new-user-email"
-              onChange={(e) => handleCreationChange(e)}
-              required
-              autoFocus
-              autoComplete="new-user-email"
-              // onFocus={e => { if (e.target.autocomplete) { e.target.autocomplete = "no-auto-email"; }}}
-            />
-        </FormGroup>
-        <FormGroup>
-          <Label for="password">Password</Label>
-          <Input
-              type="password"
-              name="new-user-password"
-              value={newUser.password}
-              onChange={(e) => handleCreationChange(e)}
-              required
-            />
-        </FormGroup>
-        <FormGroup>
-          <Label for="name">Name</Label>
-          <Input
-              type="text"
-              name="name"
-              value={newUser.name}
-              onChange={(e) => handleCreationChange(e)}
-              required
-            />
-        </FormGroup>
-        <FormGroup>
-          <Label for="level">Level</Label>
-          <Input
-              type="number"
-              name="level"
-              min="0"
-              max="100"
-              value={newUser.level}
-              onChange={e => handleCreationChange(e)}
-              required
-            />
-        </FormGroup>
-        <Button
-            color="primary"
-            className="btn-block"
-            onClick={(e) => handleAccountCreationSubmit(e)}
-            type="submit"
-          >
-          Create account
-        </Button>
-      </Form>
-    </div>
-  );
-}
 
 export default Users;
