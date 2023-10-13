@@ -2,7 +2,7 @@
   "name": "inventory-webapp",
   "version": "4.5.4",
   "private": true,
-  "homepage": "https://libtools2.smith.edu/sis-dev",
+  "homepage": "https://libtools2.smith.edu/sis-beta",
   "dependencies": {
     "bootstrap": "^5.1.1",
     "constate": "^2.0.0",
@@ -32,8 +32,8 @@
     "zustand": "^4.3.8"
   },
   "scripts": {
-    "start": "export $(cat .env-local | xargs)&& react-scripts start",
-    "build": "export $(cat .env-dev | xargs)&& react-scripts build",
+    "start": "react-scripts start",
+    "build": "export $(cat .env-beta | xargs)&& react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
