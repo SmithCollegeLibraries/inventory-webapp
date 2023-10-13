@@ -98,7 +98,8 @@ export default class Main extends Component {
         sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
         this.getCollections();
       })
-    } else {
+    }
+    else {
       failure('There was a problem logging in.');
     }
   }
