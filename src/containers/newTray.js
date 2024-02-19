@@ -445,7 +445,7 @@ const NewTray = (props) => {
       }
 
       // If we've made it this far, all barcodes are valid
-      return brokenBarcodes === [];
+      return !brokenBarcodes;
     };
 
     // Don't try to verify barcodes if the item field is empty
