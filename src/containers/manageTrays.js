@@ -43,6 +43,7 @@ const reducer = (state, action) => {
           shelf: '',
           depth: '',
           position: 0,
+          full_count: null,
           items: [],
           trayer: '',
           created: '',
@@ -63,6 +64,7 @@ const ManageTrays = (props) => {
       shelf: '',
       depth: '',
       position: 0,
+      full_count: null,
       items: [],
       trayer: '',
       created: '',
@@ -106,6 +108,7 @@ const ManageTrays = (props) => {
         shelf: data.shelf,
         depth: data.depth,
         position: data.position,
+        full_count: data.full_count,
         items: data.items,
         trayer: data.trayer,
         created: data.created,
@@ -126,6 +129,7 @@ const ManageTrays = (props) => {
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : 0,
+        full_count: results[0].full_count ? results[0].full_count : null,
         items: items,
         trayer: results[0].trayer ? results[0].trayer : "",
         created: results[0].created ? results[0].created : "",
@@ -149,6 +153,7 @@ const ManageTrays = (props) => {
             shelf: '',
             depth: '',
             position: 0,
+            full_count: null,
             items: [],
             trayer: '',
             created: '',
@@ -169,6 +174,7 @@ const ManageTrays = (props) => {
       shelf: state.fields.shelf || null,
       depth: state.fields.depth || null,
       position: state.fields.position || null,
+      full_count: state.fields.full_count || null,
     };
     const load = await Load.updateTray(data);
     if (load) {
@@ -344,19 +350,25 @@ const TrayForm = (props) => {
             <Label for="tray" style={{"fontWeight":"bold"}}>Shelf</Label>
             <Input type="text" value={props.fields.shelf || ''} onChange={(e) => props.handleTrayChange(e)} name="shelf" />
           </FormGroup>
+          <Row>
+            <FormGroup className="col-sm-6">
+              <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
+              <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
+                <option value="">(none)</option>
+                <option value="Front">Front</option>
+                <option value="Middle">Middle</option>
+                <option value="Rear">Rear</option>
+              </Input>
+            </FormGroup>
+            <FormGroup className="col-sm-6">
+              <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
+              {/* TODO: make max position not hardcoded */}
+              <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            </FormGroup>
+          </Row>
           <FormGroup>
-            <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
-              <option value="">(none)</option>
-              <option value="Front">Front</option>
-              <option value="Middle">Middle</option>
-              <option value="Rear">Rear</option>
-            </Input>
-          </FormGroup>
-          <FormGroup>
-            <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: make max position not hardcoded */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            <Label for="full_count" style={{"fontWeight":"bold"}}>Number of items when full</Label>
+            <Input type="number" style={{"width":"6em"}} value={props.fields.full_count || ''} onChange={(e) => props.handleTrayChange(e)} name="full_count" />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button
