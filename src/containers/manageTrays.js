@@ -34,6 +34,11 @@ const reducer = (state, action) => {
         ...state,
         count: action.payload,
       };
+    case 'UPDATE_SETTINGS':
+      return {
+        ...state,
+        settings: action.settings,
+      };
     case 'RESET':
       return {
         ...state,
@@ -42,7 +47,7 @@ const reducer = (state, action) => {
           new_tray_barcode: '',
           shelf: '',
           depth: '',
-          position: 0,
+          position: null,
           items: [],
           trayer: '',
           created: '',
@@ -62,7 +67,7 @@ const ManageTrays = (props) => {
       new_tray_barcode: '',
       shelf: '',
       depth: '',
-      position: 0,
+      position: null,
       items: [],
       trayer: '',
       created: '',
@@ -125,7 +130,7 @@ const ManageTrays = (props) => {
         new_tray_barcode: "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
-        position: results[0].shelf_position ? results[0].shelf_position : 0,
+        position: results[0].shelf_position ? results[0].shelf_position : null,
         items: items,
         trayer: results[0].trayer ? results[0].trayer : "",
         created: results[0].created ? results[0].created : "",
@@ -148,7 +153,7 @@ const ManageTrays = (props) => {
             new_tray_barcode: '',
             shelf: '',
             depth: '',
-            position: 0,
+            position: null,
             items: [],
             trayer: '',
             created: '',
@@ -191,6 +196,15 @@ const ManageTrays = (props) => {
       // There should already be a 400/403 popup from the API
     }
   };
+
+  // Get settings from database on load
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await Load.getAllSettings();
+      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+    };
+    getSettings();
+  }, []);
 
   // Get the total number of trays via the API on load
   useEffect(() => {
@@ -244,6 +258,7 @@ const ManageTrays = (props) => {
                       handleTrayChange={handleTrayChange}
                       handleTrayUpdate={handleTrayUpdate}
                       handleTrayDelete={handleTrayDelete}
+                      settings={state.settings}
                     />
                   </CardBody>
                 </Card>
@@ -355,8 +370,7 @@ const TrayForm = (props) => {
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: make max position not hardcoded */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button

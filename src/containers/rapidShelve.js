@@ -9,7 +9,7 @@ import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
 
 
-const RapidShelve = (props) => {
+const RapidShelve = () => {
   const initialState = {
     current: {
       tray: '',
@@ -19,13 +19,8 @@ const RapidShelve = (props) => {
     },
     staged: [],
     timeout: 0,
+    settings: {},
   };
-
-  // TODO: get these numbers from settings
-  const TRAY_BARCODE_LENGTH = 8;
-  const MAX_POSITION = 14;
-  const trayStructure = /^1[0-9]{7}$/;
-  const shelfStructure = /^[01][0-9][RL][0-9]{4}$/;
 
   const loadReducer = (state, action) => {
     switch (action.type) {
@@ -62,6 +57,11 @@ const RapidShelve = (props) => {
           staged: [],
           timeout: 0,
         };
+      case 'UPDATE_SETTINGS':
+        return {
+          ...state,
+          settings: action.settings,
+        };
       default:
         return state;
     }
@@ -82,11 +82,13 @@ const RapidShelve = (props) => {
 
   const checkAddPossible = () => {
     // Check that the tray matches the expected structure
-    if (!trayStructure.test(data.current.tray)) {
+    const trayRegex = new RegExp(data.settings.trayStructure);
+    const shelfRegex = new RegExp(data.settings.shelfStructure);
+    if (!trayRegex.test(data.current.tray)) {
       return false;
     }
     // Check that the shelf matches the expected structure
-    else if (!shelfStructure.test(data.current.shelf)) {
+    else if (!shelfRegex.test(data.current.shelf)) {
       return false;
     }
     // If the tray is already staged, don't allow it to be added again
@@ -118,8 +120,8 @@ const RapidShelve = (props) => {
 
   // This is the verification that's done when the user submits data
   const verifyOnSubmit = tray => {
-    if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > MAX_POSITION || parseInt(data.current.position) < 1) {
-      failure(`Position should be a number between 1 and ${MAX_POSITION}`);
+    if (parseInt(data.current.position) === 'NaN' || parseInt(data.current.position) > data.settings.maxPosition || parseInt(data.current.position) < 1) {
+      failure(`Position should be a number between 1 and ${data.settings.maxPosition}`);
       return false;
     }
     else if (Object.keys(data.staged).length === 0) {
@@ -182,15 +184,25 @@ const RapidShelve = (props) => {
     }
   }
 
+  // Get settings from database on load
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await Load.getAllSettings();
+      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+    };
+    getSettings();
+  }, []);
+
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
     const trayBarcodeToVerify = debouncedTray;
+    const trayRegex = new RegExp(data.settings.trayStructure);
     if (trayBarcodeToVerify) {
       verifyTrayLive(trayBarcodeToVerify);
     }
     // If the tray barcode is the right length but doesn't begin with 1,
     // show a popup message
-    if (trayBarcodeToVerify.length === TRAY_BARCODE_LENGTH && !trayStructure.test(trayBarcodeToVerify)) {
+    if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
       failure(`Valid tray barcodes must begin with 1.`);
     }
   }, [debouncedTray]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -481,15 +493,15 @@ const RapidShelve = (props) => {
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmit}
                   current={data.current}
+                  settings={data.settings}
                   handleOnChange={handleOnChange}
                   handleSubmit={handleSubmit}
-                  trayStructure={trayStructure}
-                  shelfStructure={shelfStructure}
                   verifyTrayLive={verifyTrayLive}
                   checkAddPossible={checkAddPossible}
                   clearShelving={clearShelving}
                   disabledClear={data.current.tray === '' && data.current.shelf === '' && data.current.depth === '' && data.current.position === ''}
-                  TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
+                  trayRegex={new RegExp(data.settings.trayStructure)}
+                  shelfRegex={new RegExp(data.settings.shelfStructure)}
                 />
               </CardBody>
             </Card>
@@ -522,9 +534,9 @@ const CurrentShelvingForm = props => (
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.current.tray)
+          { props.trayRegex.test(props.current.tray)
             ? <><Badge color="success">{props.current.tray.length}</Badge> ✓</>
-            : <Badge color={props.TRAY_BARCODE_LENGTH === props.current.tray.length ? "warning" : "danger"}>{props.current.tray.length}</Badge>
+            : <Badge color={props.settings.trayBarcodeLength === props.current.tray.length ? "warning" : "danger"}>{props.current.tray.length}</Badge>
           }
         </Label>
         <Input
@@ -542,7 +554,7 @@ const CurrentShelvingForm = props => (
       </FormGroup>
       <FormGroup>
         <Label for="shelf">Shelf{ ' ' }
-          { props.shelfStructure.test(props.current.shelf)
+          { props.shelfRegex.test(props.current.shelf)
             ? <><Badge color="success">{props.current.shelf.length}</Badge> ✓</>
             : (props.current.shelf.length === 7 ? <Badge color="warning">{props.current.shelf.length}</Badge> : <Badge color="danger">{props.current.shelf.length}</Badge>)
           }

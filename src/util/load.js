@@ -1,6 +1,7 @@
 import { failure } from '../components/toastAlerts'
 // import { getFormattedDate } from '../util/date';
 
+const settings = `${process.env.REACT_APP_DATABASE_URL}/setting-api/`
 const account = `${process.env.REACT_APP_DATABASE_URL}/user/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
@@ -12,6 +13,20 @@ const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
 
 
 class Load {
+
+  /**
+   * @desc Settings
+   */
+
+  getSetting = async (settingName) => {
+    const get = await this.handleUpdate(`${settings}get-setting/?name=${settingName}`, 'GET');
+    return get;
+  }
+
+  getAllSettings = async () => {
+    const get = await this.handleUpdate(`${settings}get-all-settings/`, 'GET');
+    return get;
+  }
 
   /**
     * @desc Account management
