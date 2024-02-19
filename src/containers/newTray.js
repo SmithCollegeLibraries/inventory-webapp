@@ -758,7 +758,7 @@ const NewTray = (props) => {
               <CardBody>
                 <TrayFormOriginal
                   handleEnter={handleEnter}
-                  // collections={props.collections}
+                  collections={props.collections}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
