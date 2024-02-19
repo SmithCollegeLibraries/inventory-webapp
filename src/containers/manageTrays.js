@@ -370,8 +370,7 @@ const TrayForm = (props) => {
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: make max position not hardcoded */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button
