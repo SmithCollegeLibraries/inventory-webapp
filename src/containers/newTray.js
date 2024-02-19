@@ -7,17 +7,13 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
-// TODO: get these numbers from settings
-const TRAY_BARCODE_LENGTH = 8;
+// Put default collection for each user separately
 // const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 const DEFAULT_COLLECTION = 'Smith General Collections';
-const trayStructure = /^1[0-9]{7}$/;
-const itemStructure = /^3101[0-9]{11}$/;
 
 
 const NewTray = (props) => {
   const initialState = {
-    trayLength: TRAY_BARCODE_LENGTH,  // Length of tray barcodes - constant for now
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
       collection: DEFAULT_COLLECTION,
@@ -29,6 +25,7 @@ const NewTray = (props) => {
       barcodes: ''
     },
     verified: [],  // List of trays that have been verified and staged
+    settings: {},
 
     // Containers for all the possible states of verifying trays and items
     trayCheckStarted: [],
@@ -66,6 +63,11 @@ const NewTray = (props) => {
         return {
           ...state,
           verified: action.verified,
+        };
+      case 'UPDATE_SETTINGS':
+        return {
+          ...state,
+          settings: action.settings,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -255,8 +257,9 @@ const NewTray = (props) => {
         }
       }
       else {
-        if (!itemStructure.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+        var itemRegex = new RegExp(data.settings.itemStructure);
+        if (!itemRegex.test(barcode)) {
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes are 15 characters long and begin with 31.`);
           return false;
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -276,9 +279,19 @@ const NewTray = (props) => {
     return true;
   }
 
+  // Get settings from database on load
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await Load.getAllSettings();
+      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+    };
+    getSettings();
+  }, []);
+
   // Now the actual hooks that implement the live checks
 
   useEffect(() => {
+    const trayRegex = new RegExp(data.settings.trayStructure);
     const verifyTrayLive = async (tray) => {
       // First, check that it's not in the list of staged trays
       if (data.verified) {
@@ -307,7 +320,7 @@ const NewTray = (props) => {
     // correct length or doesn't begin with 1. (We're already showing the
     // user that it's incorrect with the badge, so no need to give a
     // popup alert.)
-    if (trayStructure.test(data.original.tray)) {
+    if (trayRegex.test(data.original.tray)) {
       if (data.trayCheckStarted.includes(data.original.tray)) {
         // Do nothing if the tray is already being checked
       }
@@ -317,7 +330,7 @@ const NewTray = (props) => {
       }
     }
     else {
-      if (data.original.tray.length === TRAY_BARCODE_LENGTH) {
+      if (data.original.tray.length === data.settings.trayBarcodeLength) {
         failure(`Valid tray barcodes must begin with 1.`);
       }
       // Don't give popup alert if it's just the wrong length, to avoid
@@ -326,6 +339,7 @@ const NewTray = (props) => {
   }, [data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const itemRegex = new RegExp(data.settings.itemStructure);
     const verifyItemsLive = async (barcodes) => {
 
       const verifyItemsFree = async (barcodes) => {
@@ -409,8 +423,8 @@ const NewTray = (props) => {
         else if (data.itemUsedGood.includes(barcode) && data.itemFolioGood.includes(barcode)) {
           // These are known to be good, so don't verify them again
         }
-        else if (!itemStructure.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+        else if (!itemRegex.test(barcode)) {
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
           brokenBarcodes.push(barcode);
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -603,7 +617,7 @@ const NewTray = (props) => {
     // tray length, plus the ordinary live checking
     const inspectTray = (tray) => {
       const { trayLength } = data;
-      if (!trayStructure.test(tray)) {
+      if (!trayRegex.test(tray)) {
         failure(`Tray barcode must be ${trayLength} characters long and begin with 1.`);
         return false;
       }
@@ -749,6 +763,8 @@ const NewTray = (props) => {
     }
   };
 
+  const trayRegex = new RegExp(data.settings.trayStructure);
+
   return (
     <Fragment>
       <div style={{marginTop: "20px"}}>
@@ -766,12 +782,12 @@ const NewTray = (props) => {
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0 || data.duplicateOriginalItems.length > 0}
+                  disabledSubmit={!trayRegex.test(data.original.tray) || data.original.barcodes.length === 0 || data.duplicateOriginalItems.length > 0}
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
-                  trayStructure={trayStructure}
+                  trayRegex={trayRegex}
                   duplicateOriginalItems={data.duplicateOriginalItems}
                   errorItems={data.errorItems}
-                  TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
+                  trayBarcodeLength={data.settings.trayBarcodeLength}
                 />
               </CardBody>
             </Card>
@@ -789,10 +805,10 @@ const NewTray = (props) => {
                 handleVerifySubmit={handleVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
-                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0 || data.duplicateVerifyItems.length > 0}
-                trayStructure={trayStructure}
+                disabledSubmit={!trayRegex.test(data.verify.tray) || data.verify.barcodes.length === 0 || data.duplicateVerifyItems.length > 0}
+                trayRegex={trayRegex}
                 duplicateVerifyItems={data.duplicateVerifyItems}
-                TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
+                trayBarcodeLength={data.settings.trayBarcodeLength}
               />
               </CardBody>
             </Card>
@@ -834,11 +850,11 @@ const TrayFormOriginal = props => (
       </FormGroup> */}
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.original.tray)
+          { props.trayRegex.test(props.original.tray)
             ? <Badge color="success">{props.original.tray.length}</Badge>
             : props.original.tray.length === 0
               ? <Badge>{props.original.tray.length}</Badge>
-              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
@@ -920,11 +936,11 @@ const TrayFormVerify = props => (
     </FormGroup> */}
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
+          { props.trayRegex.test(props.verify.tray) && props.original.tray === props.verify.tray
             ? <Badge color="success">{props.verify.tray.length}</Badge>
             : props.verify.tray.length === 0
               ? <Badge>{props.verify.tray.length}</Badge>
-              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
       </Label>
