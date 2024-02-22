@@ -255,6 +255,11 @@ class Load {
     return deleteCollection;
   }
 
+  getAllCollections = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-all-collections/`, 'GET');
+    return get;
+  }
+
   // getHistory = async (data, page='') => {
   //   const search = await this.handleUpdate(`${history}filter-columns/${page ? `?page=${page}` : ''}`, 'POST', data)
   //   return search

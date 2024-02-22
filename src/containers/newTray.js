@@ -8,15 +8,14 @@ import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
 // Put default collection for each user separately
-// const COLLECTION_PLACEHOLDER = '--- Select collection ---';
-const DEFAULT_COLLECTION = 'Smith General Collections';
+const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 
 
-const NewTray = (props) => {
+const NewTray = () => {
   const initialState = {
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
-      collection: DEFAULT_COLLECTION,
+      collection: '',
       tray: '',
       barcodes: ''
     },
@@ -25,6 +24,8 @@ const NewTray = (props) => {
       barcodes: ''
     },
     verified: [],  // List of trays that have been verified and staged
+    collections: [],
+    defaultCollection: '',
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
@@ -68,6 +69,11 @@ const NewTray = (props) => {
         return {
           ...state,
           settings: action.settings,
+        };
+      case 'UPDATE_COLLECTIONS':
+        return {
+          ...state,
+          collections: action.collections,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -286,6 +292,15 @@ const NewTray = (props) => {
       dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
     };
     getSettings();
+  }, []);
+
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
+    };
+    getCollections();
   }, []);
 
   // Now the actual hooks that implement the live checks
@@ -564,9 +579,9 @@ const NewTray = (props) => {
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
-    // else if (e.target.name === 'collection') {
-    //   value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
-    // }
+    else if (e.target.name === 'collection') {
+      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
+    }
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
@@ -774,7 +789,7 @@ const NewTray = (props) => {
               <CardBody>
                 <TrayFormOriginal
                   handleEnter={handleEnter}
-                  // collections={props.collections}
+                  collections={data.collections}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -797,7 +812,6 @@ const NewTray = (props) => {
               <CardBody>
               <TrayFormVerify
                 handleEnter={handleEnter}
-                // collections={props.collections}
                 trayLength={data.trayLength}
                 original={data.original}
                 verify={data.verify}
@@ -816,7 +830,6 @@ const NewTray = (props) => {
           <Col>
             <Display
               data={data.verified}
-              // collections={props.collections}
               removeTrayFromStaged={removeTrayFromStaged}
             />
             { Object.keys(data.verified).map(items => items).length
@@ -836,10 +849,10 @@ const NewTray = (props) => {
 const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
-      {/* <FormGroup>
+      <FormGroup>
         <Label for="collections">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-          <option>{ COLLECTION_PLACEHOLDER }</option>
+          <option>{ console.log(props.collections) || COLLECTION_PLACEHOLDER }</option>
           { props.collections
             ? Object.keys(props.collections).map((items, idx) => (
                 <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
@@ -847,7 +860,7 @@ const TrayFormOriginal = props => (
             : <option></option>
           }
         </Input>
-      </FormGroup> */}
+      </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.original.tray)
@@ -930,10 +943,10 @@ const TrayFormOriginal = props => (
 
 const TrayFormVerify = props => (
   <Form autoComplete="off">
-    {/* <FormGroup>
+    <FormGroup>
       <Label for="collections">Collection</Label>
       <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
-    </FormGroup> */}
+    </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.verify.tray) && props.original.tray === props.verify.tray
@@ -1021,10 +1034,10 @@ const Display = props => (
             <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
               {props.data[tray].items ? props.data[tray].items.join('\n') : ''}
             </dd>
-            {/* <dt className="col-sm-3">Collection</dt>
+            <dt className="col-sm-3">Collection</dt>
             <dd className="col-sm-9">
               {props.data[tray].collection}
-            </dd> */}
+            </dd>
           </dl>
           <Button color="danger" onClick={
               function () {
