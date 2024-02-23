@@ -260,6 +260,11 @@ class Load {
     return get;
   }
 
+  getDefaultCollection = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-default/`, 'GET');
+    return get;
+  }
+
   // getHistory = async (data, page='') => {
   //   const search = await this.handleUpdate(`${history}filter-columns/${page ? `?page=${page}` : ''}`, 'POST', data)
   //   return search

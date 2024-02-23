@@ -60,6 +60,14 @@ const NewTray = () => {
           ...state,
           verify: action.verify,
         };
+      case 'ADD_DEFAULT_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
+        };
       case 'UPDATE_STAGED':
         return {
           ...state,
@@ -292,6 +300,20 @@ const NewTray = () => {
       dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
     };
     getSettings();
+  }, []);
+
+  // Get current user's default collection
+  useEffect(() => {
+    const getDefaultCollection = async () => {
+      const collection = await Load.getDefaultCollection();
+      // Don't override a selected collection -- just an empty default;
+      // also make sure that there is in fact an active default collection
+      // for the current user
+      if (data.original.collection === '' && collection) {
+        dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
+      }
+    };
+    getDefaultCollection();
   }, []);
 
   // Get list of active collections from database on load
