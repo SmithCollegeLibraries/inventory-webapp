@@ -271,7 +271,7 @@ const ManageTrays = (props) => {
                   <CardBody>
                     <dl className="row">
                       <dt className="col-sm-3">Trayer</dt>
-                      <dd className="col-sm-9">{state.fields.trayer.split(" ")[0]}</dd>
+                      <dd className="col-sm-9">{state.fields.trayer ? state.fields.trayer.split(" ")[0] : "-"}</dd>
                     </dl>
                     <dl className="row">
                       <dt className="col-sm-3">Date</dt>
@@ -280,7 +280,7 @@ const ManageTrays = (props) => {
                     <dl className="row">
                       <dt className="col-sm-3">Items</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                          {state.fields.items.join('\n')}
+                          {state.fields.items && state.fields.items.length > 0 ? state.fields.items.join('\n') : "-"}
                         </dd>
                     </dl>
                   </CardBody>
