@@ -155,14 +155,19 @@ class Load {
     return info;
   };
 
-  updateItem = async (data, id) => {
+  updateItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
     console.log(data);
     return update;
   };
 
-  newItem = async (data, id) => {
+  newItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}new-item/`, 'POST', data);
+    return update;
+  };
+
+  addReturn = async (data) => {
+    const update = await this.handleUpdate(`${itemAPI}add-return/`, 'POST', data);
     console.log(data);
     return update;
   };

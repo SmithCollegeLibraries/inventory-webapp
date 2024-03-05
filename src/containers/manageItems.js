@@ -224,7 +224,6 @@ const ManageItems = (props) => {
       status: state.fields.status || null,
       tray: state.fields.tray || null,
     };
-    console.log(data);
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
       if (load) {
@@ -245,7 +244,6 @@ const ManageItems = (props) => {
       status: "New",
       tray: state.fields.tray || null,
     };
-    console.log(data);
     const newBarcode = state.fields.new_item_barcode;
     if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.newItem(data);

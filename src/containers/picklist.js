@@ -345,7 +345,7 @@ const Picklist = () => {
                       Old system
                     </h1>
                   </Row>
-                  <p>The following items are not in the new system yet. You can copy these barcodes and paste them into the old system’s search form.</p>
+                  <p>The following items are not in the new system yet. You can copy these barcodes and paste them into the search form.</p>
                   {/* Don't show this option if there are no items in the list */}
                   <Input type="textarea" disabled rows={state.notInNewSystem ? state.notInNewSystem.length : 1} style={{"width":"15em"}} value={state.notInNewSystem.join('\n')}></Input>
                   <Button color={state.oldSystemCopied ? "info" : "secondary"} style={{"cursor": "grab", "marginTop": "10px", "marginRight": "10px"}} onClick={copyOldSystemBarcodes}>{state.oldSystemCopied ? "Copied" : "Copy"}</Button>

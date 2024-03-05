@@ -1,5 +1,6 @@
 import NewTray from './newTray';
 import RapidShelve from './rapidShelve';
+import AddReturn from './addReturn';
 import Picklist from './picklist';
 import ItemSearch from './itemSearch';
 import ManageCollections from './manageCollections';
@@ -11,6 +12,7 @@ import Statistics from './statistics';
 export {
   NewTray,
   RapidShelve,
+  AddReturn,
   Picklist,
   ManageCollections,
   ItemSearch,

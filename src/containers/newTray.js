@@ -285,7 +285,7 @@ const NewTray = () => {
           return false;
         }
         else {
-          warning(`Verification of item ${barcode} in the system may be pending. Please try again in a few seconds, and report this problem if it continues.`);
+          warning(`Verification of item ${barcode} in the system may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
           return false;
         }
       }
@@ -314,7 +314,7 @@ const NewTray = () => {
       }
     };
     getDefaultCollection();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get list of active collections from database on load
   useEffect(() => {
@@ -368,7 +368,7 @@ const NewTray = () => {
     }
     else {
       if (data.original.tray.length === data.settings.trayBarcodeLength) {
-        failure(`Valid tray barcodes must begin with 1.`);
+        failure(`Valid tray barcodes begin with 1.`);
       }
       // Don't give popup alert if it's just the wrong length, to avoid
       // excessive alerts
@@ -763,10 +763,8 @@ const NewTray = () => {
     e.preventDefault();
     if (navigator.onLine === true) {
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
-        console.log(tray);
         const response = await Load.newTray(tray);
-        console.log(response);
-        if (response === tray.barcode) {
+        if (response.barcode === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
           removeTrayFromStaged(tray.barcode);
         }
@@ -874,7 +872,7 @@ const TrayFormOriginal = props => (
       <FormGroup>
         <Label for="collections">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-          <option>{ console.log(props.collections) || COLLECTION_PLACEHOLDER }</option>
+          <option>{ COLLECTION_PLACEHOLDER }</option>
           { props.collections
             ? Object.keys(props.collections).map((items, idx) => (
                 <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>

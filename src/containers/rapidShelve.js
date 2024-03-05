@@ -203,7 +203,7 @@ const RapidShelve = () => {
     // If the tray barcode is the right length but doesn't begin with 1,
     // show a popup message
     if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
-      failure(`Valid tray barcodes must begin with 1.`);
+      failure(`Valid tray barcodes begin with 1.`);
     }
   }, [debouncedTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
