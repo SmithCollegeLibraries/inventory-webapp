@@ -138,7 +138,7 @@ export default class Main extends Component {
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />
                 )}/>
-                <Route path="/add-return" render={() => (
+                <Route path="/return" render={() => (
                   <AddReturn />
                 )}/>
                 <Route path="/item-search" render={() => (

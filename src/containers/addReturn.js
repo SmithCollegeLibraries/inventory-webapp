@@ -7,9 +7,6 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
-// Put default collection for each user separately
-const COLLECTION_PLACEHOLDER = '--- Select collection ---';
-
 
 const AddReturn = () => {
   const initialState = {
@@ -17,27 +14,19 @@ const AddReturn = () => {
     original: {
       item: '',
       tray: '',
-      collection: '',
-      folioCollection: '',
     },
     verify: {
       item: '',
       tray: '',
     },
     verified: [],  // List of things that have been verified and staged
-    collections: [],
-    defaultCollection: '',
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
-    itemCollectionCheckStarted: null,
     itemFolioCheckStarted: [],
     itemFolioBad: [],
     itemFolioGood: [],
     itemFolioOffline: [],
-    // A list of all items that have been looked up in the database, along
-    // with their collection there
-    itemCollectionsInDatabase: {},
   };
 
   const trayReducer = (state, action) => {
@@ -52,14 +41,6 @@ const AddReturn = () => {
           ...state,
           verify: action.verify,
         };
-      case 'ADD_DEFAULT_COLLECTION':
-        return {
-          ...state,
-          original: {
-            ...state.original,
-            collection: action.collection,
-          },
-        };
       case 'UPDATE_STAGED':
         return {
           ...state,
@@ -69,21 +50,6 @@ const AddReturn = () => {
         return {
           ...state,
           settings: action.settings,
-        };
-      case 'UPDATE_COLLECTIONS':
-        return {
-          ...state,
-          collections: action.collections,
-        };
-      case 'ITEM_COLLECTION_CHECK_STARTED':
-        return {
-          ...state,
-          itemCollectionCheckStarted: action.item,
-        };
-      case 'ITEM_COLLECTION_CHECK_CLEAR':
-        return {
-          ...state,
-          itemCollectionCheckStarted: null,
         };
       case 'ITEM_FOLIO_CHECK_STARTED':
         return {
@@ -110,9 +76,6 @@ const AddReturn = () => {
           ...state,
           itemFolioOffline: [...state.itemFolioBad, action.item],
         };
-      case 'ITEM_COLLECTIONS_IN_DATABASE':
-        state.itemCollectionsInDatabase[action.item] = action.collection;
-        return state;
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -125,7 +88,6 @@ const AddReturn = () => {
           original: {
             item: '',
             tray: '',
-            collection: '',
           },
           verify: {
             item: '',
@@ -138,9 +100,6 @@ const AddReturn = () => {
           itemFolioBad: [],
           itemFolioGood: [],
           itemFolioOffline: [],
-          // A list of all items that have been looked up in the database, along
-          // with their collection there
-          itemCollectionsInDatabase: {},
         };
       default:
         return state;
@@ -171,11 +130,6 @@ const AddReturn = () => {
       // We're already giving an error message when checking
       return false;
     }
-    // Check database and if it's there already, make sure that the
-    // collection matches the one provided by the user
-    else if (!verifyItemCollection(barcode, data.original.collection)) {
-      return false;
-    }
     else {
       if (data.itemFolioGood.includes(barcode) || data.itemFolioOffline.includes(barcode)) {
         return true;
@@ -204,23 +158,6 @@ const AddReturn = () => {
     return true;
   };
 
-  // Verify that an item's collection in the database matches the
-  // user-provided collection
-  const verifyItemCollection = (barcode, collection) => {
-    // If we weren't connected to the internet, or the item isn't in the
-    // database yet, pass the inspection
-    if (!data.itemCollectionsInDatabase[barcode]) {
-      return true;
-    }
-    else if (data.itemCollectionsInDatabase[barcode] === collection) {
-      return true;
-    }
-    else {
-      failureIfNew(barcode, `Item ${barcode} is already in the system and is marked as belonging to the collection ${data.itemCollectionsInDatabase[barcode]}.`);
-      return false;
-    }
-  }
-
   // Get settings from database on load
   useEffect(() => {
     const getSettings = async () => {
@@ -228,29 +165,6 @@ const AddReturn = () => {
       dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
     };
     getSettings();
-  }, []);
-
-  // Get current user's default collection
-  useEffect(() => {
-    const getDefaultCollection = async () => {
-      const collection = await Load.getDefaultCollection();
-      // Don't override a selected collection -- just an empty default;
-      // also make sure that there is in fact an active default collection
-      // for the current user
-      if (data.original.collection === '' && collection) {
-        dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
-      }
-    };
-    getDefaultCollection();
-  }, [data.original.collection]);
-
-  // Get list of active collections from database on load
-  useEffect(() => {
-    const getCollections = async () => {
-      const collections = await Load.getAllCollections();
-      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
-    };
-    getCollections();
   }, []);
 
   // Now the actual hooks that implement the live checks
@@ -272,30 +186,6 @@ const AddReturn = () => {
   useEffect(() => {
     const itemRegex = new RegExp(data.settings.itemStructure);
     const verifyItemLive = async (barcode) => {
-
-      const checkItemCollection = async (barcode, collection) => {
-        // If the item is already in the database, make sure it's not marked
-        // as belonging to a different collection
-        if (navigator.onLine) {
-          dispatch({ type: 'ITEM_COLLECTION_CHECK_STARTED', item: barcode });
-          const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
-          if (databaseResults.length > 0) {
-            var result = databaseResults[0];
-            var collectionInDatabase = result.collection;
-            dispatch({ type: 'ITEM_COLLECTIONS_IN_DATABASE', item: barcode, collection: collectionInDatabase });
-          }
-          else {
-            dispatch({ type: 'ITEM_COLLECTIONS_IN_DATABASE', item: barcode, collection: null });
-          }
-          dispatch({ type: 'ITEM_COLLECTION_CHECK_CLEAR' });
-        }
-        // If we're not online, acknowledge that we tried to check this item
-        // and allow it to pass the test. Any anomalies will be flagged when
-        // actually added to the database.
-        else {
-          dispatch({ type: 'ITEM_COLLECTIONS_IN_DATABASE', item: barcode, collection: null });
-        }
-      };
 
       const verifyFolioRecord = async (barcode) => {
         if (navigator.onLine) {
@@ -328,10 +218,6 @@ const AddReturn = () => {
         }
         return true;
       };
-
-      // Look up the item in the database, but don't necessarily check
-      // against the collection field or give any warnings yet
-      checkItemCollection(barcode, data.original.collection);
 
       // Gives an alert to the user if a barcode has been entered that
       // doesn't exist in FOLIO. Only shows this warning once per barcode.
@@ -419,9 +305,6 @@ const AddReturn = () => {
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
-    else if (e.target.name === 'collection') {
-      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
-    }
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
@@ -457,17 +340,6 @@ const AddReturn = () => {
   };
 
   const handleOriginalSubmit = (e) => {
-    // Collections aren't inspected live
-    const inspectCollection = () => {
-      const { original } = data;
-      if (!original.collection) {
-        failure(`You must select a collection.`);
-        return false;
-      }
-      else {
-        return true;
-      }
-    };
 
     // When inspecting trays upon submission, we want to give a popup for
     // tray length, plus the ordinary live checking
@@ -495,10 +367,9 @@ const AddReturn = () => {
     // If the user is clicking verify, we want to show them alerts a
     // second time if necessary so they know what the exact problem is
     const timer = setTimeout(() => {
-      const collectionPassedInspection = inspectCollection();
       const itemPassedInspection = inspectItem(data.original.item);
       const trayPassedInspection = inspectTray(data.original.tray);
-      if (collectionPassedInspection && itemPassedInspection && trayPassedInspection ) {
+      if (itemPassedInspection && trayPassedInspection ) {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
       }
@@ -519,7 +390,6 @@ const AddReturn = () => {
       addItemToStaged({
         barcode: data.original.item,
         tray: data.original.tray,
-        collection: data.original.collection,
       });
       updateStagedFromLocalStorage();
       dispatch({ type: "RESET" });
@@ -535,7 +405,7 @@ const AddReturn = () => {
         itemInfo["status"] = "Trayed";
         console.log(itemInfo);
         const response = await Load.addReturn(itemInfo);
-        if (response.barcode === itemInfo.barcode) {
+        if (response && (response.barcode === itemInfo.barcode)) {
           success(`Item ${itemInfo.barcode} successfully added to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo.barcode);
         }
@@ -588,7 +458,6 @@ const AddReturn = () => {
               <CardBody>
                 <AddReturnFormOriginal
                   handleEnter={handleEnter}
-                  collections={data.collections}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -649,18 +518,6 @@ const AddReturn = () => {
 const AddReturnFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
-      <FormGroup>
-        <Label for="collections">Collection</Label>
-        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-          <option>{ COLLECTION_PLACEHOLDER }</option>
-          { props.collections
-            ? Object.keys(props.collections).map((items, idx) => (
-                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-              ))
-            : <option></option>
-          }
-        </Input>
-      </FormGroup>
       <FormGroup>
         <Label for="item">Item{ ' ' }
           { props.itemRegex.test(props.original.item)
@@ -734,10 +591,6 @@ const AddReturnFormOriginal = props => (
 
 const AddReturnFormVerify = props => (
   <Form autoComplete="off">
-    <FormGroup>
-      <Label for="collections">Collection</Label>
-      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
-    </FormGroup>
     <FormGroup>
       <Label for="item">Item{ ' ' }
         { props.itemRegex.test(props.verify.item)
@@ -814,10 +667,6 @@ const Display = props => (
       <Card key={itemInfo}>
         <CardBody>
           <dl className="row">
-            <dt className="col-sm-3">Collection</dt>
-            <dd className="col-sm-9">
-              {props.data[itemInfo].collection}
-            </dd>
             <dt className="col-sm-3">Item</dt>
             <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
               {props.data[itemInfo].barcode ? props.data[itemInfo].barcode : '-'}
