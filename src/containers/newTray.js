@@ -26,6 +26,7 @@ const NewTray = () => {
     verified: [],  // List of trays that have been verified and staged
     collections: [],
     defaultCollection: '',
+    defaultCollectionMessage: false,
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
@@ -67,6 +68,11 @@ const NewTray = () => {
             ...state.original,
             collection: action.collection,
           },
+        };
+      case 'DEFAULT_COLLECTION_MESSAGE':
+        return {
+          ...state,
+          defaultCollectionMessage: action.value,
         };
       case 'UPDATE_STAGED':
         return {
@@ -306,11 +312,16 @@ const NewTray = () => {
   useEffect(() => {
     const getDefaultCollection = async () => {
       const collection = await Load.getDefaultCollection();
-      // Don't override a selected collection -- just an empty default;
-      // also make sure that there is in fact an active default collection
-      // for the current user
-      if (data.original.collection === '' && collection) {
-        dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
+      if (collection) {
+        // Don't override a selected collection -- just an empty default;
+        // also make sure that there is in fact an active default collection
+        // for the current user
+        if (!data.original.collection) {
+          dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
+        }
+      }
+      else {
+        dispatch({ type: 'DEFAULT_COLLECTION_MESSAGE', value: true});
       }
     };
     getDefaultCollection();
@@ -803,6 +814,14 @@ const NewTray = () => {
   return (
     <Fragment>
       <div style={{marginTop: "20px"}}>
+        {
+          data.defaultCollectionMessage &&
+          <Row>
+            <Col>
+              <p>If you would like a default collection set for your account, please contact {data.settings.databaseAdministrator}.</p>
+            </Col>
+          </Row>
+        }
         <Row>
           <Col md="4">
             <Card>
