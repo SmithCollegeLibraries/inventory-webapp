@@ -23,10 +23,15 @@ const AddReturn = () => {
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
+    itemSystemCheckStarted: null,
     itemFolioCheckStarted: [],
     itemFolioBad: [],
     itemFolioGood: [],
     itemFolioOffline: [],
+    // The following two keep track of items that have been looked up
+    // in the database
+    itemTraysInSystem: {},
+    itemStatusesInSystem: {},
   };
 
   const trayReducer = (state, action) => {
@@ -50,6 +55,16 @@ const AddReturn = () => {
         return {
           ...state,
           settings: action.settings,
+        };
+      case 'ITEM_SYSTEM_CHECK_STARTED':
+        return {
+          ...state,
+          itemCollectionCheckStarted: action.item,
+        };
+      case 'ITEM_SYSTEM_CHECK_CLEAR':
+        return {
+          ...state,
+          itemCollectionCheckStarted: null,
         };
       case 'ITEM_FOLIO_CHECK_STARTED':
         return {
@@ -76,6 +91,12 @@ const AddReturn = () => {
           ...state,
           itemFolioOffline: [...state.itemFolioBad, action.item],
         };
+      case 'ITEM_TRAYS_IN_SYSTEM':
+        state.itemTraysInSystem[action.item] = action.tray;
+        return state;
+      case 'ITEM_STATUSES_IN_SYSTEM':
+        state.itemStatusesInSystem[action.item] = action.status;
+        return state;
       case 'CHANGE_FORM':
         return {
           ...state,
@@ -96,10 +117,15 @@ const AddReturn = () => {
           // Don't add 'verified' here! That should not be cleared on reset!
 
           // Containers for all the possible states of verifying trays and items
+          itemSystemCheckStarted: null,
           itemFolioCheckStarted: [],
           itemFolioBad: [],
           itemFolioGood: [],
           itemFolioOffline: [],
+          // The following two keep track of items that have been looked up
+          // in the database
+          itemTraysInSystem: {},
+          itemStatusesInSystem: {},
         };
       default:
         return state;
@@ -118,6 +144,29 @@ const AddReturn = () => {
     failure(message);
   }, []);
 
+  const itemLastCheck = (barcode) => {
+    var itemTrayMessage = "";
+    var itemStatusMessage = "";
+    if (data.itemTraysInSystem[barcode] && data.itemTraysInSystem[barcode] !== data.original.tray) {
+      itemTrayMessage = "The tray given does not match the item's current tray. ";
+    }
+    if (data.itemStatusesInSystem[barcode] && data.itemStatusesInSystem[barcode] !== "Circulating") {
+      if (itemTrayMessage) {
+        itemStatusMessage = "Also, this item is not currently marked as circulating. ";
+      }
+      else {
+        itemStatusMessage = "This item is not currently marked as circulating. ";
+      }
+    }
+
+    if (itemTrayMessage || itemStatusMessage) {
+      return window.confirm(itemTrayMessage + itemStatusMessage + "Are you sure you want to continue?");
+    }
+    else {
+      return true;
+    }
+  }
+
   const verifyItemOnSubmit = (barcode) => {
     // For each barcode, check against the system and then also make sure
     // that it's checked against FOLIO
@@ -128,6 +177,9 @@ const AddReturn = () => {
     }
     else if (!verifyItemUnstaged(barcode)) {
       // We're already giving an error message when checking
+      return false;
+    }
+    else if (!itemLastCheck(barcode)) {
       return false;
     }
     else {
@@ -187,6 +239,32 @@ const AddReturn = () => {
     const itemRegex = new RegExp(data.settings.itemStructure);
     const verifyItemLive = async (barcode) => {
 
+      const checkItemInSystem = async (barcode) => {
+        // If the item is already in the database, make sure it's not marked
+        // as belonging to a different collection
+        if (navigator.onLine) {
+          dispatch({ type: 'ITEM_SYSTEM_CHECK_STARTED', item: barcode });
+          const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
+          if (databaseResults.length > 0) {
+            var result = databaseResults[0];
+            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray });
+            dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: result.status });
+          }
+          else {
+            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: null });
+            dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: null });
+          }
+          dispatch({ type: 'ITEM_SYSTEM_CHECK_CLEAR' });
+        }
+        // If we're not online, acknowledge that we tried to check this item
+        // and allow it to pass the test. Any anomalies will be flagged when
+        // actually added to the database.
+        else {
+          dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: null });
+          dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: null });
+        }
+      };
+
       const verifyFolioRecord = async (barcode) => {
         if (navigator.onLine) {
           dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', item: barcode });
@@ -218,6 +296,10 @@ const AddReturn = () => {
         }
         return true;
       };
+
+      // Look up the item in the database, but don't necessarily check
+      // against the tray and status or give any warnings yet
+      checkItemInSystem(barcode);
 
       // Gives an alert to the user if a barcode has been entered that
       // doesn't exist in FOLIO. Only shows this warning once per barcode.
@@ -406,7 +488,7 @@ const AddReturn = () => {
         console.log(itemInfo);
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
-          success(`Item ${itemInfo.barcode} successfully added to tray ${itemInfo.tray}.`);
+          success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo.barcode);
         }
         else {
