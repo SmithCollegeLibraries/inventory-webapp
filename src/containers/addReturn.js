@@ -469,7 +469,7 @@ const AddReturn = () => {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
       }
-      document.getElementById('verify-item').focus();
+      document.getElementById('verify-tray').focus();
     }, 500);
     return () => clearTimeout(timer);
   };
