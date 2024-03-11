@@ -644,7 +644,7 @@ const AddReturnFormOriginal = props => (
               return false;
             }
           }}
-          onKeyDown={(e) => props.handleEnterSubmit(e)}
+          onKeyDown={(e) => props.handleEnter(e)}
           disabled={props.disabled}
           autoFocus={true}
         />
@@ -672,7 +672,7 @@ const AddReturnFormOriginal = props => (
               return false;
             }
           }}
-          onKeyDown={(e) => props.handleEnter(e)}
+          onKeyDown={(e) => props.handleEnterSubmit(e)}
           disabled={props.disabled}
         />
       </FormGroup>
@@ -720,7 +720,7 @@ const AddReturnFormVerify = props => (
             return false;
           }
         }}
-        onKeyDown={(e) => props.handleEnterSubmit(e)}
+        onKeyDown={(e) => props.handleEnter(e)}
         disabled={props.disabled}
       />
     </FormGroup>
@@ -747,7 +747,7 @@ const AddReturnFormVerify = props => (
             return false;
           }
         }}
-        onKeyDown={(e) => props.handleEnter(e)}
+        onKeyDown={(e) => props.handleEnterSubmit(e)}
         disabled={props.disabled}
       />
     </FormGroup>
