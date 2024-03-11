@@ -492,7 +492,7 @@ const AddReturn = () => {
       dispatch({ type: "RESET" });
     }
     const timer = setTimeout(() => {
-      document.getElementById('original-item').focus();
+      document.getElementById('original-tray').focus();
     }, 200);
     return () => clearTimeout(timer);
   };
