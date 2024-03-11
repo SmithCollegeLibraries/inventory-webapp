@@ -378,6 +378,20 @@ const AddReturn = () => {
     }
   };
 
+  const handleEnterOriginalSubmit = e => {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      handleOriginalSubmit(e);
+    }
+  };
+
+  const handleEnterVerifySubmit = e => {
+    if (e.keyCode === 13) {
+      e.preventDefault();
+      handleVerifySubmit(e);
+    }
+  };
+
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
@@ -455,6 +469,7 @@ const AddReturn = () => {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
       }
+      document.getElementById('verify-item').focus();
     }, 500);
     return () => clearTimeout(timer);
   };
@@ -476,6 +491,10 @@ const AddReturn = () => {
       updateStagedFromLocalStorage();
       dispatch({ type: "RESET" });
     }
+    const timer = setTimeout(() => {
+      document.getElementById('original-item').focus();
+    }, 200);
+    return () => clearTimeout(timer);
   };
 
   // Staging area
@@ -540,6 +559,7 @@ const AddReturn = () => {
               <CardBody>
                 <AddReturnFormOriginal
                   handleEnter={handleEnter}
+                  handleEnterSubmit={handleEnterOriginalSubmit}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -562,6 +582,7 @@ const AddReturn = () => {
               <CardBody>
               <AddReturnFormVerify
                 handleEnter={handleEnter}
+                handleEnterSubmit={handleEnterVerifySubmit}
                 trayLength={data.trayLength}
                 original={data.original}
                 verify={data.verify}
@@ -601,41 +622,17 @@ const AddReturnFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="item">Item{ ' ' }
-          { props.itemRegex.test(props.original.item)
-            ? <Badge color="success">{props.original.item.length}</Badge>
-            : props.original.item.length === 0
-              ? <Badge>{props.original.item.length}</Badge>
-              : (<><Badge color={props.itemBarcodeLength === props.original.item.length ? "warning" : "danger"}>{props.original.item.length}</Badge> <span className='text-danger'>✘</span></>
+        <Label for="tray">Tray{ ' ' }
+          { props.trayRegex.test(props.original.tray)
+            ? <Badge color="success">{props.original.tray.length}</Badge>
+            : props.original.tray.length === 0
+              ? <Badge>{props.original.tray.length}</Badge>
+              : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
         <Input
-          type="text"
-          name="item"
-          placeholder="Item barcode"
-          value={props.original.item}
-          onChange={(e) => props.handleOriginalOnChange(e)}
-          onPaste={(e) => {
-            if (!process.env.REACT_APP_ROOT.includes("-dev")) {
-              e.preventDefault();
-              return false;
-            }
-          }}
-          disabled={props.disabled}
-        />
-      </FormGroup>
-      <FormGroup>
-      <Label for="tray">Tray{ ' ' }
-        { props.trayRegex.test(props.original.tray)
-          ? <Badge color="success">{props.original.tray.length}</Badge>
-          : props.original.tray.length === 0
-            ? <Badge>{props.original.tray.length}</Badge>
-            : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
-            )
-        }
-      </Label>
-        <Input
+          id="original-tray"
           type="text"
           name="tray"
           placeholder="Tray barcode"
@@ -647,9 +644,36 @@ const AddReturnFormOriginal = props => (
               return false;
             }
           }}
-          onKeyDown={(e) => props.handleEnter(e)}
+          onKeyDown={(e) => props.handleEnterSubmit(e)}
           disabled={props.disabled}
           autoFocus={true}
+        />
+      </FormGroup>
+      <FormGroup>
+        <Label for="item">Item{ ' ' }
+          { props.itemRegex.test(props.original.item)
+            ? <Badge color="success">{props.original.item.length}</Badge>
+            : props.original.item.length === 0
+              ? <Badge>{props.original.item.length}</Badge>
+              : (<><Badge color={props.itemBarcodeLength === props.original.item.length ? "warning" : "danger"}>{props.original.item.length}</Badge> <span className='text-danger'>✘</span></>
+              )
+          }
+        </Label>
+        <Input
+          id="original-item"
+          type="text"
+          name="item"
+          placeholder="Item barcode"
+          value={props.original.item}
+          onChange={(e) => props.handleOriginalOnChange(e)}
+          onPaste={(e) => {
+            if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+              e.preventDefault();
+              return false;
+            }
+          }}
+          onKeyDown={(e) => props.handleEnter(e)}
+          disabled={props.disabled}
         />
       </FormGroup>
       <Button
@@ -674,6 +698,33 @@ const AddReturnFormOriginal = props => (
 const AddReturnFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
+      <Label for="tray">Tray{ ' ' }
+        { props.trayRegex.test(props.verify.tray)
+          ? <Badge color="success">{props.verify.tray.length}</Badge>
+          : props.verify.tray.length === 0
+            ? <Badge>{props.verify.tray.length}</Badge>
+            : (<><Badge color={props.trayBarcodeLength === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
+            )
+        }
+      </Label>
+      <Input
+        id="verify-tray"
+        type="text"
+        name="tray"
+        placeholder={ props.disabled ? "" : "Tray barcode" }
+        value={props.verify.tray}
+        onChange={(e) => props.handleVerifyOnChange(e)}
+        onPaste={(e)=>{
+          if (!process.env.REACT_APP_ROOT.includes("-dev")) {
+            e.preventDefault();
+            return false;
+          }
+        }}
+        onKeyDown={(e) => props.handleEnterSubmit(e)}
+        disabled={props.disabled}
+      />
+    </FormGroup>
+    <FormGroup>
       <Label for="item">Item{ ' ' }
         { props.itemRegex.test(props.verify.item)
           ? <Badge color="success">{props.verify.item.length}</Badge>
@@ -684,35 +735,11 @@ const AddReturnFormVerify = props => (
         }
       </Label>
       <Input
+        id="verify-item"
         type="text"
         name="item"
         placeholder={ props.disabled ? "" : "Item barcode" }
         value={props.verify.item}
-        onChange={(e) => props.handleVerifyOnChange(e)}
-        onPaste={(e)=>{
-          if (!process.env.REACT_APP_ROOT.includes("-dev")) {
-            e.preventDefault();
-            return false;
-          }
-        }}
-        disabled={props.disabled}
-      />
-    </FormGroup>
-    <FormGroup>
-    <Label for="tray">Tray{ ' ' }
-      { props.trayRegex.test(props.verify.tray)
-        ? <Badge color="success">{props.verify.tray.length}</Badge>
-        : props.verify.tray.length === 0
-          ? <Badge>{props.verify.tray.length}</Badge>
-          : (<><Badge color={props.trayBarcodeLength === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
-          )
-      }
-    </Label>
-      <Input
-        type="text"
-        name="tray"
-        placeholder={ props.disabled ? "" : "Tray barcode" }
-        value={props.verify.tray}
         onChange={(e) => props.handleVerifyOnChange(e)}
         onPaste={(e)=>{
           if (!process.env.REACT_APP_ROOT.includes("-dev")) {
@@ -749,13 +776,13 @@ const Display = props => (
       <Card key={itemInfo}>
         <CardBody>
           <dl className="row">
-            <dt className="col-sm-3">Item</dt>
-            <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-              {props.data[itemInfo].barcode ? props.data[itemInfo].barcode : '-'}
-            </dd>
             <dt className="col-sm-3">Tray</dt>
             <dd className="col-sm-9">
               {props.data[itemInfo].tray}
+            </dd>
+            <dt className="col-sm-3">Item</dt>
+            <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
+              {props.data[itemInfo].barcode ? props.data[itemInfo].barcode : '-'}
             </dd>
           </dl>
           <Button color="danger" onClick={
