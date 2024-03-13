@@ -247,7 +247,7 @@ const AddReturn = () => {
           const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
           if (databaseResults.length > 0) {
             var result = databaseResults[0];
-            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray });
+            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray.barcode });
             dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: result.status });
           }
           else {
