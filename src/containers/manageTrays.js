@@ -43,6 +43,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         fields: {
+          new_tray: false,
           tray_barcode: '',
           new_tray_barcode: '',
           shelf: '',
@@ -63,6 +64,7 @@ const ManageTrays = (props) => {
     query: '',
     search_results: [],
     fields: {
+      new_tray: false,
       tray_barcode: '',
       new_tray_barcode: '',
       shelf: '',
@@ -106,6 +108,7 @@ const ManageTrays = (props) => {
     dispatch({
       type: "UPDATE_SELECTION",
       payload: {
+        new_tray: false,
         tray_barcode: data.barcode,
         new_tray_barcode: '',
         shelf: data.shelf,
@@ -118,6 +121,24 @@ const ManageTrays = (props) => {
     });
   }
 
+  const handleNewTraySelect = (e) => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_SELECTION",
+      payload: {
+        new_tray: true,
+        tray_barcode: '',
+        new_tray_barcode: '',
+        shelf: '',
+        depth: '',
+        position: null,
+        items: [],
+        trayer: '',
+        created: '',
+      }
+    });
+  }
+
   const handleSearch = async (showWarnings = false) => {
     const results = await ContentSearch.trays(state.query);
     if (results && results[0]) {
@@ -126,6 +147,7 @@ const ManageTrays = (props) => {
         items.push(barcode);
       }
       const fields = {
+        new_tray: false,
         tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
         new_tray_barcode: "",
         shelf: results[0].shelf ? results[0].shelf : "",
@@ -185,6 +207,28 @@ const ManageTrays = (props) => {
     }
   };
 
+  const handleCreateTray = async (e) => {
+    e.preventDefault();
+    const data = {
+      barcode: state.fields.new_tray_barcode,
+      shelf: state.fields.shelf || null,
+      depth: state.fields.depth || null,
+      position: state.fields.position || null,
+      collection: null,
+      items: [],
+    };
+    const load = await Load.newTray(data);
+    console.log(data);
+    console.log(load);
+    if (load) {
+      success(`Tray ${load['barcode']} successfully added`);
+      dispatch({ type: 'RESET', payload: '' });
+      handleSearch(false);
+    } else {
+      // There should already be a 400/403 popup from the API
+    }
+  };
+
   const handleTrayDelete = async (barcode, e) => {
     const data = { barcode: barcode };
     const deleteTray = await Load.deleteTrayAndItems(data);
@@ -228,6 +272,7 @@ const ManageTrays = (props) => {
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
+        <Button color="warning" onClick={(e) => handleNewTraySelect(e)}>New tray</Button>
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} trays total`}</Button>
         }
@@ -250,7 +295,7 @@ const ManageTrays = (props) => {
             }
           </Col>
           <Col md="4">
-            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
+            { state.fields && ((state.fields.tray_barcode && state.fields.tray_barcode !== "") || state.fields.new_tray)
               ? <Card>
                   <CardBody>
                     <TrayForm
@@ -258,6 +303,7 @@ const ManageTrays = (props) => {
                       handleTrayChange={handleTrayChange}
                       handleTrayUpdate={handleTrayUpdate}
                       handleTrayDelete={handleTrayDelete}
+                      handleCreateTray={handleCreateTray}
                       settings={state.settings}
                     />
                   </CardBody>
@@ -347,10 +393,12 @@ const TrayForm = (props) => {
     <Row>
       <Col>
         <Form autoComplete="off">
-          <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
-            <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
-          </FormGroup>
+          { !props.fields.new_tray &&
+            <FormGroup>
+              <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
+              <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
+            </FormGroup>
+          }
           <FormGroup>
             <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
             <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
@@ -376,13 +424,15 @@ const TrayForm = (props) => {
             <Button
               color="primary"
               style={{"float": "left"}}
-              onClick={(e) => props.handleTrayUpdate(e)}
-            >Update tray</Button>
-            <Button
-              color="danger"
-              style={{"float": "right"}}
-              onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
-            >Delete tray and all items</Button>
+              onClick={(e) => props.fields.new_tray ? props.handleCreateTray(e) : props.handleTrayUpdate(e)}
+            >{ props.fields.new_tray ? "Create tray" : "Update tray" }</Button>
+            { !props.fields.new_tray &&
+              <Button
+                color="danger"
+                style={{"float": "right"}}
+                onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
+              >Delete tray and all items</Button>
+            }
           </FormGroup>
         </Form>
       </Col>
