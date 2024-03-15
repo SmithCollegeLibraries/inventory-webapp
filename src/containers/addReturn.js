@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
+import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
 // import { getFormattedDate } from '../util/date';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
-import { success, warning, failure } from '../components/toastAlerts';
+import { success, failure } from '../components/toastAlerts';
 
 
 const AddReturn = () => {
@@ -136,14 +136,6 @@ const AddReturn = () => {
 
   const debouncedLeftPaneItem = useDebounce(data.original.item);
 
-  // Live verification functions, which also get called again on submission
-  const failureIfNew = useCallback((barcode, message) => {
-    // Only alert if the barcode is not already in the list of alerted barcodes
-    // This prevents the same barcode from being alerted multiple times
-    // if the user doesn't clear the list of barcodes
-    failure(message);
-  }, []);
-
   const itemLastCheck = (barcode) => {
     var itemTrayMessage = "";
     var itemStatusMessage = "";
@@ -172,30 +164,25 @@ const AddReturn = () => {
     // that it's checked against FOLIO
     var itemRegex = new RegExp(data.settings.itemStructure);
     if (!itemRegex.test(barcode)) {
-      failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes are 15 characters long and begin with 31.`);
       return false;
     }
     else if (!verifyItemUnstaged(barcode)) {
-      // We're already giving an error message when checking
       return false;
     }
     else if (!itemLastCheck(barcode)) {
       return false;
     }
+    else if (data.itemFolioBad.includes(barcode)) {
+      failure(`Unable to locate FOLIO record for ${barcode}.`);
+      return false;
+    }
     else {
-      if (data.itemFolioGood.includes(barcode) || data.itemFolioOffline.includes(barcode)) {
-        return true;
-      }
-      else {
-        if (data.itemFolioBad.includes(barcode)) {
-          failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
-          return false;
-        }
-        else {
-          warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
-          return false;
-        }
-      }
+      // While this doesn't catch items that have been looked up in FOLIO
+      // and haven't yet thrown an error, we will catch those when the
+      // Verify screen has been submitted. We don't want to hold up the
+      // process -- otherwise the user will get a warning on every single
+      // submission that verification is still in process.
+      return true;
     }
   }
 
@@ -204,7 +191,7 @@ const AddReturn = () => {
     const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].item);
     const stagedItems = [].concat.apply([], arrayOfStagedItems);
     if (stagedItems.includes(barcode)) {
-      failureIfNew(barcode, `Item ${barcode} is already staged`);
+      failure(`Item ${barcode} is already staged`);
       return false;
     }
     return true;
@@ -273,15 +260,20 @@ const AddReturn = () => {
             const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
             if (databaseResults.length > 0) {
               dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
+              dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
             }
             else {
               const itemInFolio = await Load.itemInFolio(barcode);
               if (itemInFolio) {
                 dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
+                dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
               }
               else {
-                failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+                failure(`Unable to locate FOLIO record for ${barcode}.`);
                 dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
+                dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
+                dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+                dispatch({ type: 'CHANGE_FORM', form: 'original'});
                 return false;
               }
             }
@@ -289,7 +281,6 @@ const AddReturn = () => {
           }
           // After getting the results, clear that we've started checking
           // so that we don't get a "perpetual pending" error
-          dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
         }
         else {
           dispatch({ type: 'ITEM_FOLIO_OFFLINE', item: barcode });
@@ -313,7 +304,7 @@ const AddReturn = () => {
           // Don't verify empty "barcodes"
         }
         else if (!itemRegex.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
+          failure(`Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
           brokenBarcode = barcode;
         }
         else if (!verifyItemUnstaged(barcode)) {
@@ -321,7 +312,7 @@ const AddReturn = () => {
           brokenBarcode = barcode;
         }
         else if (data.itemFolioBad.includes(barcode)) {
-          failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+          failure(`Unable to locate FOLIO record for ${barcode}.`);
           brokenBarcode = barcode;
         }
         else {
@@ -436,7 +427,6 @@ const AddReturn = () => {
   };
 
   const handleOriginalSubmit = (e) => {
-
     // When inspecting trays upon submission, we want to give a popup for
     // tray length, plus the ordinary live checking
     const inspectTray = (tray) => {
@@ -462,21 +452,23 @@ const AddReturn = () => {
     e.preventDefault();
     // If the user is clicking verify, we want to show them alerts a
     // second time if necessary so they know what the exact problem is
+    const itemPassedInspection = inspectItem(data.original.item);
+    const trayPassedInspection = inspectTray(data.original.tray);
+    if (itemPassedInspection && trayPassedInspection ) {
+      dispatch({ type: 'CHANGE_FORM', form: 'verify'});
+      dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+    }
     const timer = setTimeout(() => {
-      const itemPassedInspection = inspectItem(data.original.item);
-      const trayPassedInspection = inspectTray(data.original.tray);
-      if (itemPassedInspection && trayPassedInspection ) {
-        dispatch({ type: 'CHANGE_FORM', form: 'verify'});
-        dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-      }
       document.getElementById('verify-tray').focus();
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
   };
 
   const handleVerifySubmit = (e) => {
     e.preventDefault();
 
+    // If we only now checked against FOLIO and the item isn't there,
+    // go back to the original form
     if (data.original.item !== data.verify.item) {
       failure("Item mismatch!");
     }
@@ -493,7 +485,7 @@ const AddReturn = () => {
     }
     const timer = setTimeout(() => {
       document.getElementById('original-tray').focus();
-    }, 200);
+    }, 300);
     return () => clearTimeout(timer);
   };
 
