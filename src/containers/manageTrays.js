@@ -190,6 +190,14 @@ const ManageTrays = (props) => {
 
   const handleTrayUpdate = async (e) => {
     e.preventDefault();
+    // If the user supplies shelf, depth or position, double-check
+    // with the user if they're not all present
+    if ((state.fields.shelf || state.fields.depth || state.fields.position) &&
+        !(state.fields.shelf && state.fields.depth && state.fields.position)) {
+      if (!window.confirm("The location information provided is partial. Shelf, depth and position should normally be provided together. Are you sure you want to continue?")) {
+        return;
+      }
+    }
     const data = {
       barcode: state.fields.tray_barcode,
       new_barcode: state.fields.new_tray_barcode || null,
@@ -209,6 +217,15 @@ const ManageTrays = (props) => {
 
   const handleCreateTray = async (e) => {
     e.preventDefault();
+    // If the user supplies shelf, depth or position, double-check
+    // with the user if they're not all present
+    if ((state.fields.shelf || state.fields.depth || state.fields.position) &&
+        !(state.fields.shelf && state.fields.depth && state.fields.position)) {
+      if (!window.confirm("The location information provided is partial. Shelf, depth and position should normally be provided together. Are you sure you want to continue?")) {
+        return;
+      }
+    }
+
     const data = {
       barcode: state.fields.new_tray_barcode,
       shelf: state.fields.shelf || null,
@@ -224,7 +241,8 @@ const ManageTrays = (props) => {
       success(`Tray ${load['barcode']} successfully added`);
       dispatch({ type: 'RESET', payload: '' });
       handleSearch(false);
-    } else {
+    }
+    else {
       // There should already be a 400/403 popup from the API
     }
   };
