@@ -34,15 +34,21 @@ const reducer = (state, action) => {
         ...state,
         count: action.payload,
       };
+    case 'UPDATE_SETTINGS':
+      return {
+        ...state,
+        settings: action.settings,
+      };
     case 'RESET':
       return {
         ...state,
         fields: {
+          new_tray: false,
           tray_barcode: '',
           new_tray_barcode: '',
           shelf: '',
           depth: '',
-          position: 0,
+          position: null,
           items: [],
           trayer: '',
           created: '',
@@ -58,11 +64,12 @@ const ManageTrays = (props) => {
     query: '',
     search_results: [],
     fields: {
+      new_tray: false,
       tray_barcode: '',
       new_tray_barcode: '',
       shelf: '',
       depth: '',
-      position: 0,
+      position: null,
       items: [],
       trayer: '',
       created: '',
@@ -101,6 +108,7 @@ const ManageTrays = (props) => {
     dispatch({
       type: "UPDATE_SELECTION",
       payload: {
+        new_tray: false,
         tray_barcode: data.barcode,
         new_tray_barcode: '',
         shelf: data.shelf,
@@ -113,6 +121,24 @@ const ManageTrays = (props) => {
     });
   }
 
+  const handleNewTraySelect = (e) => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_SELECTION",
+      payload: {
+        new_tray: true,
+        tray_barcode: '',
+        new_tray_barcode: '',
+        shelf: '',
+        depth: '',
+        position: null,
+        items: [],
+        trayer: '',
+        created: '',
+      }
+    });
+  }
+
   const handleSearch = async (showWarnings = false) => {
     const results = await ContentSearch.trays(state.query);
     if (results && results[0]) {
@@ -121,11 +147,12 @@ const ManageTrays = (props) => {
         items.push(barcode);
       }
       const fields = {
+        new_tray: false,
         tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
         new_tray_barcode: "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
-        position: results[0].shelf_position ? results[0].shelf_position : 0,
+        position: results[0].shelf_position ? results[0].shelf_position : null,
         items: items,
         trayer: results[0].trayer ? results[0].trayer : "",
         created: results[0].created ? results[0].created : "",
@@ -148,7 +175,7 @@ const ManageTrays = (props) => {
             new_tray_barcode: '',
             shelf: '',
             depth: '',
-            position: 0,
+            position: null,
             items: [],
             trayer: '',
             created: '',
@@ -163,6 +190,14 @@ const ManageTrays = (props) => {
 
   const handleTrayUpdate = async (e) => {
     e.preventDefault();
+    // If the user supplies shelf, depth or position, double-check
+    // with the user if they're not all present
+    if ((state.fields.shelf || state.fields.depth || state.fields.position) &&
+        !(state.fields.shelf && state.fields.depth && state.fields.position)) {
+      if (!window.confirm("The location information provided is partial. Shelf, depth and position should normally be provided together. Are you sure you want to continue?")) {
+        return;
+      }
+    }
     const data = {
       barcode: state.fields.tray_barcode,
       new_barcode: state.fields.new_tray_barcode || null,
@@ -180,6 +215,38 @@ const ManageTrays = (props) => {
     }
   };
 
+  const handleCreateTray = async (e) => {
+    e.preventDefault();
+    // If the user supplies shelf, depth or position, double-check
+    // with the user if they're not all present
+    if ((state.fields.shelf || state.fields.depth || state.fields.position) &&
+        !(state.fields.shelf && state.fields.depth && state.fields.position)) {
+      if (!window.confirm("The location information provided is partial. Shelf, depth and position should normally be provided together. Are you sure you want to continue?")) {
+        return;
+      }
+    }
+
+    const data = {
+      barcode: state.fields.new_tray_barcode,
+      shelf: state.fields.shelf || null,
+      depth: state.fields.depth || null,
+      position: state.fields.position || null,
+      collection: null,
+      items: [],
+    };
+    const load = await Load.newTray(data);
+    console.log(data);
+    console.log(load);
+    if (load) {
+      success(`Tray ${load['barcode']} successfully added`);
+      dispatch({ type: 'RESET', payload: '' });
+      handleSearch(false);
+    }
+    else {
+      // There should already be a 400/403 popup from the API
+    }
+  };
+
   const handleTrayDelete = async (barcode, e) => {
     const data = { barcode: barcode };
     const deleteTray = await Load.deleteTrayAndItems(data);
@@ -191,6 +258,15 @@ const ManageTrays = (props) => {
       // There should already be a 400/403 popup from the API
     }
   };
+
+  // Get settings from database on load
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await Load.getAllSettings();
+      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+    };
+    getSettings();
+  }, []);
 
   // Get the total number of trays via the API on load
   useEffect(() => {
@@ -214,6 +290,7 @@ const ManageTrays = (props) => {
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
+        <Button color="warning" onClick={(e) => handleNewTraySelect(e)}>New tray</Button>
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} trays total`}</Button>
         }
@@ -236,7 +313,7 @@ const ManageTrays = (props) => {
             }
           </Col>
           <Col md="4">
-            { state.fields && state.fields.tray_barcode && state.fields.tray_barcode !== ""
+            { state.fields && ((state.fields.tray_barcode && state.fields.tray_barcode !== "") || state.fields.new_tray)
               ? <Card>
                   <CardBody>
                     <TrayForm
@@ -244,6 +321,8 @@ const ManageTrays = (props) => {
                       handleTrayChange={handleTrayChange}
                       handleTrayUpdate={handleTrayUpdate}
                       handleTrayDelete={handleTrayDelete}
+                      handleCreateTray={handleCreateTray}
+                      settings={state.settings}
                     />
                   </CardBody>
                 </Card>
@@ -256,7 +335,7 @@ const ManageTrays = (props) => {
                   <CardBody>
                     <dl className="row">
                       <dt className="col-sm-3">Trayer</dt>
-                      <dd className="col-sm-9">{state.fields.trayer.split(" ")[0]}</dd>
+                      <dd className="col-sm-9">{state.fields.trayer ? state.fields.trayer.split(" ")[0] : "-"}</dd>
                     </dl>
                     <dl className="row">
                       <dt className="col-sm-3">Date</dt>
@@ -265,7 +344,7 @@ const ManageTrays = (props) => {
                     <dl className="row">
                       <dt className="col-sm-3">Items</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                          {state.fields.items.join('\n')}
+                          {state.fields.items && state.fields.items.length > 0 ? state.fields.items.join('\n') : "-"}
                         </dd>
                     </dl>
                   </CardBody>
@@ -332,10 +411,12 @@ const TrayForm = (props) => {
     <Row>
       <Col>
         <Form autoComplete="off">
-          <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
-            <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
-          </FormGroup>
+          { !props.fields.new_tray &&
+            <FormGroup>
+              <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
+              <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
+            </FormGroup>
+          }
           <FormGroup>
             <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
             <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
@@ -355,20 +436,21 @@ const TrayForm = (props) => {
           </FormGroup>
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            {/* TODO: make max position not hardcoded */}
-            <Input type="text" style={{"width":"6em"}} name="position" value={props.fields.position || ''} maxLength="2" onChange={e => props.handleTrayChange(e)} />
+            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button
               color="primary"
               style={{"float": "left"}}
-              onClick={(e) => props.handleTrayUpdate(e)}
-            >Update tray</Button>
-            <Button
-              color="danger"
-              style={{"float": "right"}}
-              onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
-            >Delete tray and all items</Button>
+              onClick={(e) => props.fields.new_tray ? props.handleCreateTray(e) : props.handleTrayUpdate(e)}
+            >{ props.fields.new_tray ? "Create tray" : "Update tray" }</Button>
+            { !props.fields.new_tray &&
+              <Button
+                color="danger"
+                style={{"float": "right"}}
+                onClick={(e) => {if (window.confirm('Are you sure you want to delete this tray and all its items from the system?')) {props.handleTrayDelete(props.fields.tray_barcode, e)}}}
+              >Delete tray and all items</Button>
+            }
           </FormGroup>
         </Form>
       </Col>

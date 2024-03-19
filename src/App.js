@@ -6,6 +6,7 @@ import 'react-s-alert/dist/s-alert-default.css';
 import {
     NewTray,
     RapidShelve,
+    AddReturn,
     ItemSearch,
     ManageCollections,
     ManageTrays,
@@ -136,6 +137,9 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />
+                )}/>
+                <Route path="/return" render={() => (
+                  <AddReturn />
                 )}/>
                 <Route path="/item-search" render={() => (
                   <ItemSearch />

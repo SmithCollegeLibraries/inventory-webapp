@@ -224,7 +224,6 @@ const ManageItems = (props) => {
       status: state.fields.status || null,
       tray: state.fields.tray || null,
     };
-    console.log(data);
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
       if (load) {
@@ -242,10 +241,9 @@ const ManageItems = (props) => {
     const data = {
       barcode: state.fields.new_item_barcode,
       collection: state.fields.collection,
-      status: "New",
+      status: state.fields.status || "New",
       tray: state.fields.tray || null,
     };
-    console.log(data);
     const newBarcode = state.fields.new_item_barcode;
     if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.newItem(data);
@@ -442,28 +440,19 @@ const ItemForm = (props) => {
           <Row>
             <FormGroup className="col-sm-6">
               <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
-              { props.fields.new_item
-                ?
-                <Input type="select" name="status" value="New" disabled={true}>
-                  <option value="New">New</option>
-                </Input>
-                :
-                <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
-                  <option value={null}>(none)</option>
-                  <option value="Trayed">Trayed</option>
-                  <option value="Circulating">Circulating</option>
-                  <option value="To return to campus">To return to campus</option>
-                  <option value="Returned to campus">Returned to campus</option>
-                  <option value="Missing">Missing</option>
-                </Input>
-              }
+              <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
+                <option value={null}>(none)</option>
+                <option value="Trayed">Trayed</option>
+                <option value="Circulating">Circulating</option>
+                <option value="To return to campus">To return to campus</option>
+                <option value="Returned to campus">Returned to campus</option>
+                <option value="Missing">Missing</option>
+              </Input>
             </FormGroup>
-            { !props.fields.new_item &&
-              <FormGroup className="col-sm-6">
-                <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
-                <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
-              </FormGroup>
-            }
+            <FormGroup className="col-sm-6">
+              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
+              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+            </FormGroup>
           </Row>
           { !props.fields.new_item &&
             <Row>

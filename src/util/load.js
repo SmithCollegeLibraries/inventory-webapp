@@ -1,6 +1,7 @@
 import { failure } from '../components/toastAlerts'
 // import { getFormattedDate } from '../util/date';
 
+const settings = `${process.env.REACT_APP_DATABASE_URL}/setting-api/`
 const account = `${process.env.REACT_APP_DATABASE_URL}/user/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
@@ -12,6 +13,20 @@ const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
 
 
 class Load {
+
+  /**
+   * @desc Settings
+   */
+
+  getSetting = async (settingName) => {
+    const get = await this.handleUpdate(`${settings}get-setting/?name=${settingName}`, 'GET');
+    return get;
+  }
+
+  getAllSettings = async () => {
+    const get = await this.handleUpdate(`${settings}get-all-settings/`, 'GET');
+    return get;
+  }
 
   /**
     * @desc Account management
@@ -140,14 +155,19 @@ class Load {
     return info;
   };
 
-  updateItem = async (data, id) => {
+  updateItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
     console.log(data);
     return update;
   };
 
-  newItem = async (data, id) => {
+  newItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}new-item/`, 'POST', data);
+    return update;
+  };
+
+  addReturn = async (data) => {
+    const update = await this.handleUpdate(`${itemAPI}add-return/`, 'POST', data);
     console.log(data);
     return update;
   };
@@ -238,6 +258,16 @@ class Load {
   deleteCollection = async (data) => {
     const deleteCollection = await this.handleUpdate(`${collectionAPI}delete-collection/`, 'POST', data);
     return deleteCollection;
+  }
+
+  getAllCollections = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-all-collections/`, 'GET');
+    return get;
+  }
+
+  getDefaultCollection = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-default/`, 'GET');
+    return get;
   }
 
   // getHistory = async (data, page='') => {
