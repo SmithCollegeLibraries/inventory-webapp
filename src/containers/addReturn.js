@@ -135,6 +135,7 @@ const AddReturn = () => {
   const [data, dispatch] = useReducer(trayReducer, initialState);
 
   const debouncedLeftPaneItem = useDebounce(data.original.item);
+  const debouncedLeftPaneTray = useDebounce(data.original.tray);
 
   const itemLastCheck = (barcode) => {
     var itemTrayMessage = "";
@@ -337,6 +338,20 @@ const AddReturn = () => {
     }
   }, [debouncedLeftPaneItem]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    const verifyTrayLive = async (trayBarcode) => {
+      const { trayBarcodeLength } = data;
+      if (!trayRegex.test(trayBarcode) || trayBarcode.length > trayBarcodeLength) {
+        failure(`Tray barcode must be ${trayBarcodeLength} characters long and begin with 1.`);
+        return false;
+      }
+    }
+
+    if (debouncedLeftPaneTray && debouncedLeftPaneTray.length >= data.settings.trayBarcodeLength) {
+      verifyTrayLive(debouncedLeftPaneTray);
+    }
+  }, [debouncedLeftPaneTray]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // On load, check local storage for any staged items
   useEffect(() => {
     updateStagedFromLocalStorage();
@@ -430,9 +445,7 @@ const AddReturn = () => {
     // When inspecting trays upon submission, we want to give a popup for
     // tray length, plus the ordinary live checking
     const inspectTray = (tray) => {
-      const { trayLength } = data;
       if (!trayRegex.test(tray)) {
-        failure(`Tray barcode must be ${trayLength} characters long and begin with 1.`);
         return false;
       }
       else {
@@ -552,7 +565,6 @@ const AddReturn = () => {
                 <AddReturnFormOriginal
                   handleEnter={handleEnter}
                   handleEnterSubmit={handleEnterOriginalSubmit}
-                  trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleOriginalSubmit={handleOriginalSubmit}
@@ -575,7 +587,6 @@ const AddReturn = () => {
               <AddReturnFormVerify
                 handleEnter={handleEnter}
                 handleEnterSubmit={handleEnterVerifySubmit}
-                trayLength={data.trayLength}
                 original={data.original}
                 verify={data.verify}
                 handleVerifyOnChange={handleVerifyOnChange}
