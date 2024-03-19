@@ -210,20 +210,6 @@ const AddReturn = () => {
   // Now the actual hooks that implement the live checks
 
   useEffect(() => {
-    const trayRegex = new RegExp(data.settings.trayStructure);
-
-    // Don't bother doing the live verification if it's not even the
-    // correct length or doesn't begin with 1. (We're already showing the
-    // user that it's incorrect with the badge, so no need to give a
-    // popup alert.)
-    if (data.original.tray.length === data.settings.trayBarcodeLength) {
-      if (!trayRegex.test(data.original.tray)) {
-        failure(`Valid tray barcodes begin with 1.`);
-      }
-    }
-  }, [data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     const itemRegex = new RegExp(data.settings.itemStructure);
     const verifyItemLive = async (barcode) => {
 
@@ -340,9 +326,8 @@ const AddReturn = () => {
 
   useEffect(() => {
     const verifyTrayLive = async (trayBarcode) => {
-      const { trayBarcodeLength } = data;
-      if (!trayRegex.test(trayBarcode) || trayBarcode.length > trayBarcodeLength) {
-        failure(`Tray barcode must be ${trayBarcodeLength} characters long and begin with 1.`);
+      if (!trayRegex.test(trayBarcode)) {
+        failure(`Tray barcode must be ${data.settings.trayBarcodeLength} characters long and begin with 1.`);
         return false;
       }
     }
