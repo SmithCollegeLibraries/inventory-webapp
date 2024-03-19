@@ -7,20 +7,15 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
-// TODO: get these numbers from settings
-const TRAY_BARCODE_LENGTH = 8;
-// const COLLECTION_PLACEHOLDER = '--- Select collection ---';
-const DEFAULT_COLLECTION = 'Smith General Collections';
-const trayStructure = /^1[0-9]{7}$/;
-const itemStructure = /^3101[0-9]{11}$/;
+// Put default collection for each user separately
+const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 
 
-const NewTray = (props) => {
+const NewTray = () => {
   const initialState = {
-    trayLength: TRAY_BARCODE_LENGTH,  // Length of tray barcodes - constant for now
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
-      collection: DEFAULT_COLLECTION,
+      collection: '',
       tray: '',
       barcodes: ''
     },
@@ -29,6 +24,10 @@ const NewTray = (props) => {
       barcodes: ''
     },
     verified: [],  // List of trays that have been verified and staged
+    collections: [],
+    defaultCollection: '',
+    defaultCollectionMessage: false,
+    settings: {},
 
     // Containers for all the possible states of verifying trays and items
     trayCheckStarted: [],
@@ -62,10 +61,33 @@ const NewTray = (props) => {
           ...state,
           verify: action.verify,
         };
+      case 'ADD_DEFAULT_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
+        };
+      case 'DEFAULT_COLLECTION_MESSAGE':
+        return {
+          ...state,
+          defaultCollectionMessage: action.value,
+        };
       case 'UPDATE_STAGED':
         return {
           ...state,
           verified: action.verified,
+        };
+      case 'UPDATE_SETTINGS':
+        return {
+          ...state,
+          settings: action.settings,
+        };
+      case 'UPDATE_COLLECTIONS':
+        return {
+          ...state,
+          collections: action.collections,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -255,8 +277,9 @@ const NewTray = (props) => {
         }
       }
       else {
-        if (!itemStructure.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+        var itemRegex = new RegExp(data.settings.itemStructure);
+        if (!itemRegex.test(barcode)) {
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes are 15 characters long and begin with 31.`);
           return false;
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -268,7 +291,7 @@ const NewTray = (props) => {
           return false;
         }
         else {
-          warning(`Verification of item ${barcode} in the system may be pending. Please try again in a few seconds, and report this problem if it continues.`);
+          warning(`Verification of item ${barcode} in the system may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
           return false;
         }
       }
@@ -276,9 +299,47 @@ const NewTray = (props) => {
     return true;
   }
 
+  // Get settings from database on load
+  useEffect(() => {
+    const getSettings = async () => {
+      const settings = await Load.getAllSettings();
+      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+    };
+    getSettings();
+  }, []);
+
+  // Get current user's default collection
+  useEffect(() => {
+    const getDefaultCollection = async () => {
+      const collection = await Load.getDefaultCollection();
+      if (collection) {
+        // Don't override a selected collection -- just an empty default;
+        // also make sure that there is in fact an active default collection
+        // for the current user
+        if (!data.original.collection) {
+          dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
+        }
+      }
+      else {
+        dispatch({ type: 'DEFAULT_COLLECTION_MESSAGE', value: true});
+      }
+    };
+    getDefaultCollection();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
+    };
+    getCollections();
+  }, []);
+
   // Now the actual hooks that implement the live checks
 
   useEffect(() => {
+    const trayRegex = new RegExp(data.settings.trayStructure);
     const verifyTrayLive = async (tray) => {
       // First, check that it's not in the list of staged trays
       if (data.verified) {
@@ -307,7 +368,7 @@ const NewTray = (props) => {
     // correct length or doesn't begin with 1. (We're already showing the
     // user that it's incorrect with the badge, so no need to give a
     // popup alert.)
-    if (trayStructure.test(data.original.tray)) {
+    if (trayRegex.test(data.original.tray)) {
       if (data.trayCheckStarted.includes(data.original.tray)) {
         // Do nothing if the tray is already being checked
       }
@@ -317,8 +378,8 @@ const NewTray = (props) => {
       }
     }
     else {
-      if (data.original.tray.length === TRAY_BARCODE_LENGTH) {
-        failure(`Valid tray barcodes must begin with 1.`);
+      if (data.original.tray.length === data.settings.trayBarcodeLength) {
+        failure(`Valid tray barcodes begin with 1.`);
       }
       // Don't give popup alert if it's just the wrong length, to avoid
       // excessive alerts
@@ -326,6 +387,7 @@ const NewTray = (props) => {
   }, [data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    const itemRegex = new RegExp(data.settings.itemStructure);
     const verifyItemsLive = async (barcodes) => {
 
       const verifyItemsFree = async (barcodes) => {
@@ -409,8 +471,8 @@ const NewTray = (props) => {
         else if (data.itemUsedGood.includes(barcode) && data.itemFolioGood.includes(barcode)) {
           // These are known to be good, so don't verify them again
         }
-        else if (!itemStructure.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes must begin with 3101 and be 15 characters long.`);
+        else if (!itemRegex.test(barcode)) {
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
           brokenBarcodes.push(barcode);
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -445,7 +507,7 @@ const NewTray = (props) => {
       }
 
       // If we've made it this far, all barcodes are valid
-      return brokenBarcodes === [];
+      return !brokenBarcodes;
     };
 
     // Don't try to verify barcodes if the item field is empty
@@ -550,9 +612,9 @@ const NewTray = (props) => {
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/\D/g,'');
     }
-    // else if (e.target.name === 'collection') {
-    //   value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
-    // }
+    else if (e.target.name === 'collection') {
+      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
+    }
     const original = data.original;
     original[e.target.name] = value;
     dispatch({ type: 'ADD_ORIGINAL', original: original});
@@ -603,7 +665,7 @@ const NewTray = (props) => {
     // tray length, plus the ordinary live checking
     const inspectTray = (tray) => {
       const { trayLength } = data;
-      if (!trayStructure.test(tray)) {
+      if (!trayRegex.test(tray)) {
         failure(`Tray barcode must be ${trayLength} characters long and begin with 1.`);
         return false;
       }
@@ -712,10 +774,8 @@ const NewTray = (props) => {
     e.preventDefault();
     if (navigator.onLine === true) {
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
-        console.log(tray);
         const response = await Load.newTray(tray);
-        console.log(response);
-        if (response === tray.barcode) {
+        if (response.barcode === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
           removeTrayFromStaged(tray.barcode);
         }
@@ -749,16 +809,26 @@ const NewTray = (props) => {
     }
   };
 
+  const trayRegex = new RegExp(data.settings.trayStructure);
+
   return (
     <Fragment>
       <div style={{marginTop: "20px"}}>
+        {
+          data.defaultCollectionMessage &&
+          <Row>
+            <Col>
+              <p>If you would like a default collection set for your account, please contact {data.settings.databaseAdministrator}.</p>
+            </Col>
+          </Row>
+        }
         <Row>
           <Col md="4">
             <Card>
               <CardBody>
                 <TrayFormOriginal
                   handleEnter={handleEnter}
-                  // collections={props.collections}
+                  collections={data.collections}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -766,12 +836,12 @@ const NewTray = (props) => {
                   clearOriginal={clearOriginal}
                   form={data.form}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={!trayStructure.test(data.original.tray) || data.original.barcodes.length === 0 || data.duplicateOriginalItems.length > 0}
+                  disabledSubmit={!trayRegex.test(data.original.tray) || data.original.barcodes.length === 0 || data.duplicateOriginalItems.length > 0}
                   disabledClear={data.original.tray.length === 0 && data.original.barcodes.length === 0}
-                  trayStructure={trayStructure}
+                  trayRegex={trayRegex}
                   duplicateOriginalItems={data.duplicateOriginalItems}
                   errorItems={data.errorItems}
-                  TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
+                  trayBarcodeLength={data.settings.trayBarcodeLength}
                 />
               </CardBody>
             </Card>
@@ -781,7 +851,6 @@ const NewTray = (props) => {
               <CardBody>
               <TrayFormVerify
                 handleEnter={handleEnter}
-                // collections={props.collections}
                 trayLength={data.trayLength}
                 original={data.original}
                 verify={data.verify}
@@ -789,10 +858,10 @@ const NewTray = (props) => {
                 handleVerifySubmit={handleVerifySubmit}
                 goBackToOriginal={goBackToOriginal}
                 disabled={data.form === 'original'}
-                disabledSubmit={!trayStructure.test(data.verify.tray) || data.verify.barcodes.length === 0 || data.duplicateVerifyItems.length > 0}
-                trayStructure={trayStructure}
+                disabledSubmit={!trayRegex.test(data.verify.tray) || data.verify.barcodes.length === 0 || data.duplicateVerifyItems.length > 0}
+                trayRegex={trayRegex}
                 duplicateVerifyItems={data.duplicateVerifyItems}
-                TRAY_BARCODE_LENGTH={TRAY_BARCODE_LENGTH}
+                trayBarcodeLength={data.settings.trayBarcodeLength}
               />
               </CardBody>
             </Card>
@@ -800,7 +869,6 @@ const NewTray = (props) => {
           <Col>
             <Display
               data={data.verified}
-              // collections={props.collections}
               removeTrayFromStaged={removeTrayFromStaged}
             />
             { Object.keys(data.verified).map(items => items).length
@@ -820,7 +888,7 @@ const NewTray = (props) => {
 const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
-      {/* <FormGroup>
+      <FormGroup>
         <Label for="collections">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
           <option>{ COLLECTION_PLACEHOLDER }</option>
@@ -831,14 +899,14 @@ const TrayFormOriginal = props => (
             : <option></option>
           }
         </Input>
-      </FormGroup> */}
+      </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.original.tray)
+          { props.trayRegex.test(props.original.tray)
             ? <Badge color="success">{props.original.tray.length}</Badge>
             : props.original.tray.length === 0
               ? <Badge>{props.original.tray.length}</Badge>
-              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
@@ -914,17 +982,17 @@ const TrayFormOriginal = props => (
 
 const TrayFormVerify = props => (
   <Form autoComplete="off">
-    {/* <FormGroup>
+    <FormGroup>
       <Label for="collections">Collection</Label>
       <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
-    </FormGroup> */}
+    </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
-          { props.trayStructure.test(props.verify.tray) && props.original.tray === props.verify.tray
+          { props.trayRegex.test(props.verify.tray) && props.original.tray === props.verify.tray
             ? <Badge color="success">{props.verify.tray.length}</Badge>
             : props.verify.tray.length === 0
               ? <Badge>{props.verify.tray.length}</Badge>
-              : (<><Badge color={props.TRAY_BARCODE_LENGTH === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === props.verify.tray.length ? "warning" : "danger"}>{props.verify.tray.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
       </Label>
@@ -1005,10 +1073,10 @@ const Display = props => (
             <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
               {props.data[tray].items ? props.data[tray].items.join('\n') : ''}
             </dd>
-            {/* <dt className="col-sm-3">Collection</dt>
+            <dt className="col-sm-3">Collection</dt>
             <dd className="col-sm-9">
               {props.data[tray].collection}
-            </dd> */}
+            </dd>
           </dl>
           <Button color="danger" onClick={
               function () {

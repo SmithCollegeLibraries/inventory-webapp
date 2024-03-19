@@ -163,6 +163,7 @@ function Users() {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Default collection</th>
                   <th>Password</th>
                   <th>Level</th>
                   <th>Actions</th>
@@ -173,6 +174,7 @@ function Users() {
                   <tr key={index}>
                     <td>{state.users[items].name}</td>
                     <td>{state.users[items].email}</td>
+                    <td>{state.users[items].default_collection}</td>
                     <td><Input type="password" name="password" value={state.users[items].password} onChange={e => updatePassword(e, index)} /></td>
                     <td><Input type="number" name="level" value={state.users[items].level} min="1" max="100" onChange={e => updateLevel(e, index)} /></td>
                     <td>
