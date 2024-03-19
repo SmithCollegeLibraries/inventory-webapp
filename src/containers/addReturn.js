@@ -340,9 +340,8 @@ const AddReturn = () => {
 
   useEffect(() => {
     const verifyTrayLive = async (trayBarcode) => {
-      const { trayBarcodeLength } = data;
-      if (!trayRegex.test(trayBarcode) || trayBarcode.length > trayBarcodeLength) {
-        failure(`Tray barcode must be ${trayBarcodeLength} characters long and begin with 1.`);
+      if (!trayRegex.test(trayBarcode)) {
+        failure(`Tray barcode must be ${data.settings.trayBarcodeLength} characters long and begin with 1.`);
         return false;
       }
     }
