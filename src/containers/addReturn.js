@@ -162,7 +162,7 @@ const AddReturn = () => {
     }
     const timer = setTimeout(() => {
       return handleLastCheck(barcode);
-    }, 500);
+    }, 800);
     return () => clearTimeout(timer);
   }
 
@@ -225,7 +225,7 @@ const AddReturn = () => {
           const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
           if (databaseResults.length > 0) {
             var result = databaseResults[0];
-            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray.barcode });
+            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray ? result.tray.barcode : null });
             dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: result.status });
           }
           else {
@@ -454,13 +454,16 @@ const AddReturn = () => {
     e.preventDefault();
     const itemPassedInspection = inspectItem(data.original.item);
     const trayPassedInspection = inspectTray(data.original.tray);
-    if (itemPassedInspection && trayPassedInspection ) {
-      dispatch({ type: 'CHANGE_FORM', form: 'verify'});
-      dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-    }
     const timer = setTimeout(() => {
-      document.getElementById('verify-tray').focus();
-    }, 200);
+      if (itemPassedInspection && trayPassedInspection ) {
+        dispatch({ type: 'CHANGE_FORM', form: 'verify'});
+        dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+      }
+      const timer = setTimeout(() => {
+        document.getElementById('verify-tray').focus();
+      }, 200);
+      return () => clearTimeout(timer);
+    }, 400);
     return () => clearTimeout(timer);
   };
 
