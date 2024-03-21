@@ -137,30 +137,37 @@ const AddReturn = () => {
   const debouncedLeftPaneItem = useDebounce(data.original.item);
   const debouncedLeftPaneTray = useDebounce(data.original.tray);
 
-  const itemLastCheck = (barcode) => {
-    var itemTrayMessage = "";
-    var itemStatusMessage = "";
-    if (data.itemTraysInSystem[barcode] && data.itemTraysInSystem[barcode] !== data.original.tray) {
-      itemTrayMessage = "The tray given does not match the item's current tray. ";
-    }
-    if (data.itemStatusesInSystem[barcode] && data.itemStatusesInSystem[barcode] !== "Circulating") {
-      if (itemTrayMessage) {
-        itemStatusMessage = "Also, this item is not currently marked as circulating. ";
+  const performLastCheck = (barcode) => {
+    const handleLastCheck = (barcode) => {
+      var itemTrayMessage = "";
+      var itemStatusMessage = "";
+      if (data.itemTraysInSystem[barcode] && data.itemTraysInSystem[barcode] !== data.original.tray) {
+        itemTrayMessage = "The tray given does not match the item's current tray. ";
       }
-      else {
-        itemStatusMessage = "This item is not currently marked as circulating. ";
+      if (data.itemStatusesInSystem[barcode] && data.itemStatusesInSystem[barcode] !== "Circulating") {
+        if (itemTrayMessage) {
+          itemStatusMessage = "Also, this item is not currently marked as circulating. ";
+        }
+        else {
+          itemStatusMessage = "This item is not currently marked as circulating. ";
+        }
       }
-    }
 
-    if (itemTrayMessage || itemStatusMessage) {
-      return window.confirm(itemTrayMessage + itemStatusMessage + "Are you sure you want to continue?");
+      if (itemTrayMessage || itemStatusMessage) {
+        if (!window.confirm(itemTrayMessage + itemStatusMessage + "Are you sure you want to continue?")) {
+          dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+          dispatch({ type: 'CHANGE_FORM', form: 'original'});
+        }
+      }
     }
-    else {
-      return true;
-    }
+    const timer = setTimeout(() => {
+      return handleLastCheck(barcode);
+    }, 800);
+    return () => clearTimeout(timer);
   }
 
   const verifyItemOnSubmit = (barcode) => {
+    performLastCheck(barcode);
     // For each barcode, check against the system and then also make sure
     // that it's checked against FOLIO
     var itemRegex = new RegExp(data.settings.itemStructure);
@@ -168,9 +175,6 @@ const AddReturn = () => {
       return false;
     }
     else if (!verifyItemUnstaged(barcode)) {
-      return false;
-    }
-    else if (!itemLastCheck(barcode)) {
       return false;
     }
     else if (data.itemFolioBad.includes(barcode)) {
@@ -221,7 +225,7 @@ const AddReturn = () => {
           const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
           if (databaseResults.length > 0) {
             var result = databaseResults[0];
-            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray.barcode });
+            dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: result.tray ? result.tray.barcode : null });
             dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: result.status });
           }
           else {
@@ -448,17 +452,18 @@ const AddReturn = () => {
     }
 
     e.preventDefault();
-    // If the user is clicking verify, we want to show them alerts a
-    // second time if necessary so they know what the exact problem is
     const itemPassedInspection = inspectItem(data.original.item);
     const trayPassedInspection = inspectTray(data.original.tray);
-    if (itemPassedInspection && trayPassedInspection ) {
-      dispatch({ type: 'CHANGE_FORM', form: 'verify'});
-      dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-    }
     const timer = setTimeout(() => {
-      document.getElementById('verify-tray').focus();
-    }, 300);
+      if (itemPassedInspection && trayPassedInspection ) {
+        dispatch({ type: 'CHANGE_FORM', form: 'verify'});
+        dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+      }
+      const timer = setTimeout(() => {
+        document.getElementById('verify-tray').focus();
+      }, 200);
+      return () => clearTimeout(timer);
+    }, 400);
     return () => clearTimeout(timer);
   };
 
