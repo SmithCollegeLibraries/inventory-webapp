@@ -13,7 +13,6 @@ import {
     ManageItems,
     Picklist,
     ManageUsers,
-    Statistics,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -129,9 +128,6 @@ export default class Main extends Component {
                 <Route exact path="/">
                   <Redirect to="/new-tray" />
                 </Route>
-                <Route path="/statistics" render={() => (
-                  <Statistics />
-                )}/>
                 <Route path="/new-tray" render={() => (
                   <NewTray />
                 )}/>
