@@ -1,7 +1,6 @@
 import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
-// import { getFormattedDate } from '../util/date';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';

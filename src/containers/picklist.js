@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Card, CardBody, Form, Input, Row, Col } from 'reactstrap';
 import BootstrapTable from 'react-bootstrap-table-next';
+import { firstName } from '../util/helpers';
 import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
 import { create } from 'zustand';
@@ -10,10 +11,6 @@ const REFRESH_INTERVAL = 6000;
 
 const truncate = (str, n) => {
   return (str.length > n) ? str.substr(0, n-1) + '…' : str;
-};
-
-const firstName = (str) => {
-  return str.split(' ')[0];
 };
 
 const usePicklist = create((set) => {
@@ -93,7 +90,7 @@ const Picklist = () => {
   const state = usePicklist();
   const staged = useStagedItems();
 
-  // Get updated picklist data from the server; asyncrhonously update
+  // Get updated picklist data from the server; asynchronously update
   // the picklist information in state, and also return that data
   // so that it can be used by getPicklist accurately
   const fetchPicklist = async () => {

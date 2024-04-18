@@ -5,7 +5,7 @@ import Alerts from '../components/alerts'
 import queryString from 'query-string'
 import ReactToPrint from 'react-to-print';
 import _ from 'lodash'
-import { getFormattedDate } from '../util/date';
+import { getFormattedDate } from '../util/helpers';
 import { Row, Col, Table, Navbar, Button, Badge, Form, FormGroup, Label, Input , Card, CardBody} from 'reactstrap'
 import localforage from 'localforage'
 import { success, failure } from '../components/toastAlerts'

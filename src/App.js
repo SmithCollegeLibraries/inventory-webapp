@@ -7,12 +7,15 @@ import {
     NewTray,
     RapidShelve,
     AddReturn,
-    ItemSearch,
-    ManageCollections,
-    ManageTrays,
-    ManageItems,
     Picklist,
+    ItemSearch,
+    ManageItems,
+    ManageTrays,
+    // ManageShelves,
+    ManageCollections,
     ManageUsers,
+    // ManageSettings,
+    ItemLogs,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -137,68 +140,26 @@ export default class Main extends Component {
                 <Route path="/return" render={() => (
                   <AddReturn />
                 )}/>
-                <Route path="/item-search" render={() => (
-                  <ItemSearch />
-                )}/>
-                <Route path="/manage-trays" render={() => (
-                  <ManageTrays
-                    trays={this.state.trays}
-                  />
-                )}/>
-                <Route path="/manage-items" render={() => (
-                  <ManageItems
-                    items={this.state.items}
-                  />
-                )}/>
                 <Route path="/picklist" render={() => (
                   <Picklist />
                 )}/>
-                {/*
-                <Route path="/shelf" render={() => (
-                  <Shelf
-                    collections={this.state.collections}
-                    settings={settings}
-                  />
+                <Route path="/item-search" render={() => (
+                  <ItemSearch />
                 )}/>
-                <Route path="/manage-shelves" render={() => (
-                  <ManageShelves
-                    collections={this.state.collections}
-                  />
+                <Route path="/manage-items" render={() => (
+                  <ManageItems />
                 )}/>
-                <Route path="/paging-add" render={() => (
-                  <AddPaging
-                    settings={settings}
-                  />
+                <Route path="/manage-trays" render={() => (
+                  <ManageTrays />
                 )}/>
-                <Route path="/paging-display" render={() => (
-                  <PagingDisplay
-                    settings={settings}
-                  />
-                )}/>
-                <Route path="/reports" render={() => (
-                  <Reports
-                    settings={settings}
-                  />
-                )}/>
-                <Route path="/history" render={() => (
-                  <History
-                    settings={settings}
-                  />
-                )}/>
-                <Route path="/search" render={() => (
-                  <Search
-                    settings={settings}
-                  />
-                )}/> */}
                 <Route path="/manage-collections" render={() => (
-                  <ManageCollections
-                    newCollections={this.collections}
-                  />
+                  <ManageCollections />
                 )}/>
                 <Route path="/users" render={() => (
-                  <ManageUsers
-                    // settings={settings}
-                  />
+                  <ManageUsers />
+                )}/>
+                <Route path="/item-logs" render={() => (
+                  <ItemLogs />
                 )}/>
               </Switch>
             </div>

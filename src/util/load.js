@@ -1,5 +1,4 @@
 import { failure } from '../components/toastAlerts'
-// import { getFormattedDate } from '../util/date';
 
 const settings = `${process.env.REACT_APP_DATABASE_URL}/setting-api/`
 const account = `${process.env.REACT_APP_DATABASE_URL}/user/`
@@ -49,6 +48,11 @@ class Load {
 
   getUsers = async (data) => {
     const get = await this.handleUpdate(`${account}get-users/`, 'GET', data);
+    return get;
+  };
+
+  getNameList = async () => {
+    const get = await this.handleUpdate(`${account}name-list/`, 'GET');
     return get;
   };
 
@@ -109,19 +113,6 @@ class Load {
     const count = await this.handleUpdate(`${trayAPI}total-count/`, 'GET');
     return count;
   }
-
-
-  // deleteTray = async (data, id) => {
-  //   const historyItems = {
-  //     action: 'deleted tray',
-  //     item: data.boxbarcode,
-  //     status_change: 'deleted',
-  //     timestamp: getFormattedDate()
-  //   };
-  //   this.handleUpdate(`${history}create/`, 'POST', historyItems);
-  //   const update = await this.handleUpdate(`${managetrayupdate}delete/${id}`, 'DELETE', data);
-  //   return update;
-  // }
 
   /**
     * @desc Item
@@ -270,45 +261,20 @@ class Load {
     return get;
   }
 
-  // getHistory = async (data, page='') => {
-  //   const search = await this.handleUpdate(`${history}filter-columns/${page ? `?page=${page}` : ''}`, 'POST', data)
-  //   return search
-  // }
+  /**
+   * @desc Log management
+   */
 
-  // updateShelf = async (data, id) => {
-  //   const update = await this.handleUpdate(`${shelfAPI}shelf-update`, 'POST', data);
-  //   return update;
-  // }
-
-  // deleteShelf = async (data) => {
-  //   const deleteShelf = await this.handleUpdate(`${shelfAPI}delete-individual-items`, 'POST', data);
-  //   return deleteShelf;
-  // }
-
-  // processBarcodes = async (data) => {
-  //   const update = await this.handleUpdate(`${managetrayupdate}`, 'POST', data)
-  //   return update
-  // }
-
-  // insertShelf = async (data) => {
-  //   const update = await this.handleUpdate(insertshelf, 'POST', data)
-  //   return update
-  // }
-
-  newItemsLog = async () => {
-    const itemsLog = await this.handleUpdate(`${itemLogAPI}statistics/`, 'GET');
-    return itemsLog;
+  getItemActions = async () => {
+    const get = await this.handleUpdate(`${itemLogAPI}actions-list/`, 'GET');
+    return get;
   }
 
-  newTraysLog = async () => {
-    const traysLog = await this.handleUpdate(`${trayLogAPI}added-statistics/`, 'GET');
-    return traysLog;
+  searchItemLogs = async (data) => {
+    const get = await this.handleUpdate(`${itemLogAPI}search/`, 'POST', data);
+    return get;
   }
 
-  traysShelvedLog = async () => {
-    const traysShelvedLog = await this.handleUpdate(`${trayLogAPI}updated-statistics/`, 'GET');
-    return traysShelvedLog;
-  }
 
   handleAccount = async (string, method, data) => {
     let response =  await fetch(string, {

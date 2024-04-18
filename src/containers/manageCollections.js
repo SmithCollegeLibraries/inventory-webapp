@@ -5,7 +5,7 @@ import ContentSearch from '../util/search';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 
 
-function ManageCollections(props) {
+function ManageCollections() {
 
   const initialState = {
     collections: [],

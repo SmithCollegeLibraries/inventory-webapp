@@ -66,7 +66,7 @@ const reducer = (state, action) => {
   }
 };
 
-const ManageItems = (props) => {
+const ManageItems = () => {
   const initialState = {
     collections: [],
     query: '',
