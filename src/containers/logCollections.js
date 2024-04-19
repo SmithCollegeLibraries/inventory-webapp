@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { warning } from '../components/toastAlerts';
 
 
-const useItemLogs = create((set) => {
+const useCollectionLogs = create((set) => {
   return {
     query: {
       "barcode": "",
@@ -42,8 +42,8 @@ const useItemLogs = create((set) => {
   }
 });
 
-const ItemLogs = () => {
-  const state = useItemLogs();
+const CollectionLogs = () => {
+  const state = useCollectionLogs();
 
   const handleQueryChange = (e, query) => {
     e.preventDefault();
@@ -53,7 +53,7 @@ const ItemLogs = () => {
 
   const handleSearch = async () => {
     state.clearResults();
-    const results = await Load.searchItemLogs(state.query);
+    const results = await Load.searchCollectionLogs(state.query);
     if (results && results.length > 0) {
       state.updateResults(results);
     }
@@ -66,7 +66,7 @@ const ItemLogs = () => {
 
   // Get list of all actions
   useEffect(() => {
-    Load.getItemActions().then((actionList) => {state.updateActionList(actionList)});
+    Load.getCollectionActions().then((actionList) => {state.updateActionList(actionList)});
   }, []);
 
   // Get list of user names
@@ -101,7 +101,7 @@ const SearchForm = props => {
   return (
     <Form inline style={{"float": "left", "width": "100%"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
-        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search item logs</Button>
+        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search collection logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
@@ -131,12 +131,12 @@ const SearchForm = props => {
         <Input
           type="text"
           style={{"marginRight": "10px"}}
-          name="barcode"
-          placeholder="Barcode"
-          value={props.barcode}
+          name="name"
+          placeholder="Name"
+          value={props.name}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
-            "barcode": e.target.value
+            "name": e.target.value
           })}
         />
         <Input
@@ -203,8 +203,8 @@ const ResultDisplay = ({ data }) => (
 const TableHead = () => (
   <thead>
     <tr>
-      <th>Item log ID</th>
-      <th>Barcode</th>
+      <th>Collection log ID</th>
+      <th>Name</th>
       <th>Action</th>
       <th>User</th>
       <th>Details</th>
@@ -216,7 +216,7 @@ const TableHead = () => (
 const TableRow = ({ log, idx }) => (
   <tr key={idx}>
     <td>{log.id}</td>
-    <td>{log.barcode}</td>
+    <td>{log.name}</td>
     <td>{log.action}</td>
     <td>{firstName(log.user)}</td>
     <td>{log.details}</td>
@@ -224,4 +224,4 @@ const TableRow = ({ log, idx }) => (
   </tr>
 )
 
-export default ItemLogs;
+export default CollectionLogs;

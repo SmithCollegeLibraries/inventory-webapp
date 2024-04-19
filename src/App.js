@@ -16,6 +16,9 @@ import {
     ManageUsers,
     // ManageSettings,
     ItemLogs,
+    TrayLogs,
+    ShelfLogs,
+    CollectionLogs,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -160,6 +163,15 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/item-logs" render={() => (
                   <ItemLogs />
+                )}/>
+                <Route path="/tray-logs" render={() => (
+                  <TrayLogs />
+                )}/>
+                <Route path="/shelf-logs" render={() => (
+                  <ShelfLogs />
+                )}/>
+                <Route path="/collection-logs" render={() => (
+                  <CollectionLogs />
                 )}/>
               </Switch>
             </div>

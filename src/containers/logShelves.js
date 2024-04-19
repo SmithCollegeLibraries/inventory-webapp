@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { warning } from '../components/toastAlerts';
 
 
-const useItemLogs = create((set) => {
+const useShelfLogs = create((set) => {
   return {
     query: {
       "barcode": "",
@@ -42,8 +42,8 @@ const useItemLogs = create((set) => {
   }
 });
 
-const ItemLogs = () => {
-  const state = useItemLogs();
+const ShelfLogs = () => {
+  const state = useShelfLogs();
 
   const handleQueryChange = (e, query) => {
     e.preventDefault();
@@ -53,7 +53,7 @@ const ItemLogs = () => {
 
   const handleSearch = async () => {
     state.clearResults();
-    const results = await Load.searchItemLogs(state.query);
+    const results = await Load.searchShelfLogs(state.query);
     if (results && results.length > 0) {
       state.updateResults(results);
     }
@@ -66,7 +66,7 @@ const ItemLogs = () => {
 
   // Get list of all actions
   useEffect(() => {
-    Load.getItemActions().then((actionList) => {state.updateActionList(actionList)});
+    Load.getShelfActions().then((actionList) => {state.updateActionList(actionList)});
   }, []);
 
   // Get list of user names
@@ -101,7 +101,7 @@ const SearchForm = props => {
   return (
     <Form inline style={{"float": "left", "width": "100%"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
-        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search item logs</Button>
+        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search shelf logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
@@ -203,7 +203,7 @@ const ResultDisplay = ({ data }) => (
 const TableHead = () => (
   <thead>
     <tr>
-      <th>Item log ID</th>
+      <th>Shelf log ID</th>
       <th>Barcode</th>
       <th>Action</th>
       <th>User</th>
@@ -224,4 +224,4 @@ const TableRow = ({ log, idx }) => (
   </tr>
 )
 
-export default ItemLogs;
+export default ShelfLogs;

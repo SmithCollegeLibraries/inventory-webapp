@@ -8,6 +8,9 @@ import ManageTrays from './manageTrays';
 import ManageCollections from './manageCollections';
 import ManageUsers from './users';
 import ItemLogs from './logItems';
+import TrayLogs from './logTrays';
+import ShelfLogs from './logShelves';
+import CollectionLogs from './logCollections';
 
 export {
   NewTray,
@@ -20,4 +23,7 @@ export {
   ManageCollections,
   ManageUsers,
   ItemLogs,
+  TrayLogs,
+  ShelfLogs,
+  CollectionLogs
 };

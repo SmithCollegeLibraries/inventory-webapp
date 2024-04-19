@@ -8,6 +8,8 @@ const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
 const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
+const shelfLogAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-log-api/`
+const collectionLogAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-log-api/`
 const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
 
 
@@ -274,6 +276,38 @@ class Load {
     const get = await this.handleUpdate(`${itemLogAPI}search/`, 'POST', data);
     return get;
   }
+
+  getTrayActions = async () => {
+    const get = await this.handleUpdate(`${trayLogAPI}actions-list/`, 'GET');
+    return get;
+  }
+
+  searchTrayLogs = async (data) => {
+    const get = await this.handleUpdate(`${trayLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+  getShelfActions = async () => {
+    const get = await this.handleUpdate(`${shelfLogAPI}actions-list/`, 'GET');
+    return get;
+  }
+
+  searchShelfLogs = async (data) => {
+    const get = await this.handleUpdate(`${shelfLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+  getCollectionActions = async () => {
+    const get = await this.handleUpdate(`${collectionLogAPI}actions-list/`, 'GET');
+    return get;
+  }
+
+  searchCollectionLogs = async (data) => {
+    const get = await this.handleUpdate(`${collectionLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+
 
 
   handleAccount = async (string, method, data) => {
