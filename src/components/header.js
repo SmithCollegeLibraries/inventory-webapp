@@ -52,11 +52,6 @@ export default class Header extends Component {
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
               <Nav className="ml-auto" navbar>
-                {level >= 35 &&
-                  <NavItem>
-                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/statistics">Statistics</NavLink>
-                  </NavItem>
-                }
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
                 </NavItem>
@@ -108,22 +103,46 @@ export default class Header extends Component {
                     </DropdownToggle>
                     <DropdownMenu right>
                       <DropdownItem>
-                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-collections">Collections</NavLink>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-items">Items</NavLink>
                       </DropdownItem>
                       <DropdownItem>
                         <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-trays">Trays</NavLink>
                       </DropdownItem>
-                      <DropdownItem>
-                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-items">Items</NavLink>
-                      </DropdownItem>
                       {/* <DropdownItem>
-                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-shelves">Shelf</NavLink>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-shelves">Shelves</NavLink>
                       </DropdownItem> */}
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-collections">Collections</NavLink>
+                      </DropdownItem>
                       {level >= 100 &&
-                        <DropdownItem>
-                          <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/users">Users</NavLink>
-                        </DropdownItem>
+                          <DropdownItem>
+                            <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/users">Users</NavLink>
+                          </DropdownItem>
                       }
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/settings">Settings</NavLink>
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </UncontrolledDropdown>
+                }
+                { level >= 60 &&
+                  <UncontrolledDropdown nav inNavbar>
+                    <DropdownToggle nav caret>
+                      Logs
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/item-logs">Item logs</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/tray-logs">Tray logs</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/shelf-logs">Shelf logs</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/collection-logs">Collection logs</NavLink>
+                      </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 }

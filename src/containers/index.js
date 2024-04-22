@@ -3,21 +3,27 @@ import RapidShelve from './rapidShelve';
 import AddReturn from './addReturn';
 import Picklist from './picklist';
 import ItemSearch from './itemSearch';
-import ManageCollections from './manageCollections';
 import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
+import ManageCollections from './manageCollections';
 import ManageUsers from './users';
-import Statistics from './statistics';
+import ItemLogs from './logItems';
+import TrayLogs from './logTrays';
+import ShelfLogs from './logShelves';
+import CollectionLogs from './logCollections';
 
 export {
   NewTray,
   RapidShelve,
   AddReturn,
   Picklist,
-  ManageCollections,
   ItemSearch,
-  ManageTrays,
   ManageItems,
+  ManageTrays,
+  ManageCollections,
   ManageUsers,
-  Statistics,
+  ItemLogs,
+  TrayLogs,
+  ShelfLogs,
+  CollectionLogs
 };

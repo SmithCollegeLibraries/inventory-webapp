@@ -1,11 +1,11 @@
 import Alerts from '../components/alerts';
 import Load from './load';
 
-const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
-const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/traylog-api/`
-const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/itemlog-api/`
+const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
+const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/itemlog-api/`
+const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/traylog-api/`
 
 
 class ContentSearch {
@@ -45,65 +45,6 @@ class ContentSearch {
     let search = await this.searchPost(`${itemLogAPI}browse`, {barcode, action, details});
     return search;
   }
-
-  // setting = async () => {
-  //   let search = await this.search(settings)
-  //   return search
-  // }
-
-  // autocomplete = async (value) => {
-  //   let search = await this.search(`${trayAPI}auto-complete-tray/?query=${value}`)
-  //   return search
-  // }
-
-  // traymanagement = async (value) => {
-
-  //   let search = await this.search(`${managetray}?query=${value.replace(/[^0-9]+/g, '')}`)
-  //   return search
-  // }
-
-  // shelfmanagement = async (value) => {
-  //   let search = await this.search(`${shelfsearchall}?query=${value}`)
-  //   return search
-  // }
-
-  // traySearch = async (value) => {
-  //   value.replace('SM', '')
-  //   let search = await this.search(`${traysearch}?query=${value.replace(/[^0-9]+/g, '')}`)
-  //   return search
-  // }
-
-  // pagingSlips = async (day) => {
-  //   let search = await this.search(`${pagingslips}?day=${day}`)
-  //   return search
-  // }
-
-  // recordData = async (barcodes) => {
-  //   let search = await this.searchPost(`${searchalephpost}`, barcodes)
-  //   return search
-  // }
-
-  // reports = async (endpoint, query) => {
-  //   let search = await this.search(`${statistics}${endpoint}${query}`)
-  //   return search
-  // }
-
-  // trayShelfSearch = async (value) => {
-  //   let search = await this.search(`${shelfmanagement}?query=${value.replace(/[^0-9]+/g, '')}`)
-  //   return search
-  // }
-
-  // getHistory = async () => {
-  //   const search = await this.search(`${history}?sort=-timestamp`)
-  //   return search
-  // }
-
-  // searchHistory = async query => {
-  //   const search = await this.search(`${history}search?query=${query}`)
-  //   return search
-  // }
-
-
   search = async (string) => {
     const storage = JSON.parse(sessionStorage.getItem('account'))
     const { account } = storage || ''

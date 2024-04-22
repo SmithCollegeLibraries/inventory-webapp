@@ -1,3 +1,22 @@
+const FIRST_NAMES_ONLY = true;
+const LAST_NAME_INITIAL = false;
+
+export function firstName(str) {
+    const strTrim = str.trim();
+    if (!strTrim.includes(' ')) {
+        return strTrim;
+    }
+    else if (FIRST_NAMES_ONLY) {
+        return strTrim.split(' ')[0];
+    }
+    else if (LAST_NAME_INITIAL) {
+        return `${strTrim.split(' ')[0]} ${strTrim.split(' ')[1].charAt(0)}.`;
+    }
+    else {
+        return strTrim;
+    }
+};
+
 export function getFormattedDate() {
     let date = new Date();
 
@@ -14,5 +33,4 @@ export function getFormattedDate() {
     sec = (sec < 10 ? "0" : "") + sec;
 
     return `${date.getFullYear() + "-" + month + "-" + day + " " +  hour + ":" + min + ":" + sec}`;
-
 }

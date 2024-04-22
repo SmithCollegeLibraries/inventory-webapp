@@ -66,7 +66,7 @@ const reducer = (state, action) => {
   }
 };
 
-const ManageItems = (props) => {
+const ManageItems = () => {
   const initialState = {
     collections: [],
     query: '',
@@ -446,6 +446,7 @@ const ItemForm = (props) => {
                 <option value="Circulating">Circulating</option>
                 <option value="To return to campus">To return to campus</option>
                 <option value="Returned to campus">Returned to campus</option>
+                <option value="Withdrawn">Withdrawn</option>
                 <option value="Missing">Missing</option>
               </Input>
             </FormGroup>

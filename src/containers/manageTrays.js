@@ -59,7 +59,7 @@ const reducer = (state, action) => {
   }
 };
 
-const ManageTrays = (props) => {
+const ManageTrays = () => {
   const initialState = {
     query: '',
     search_results: [],
