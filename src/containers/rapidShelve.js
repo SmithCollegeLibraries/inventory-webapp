@@ -17,7 +17,6 @@ const RapidShelve = () => {
       position: '',
     },
     staged: [],
-    timeout: 0,
     settings: {},
   };
 
@@ -42,7 +41,6 @@ const RapidShelve = () => {
             depth: '',
             position: '',
           },
-          timeout: 0,
         };
       case 'DELETE_ALL':
         return {
@@ -54,7 +52,6 @@ const RapidShelve = () => {
             position: '',
           },
           staged: [],
-          timeout: 0,
         };
       case 'UPDATE_SETTINGS':
         return {
@@ -555,7 +552,7 @@ const CurrentShelvingForm = props => (
         <Label for="shelf">Shelf{ ' ' }
           { props.shelfRegex.test(props.current.shelf)
             ? <><Badge color="success">{props.current.shelf.length}</Badge> ✓</>
-            : (props.current.shelf.length === 7 ? <Badge color="warning">{props.current.shelf.length}</Badge> : <Badge color="danger">{props.current.shelf.length}</Badge>)
+            : (props.current.shelf.length === props.settings.shelfBarcodeLength ? <Badge color="warning">{props.current.shelf.length}</Badge> : <Badge color="danger">{props.current.shelf.length}</Badge>)
           }
         </Label>
         <Input
