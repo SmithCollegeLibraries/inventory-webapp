@@ -12,6 +12,7 @@ import {
     DropdownItem,
   } from 'reactstrap';
 import { NavLink } from 'react-router-dom';
+import { firstName } from '../util/helpers';
 
 
 export default class Header extends Component {
@@ -37,13 +38,13 @@ export default class Header extends Component {
     const { level } = account || '';
     const isTestInstance = process.env.REACT_APP_ROOT.includes("-dev");
     const isBetaInstance = process.env.REACT_APP_ROOT.includes("-beta");
-    const versionSuffix = isTestInstance ? "— TEST VERSION: YOUR WORK WILL NOT BE SAVED" : (isBetaInstance ? "BETA" : "");
+    const versionSuffix = isTestInstance ? "— TEST SITE: YOUR WORK WILL NOT BE SAVED" : (isBetaInstance ? "BETA" : "");
     const colorAttributes = {
         color: isTestInstance ? 'danger' : (isBetaInstance ? 'light' : 'dark'),
         light: isTestInstance,
         dark: !isTestInstance,
       };
-    const sisHeader = `SIS ${versionSuffix} (version ${process.env.REACT_APP_VERSION})`;
+    const sisHeader = `SIS ${process.env.REACT_APP_VERSION} ${versionSuffix} • ${firstName(account.name)}’s account`;
     return (
       <div>
         <Navbar {...colorAttributes} expand="md">
