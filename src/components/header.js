@@ -37,13 +37,13 @@ export default class Header extends Component {
     const { level } = account || '';
     const isTestInstance = process.env.REACT_APP_ROOT.includes("-dev");
     const isBetaInstance = process.env.REACT_APP_ROOT.includes("-beta");
-    const versionSuffix = isTestInstance ? "TEST" : (isBetaInstance ? "BETA" : "");
+    const versionSuffix = isTestInstance ? "— TEST VERSION: YOUR WORK WILL NOT BE SAVED" : (isBetaInstance ? "BETA" : "");
     const colorAttributes = {
-        color: isTestInstance ? 'light' : 'dark',
+        color: isTestInstance ? 'danger' : (isBetaInstance ? 'light' : 'dark'),
         light: isTestInstance,
         dark: !isTestInstance,
       };
-    const sisHeader = `SIS ’23 ${versionSuffix} (Version ${process.env.REACT_APP_VERSION})`;
+    const sisHeader = `SIS ${versionSuffix} (version ${process.env.REACT_APP_VERSION})`;
     return (
       <div>
         <Navbar {...colorAttributes} expand="md">
