@@ -56,44 +56,17 @@ export default class Header extends Component {
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
                 </NavItem>
-                {/*
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/shelf">Shelf</NavLink>
-                </NavItem>
-                <UncontrolledDropdown nav inNavbar>
-                  <DropdownToggle nav caret>
-                    Paging
-                  </DropdownToggle>
-                  <DropdownMenu right>
-                    <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/paging-add">Add</NavLink>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/paging-display">Pick</NavLink>
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/search">Search</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/history">History</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/reports">Reports</NavLink>
-                </NavItem>
-                */}
                 <NavItem>
                   <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
                 </NavItem>
                 { level >= 40 &&
                   <NavItem>
-                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Add/Return</NavLink>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
                   </NavItem>
                 }
                 { level >= 40 &&
                   <NavItem>
-                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Return</NavLink>
                   </NavItem>
                 }
                 { level >= 35 &&
