@@ -44,7 +44,7 @@ export default class Header extends Component {
         light: isTestInstance,
         dark: !isTestInstance,
       };
-    const sisHeader = `SIS ${process.env.REACT_APP_VERSION} ${versionSuffix} • ${firstName(account.name)}’s account`;
+    const sisHeader = `SIS ${process.env.REACT_APP_VERSION} ${versionSuffix} • ${account ? firstName(account.name) + "’s account" : "Not logged in"}`;
     return (
       <div>
         <Navbar {...colorAttributes} expand="md">
