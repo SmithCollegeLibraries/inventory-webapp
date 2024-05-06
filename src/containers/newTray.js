@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
+import { numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
@@ -394,8 +395,8 @@ const NewTray = () => {
       }
     }
     else {
-      if (data.original.tray.length === data.settings.trayBarcodeLength) {
-        failure(`Valid tray barcodes begin with 1.`);
+      if (numericPortion(data.original.tray).length === data.settings.trayBarcodeLength) {
+        failure(`Valid tray barcodes begin with 0 or 1.`);
       }
       // Don't give popup alert if it's just the wrong length, to avoid
       // excessive alerts
@@ -657,7 +658,7 @@ const NewTray = () => {
     // fields; this is important because the actual barcodes for trays are
     // prefixed with SM, which the barcode scanners will add to the input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     else if (e.target.name === 'collection') {
       value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
@@ -950,10 +951,10 @@ const TrayFormOriginal = props => (
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.original.tray)
-            ? <Badge color="success">{props.original.tray.length}</Badge>
+            ? <Badge color="success">{numericPortion(props.original.tray).length}</Badge>
             : props.original.tray.length === 0
               ? <Badge>{props.original.tray.length}</Badge>
-              : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === numericPortion(props.original.tray).length ? "warning" : "danger"}>{numericPortion(props.original.tray).length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
