@@ -459,7 +459,9 @@ const NewTray = () => {
               dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
             }
             else {
-              failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              if (data.collectionValidatedAgainstFolio) {
+                failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              }
               dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
               return false;
             }
@@ -500,8 +502,10 @@ const NewTray = () => {
           brokenBarcodes.push(barcode);
         }
         else if (data.itemFolioBad.includes(barcode)) {
-          failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
-          brokenBarcodes.push(barcode);
+          if (data.collectionValidatedAgainstFolio) {
+            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+            brokenBarcodes.push(barcode);
+          }
         }
         else {
           if (!data.itemUsedCheckStarted.includes(barcode) && !data.itemUsedGood.includes(barcode)) {
