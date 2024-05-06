@@ -41,6 +41,7 @@ const NewTray = () => {
     itemFolioBad: [],
     itemFolioGood: [],
     itemAlreadyAlerted: [],
+    collectionValidatedAgainstFolio: true,
 
     // Containers for the error items we actually display
     duplicateOriginalItems: "",
@@ -54,6 +55,14 @@ const NewTray = () => {
         return {
           ...state,
           original: action.original,
+        };
+      case 'UPDATE_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
         };
       case 'ADD_VERIFY':
         return {
@@ -179,6 +188,11 @@ const NewTray = () => {
           ...state,
           form: action.form,
         };
+      case 'CHANGE_COLLECTION_VALIDATION':
+        return {
+          ...state,
+          collectionValidatedAgainstFolio: action.value,
+        };
       case 'CLEAR_CHECKS':
         return {
           ...state,
@@ -250,13 +264,13 @@ const NewTray = () => {
       dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
     }
     else {
-      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
       const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [data.itemAlreadyAlerted]);
 
-  const verifyItemsOnSubmit = (barcodes) => {
+  const verifyItemsOnSubmit = (barcodes, collection) => {
     // For each barcode, confirm that it's checked against the system
     // and that it's checked against FOLIO
     for (const barcode of barcodes) {
@@ -265,13 +279,15 @@ const NewTray = () => {
           // Do nothing if the barcode is in both lists
         }
         else {
-          if (data.itemFolioBad.includes(barcode)) {
-            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
-            return false;
-          }
-          else {
-            warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
-            return false;
+          if (data.collectionValidatedAgainstFolio) {
+            if (data.itemFolioBad.includes(barcode)) {
+              failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              return false;
+            }
+            else {
+              warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
+              return false;
+            }
           }
         }
       }
@@ -297,6 +313,7 @@ const NewTray = () => {
     }
     return true;
   }
+
 
   // Get settings from database on load
   useEffect(() => {
@@ -433,7 +450,7 @@ const NewTray = () => {
         return true;
       };
 
-      const verifyFolioRecord = async (barcodes) => {
+      const verifyFolioRecord = async (barcodes, collection) => {
         dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', items: barcodes });
         for (const barcode of barcodes) {
           if (barcode.length > 0) {
@@ -497,12 +514,14 @@ const NewTray = () => {
       }
 
       let allItemsFree = verifyItemsFree(barcodesToLookupInSystem);
-      let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio);
+      let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio, data.original.collection);
       if (await allItemsFree !== true) {
         return false;
       }
-      if (await allItemsInFolio !== true) {
-        return false;
+      if (data.collectionValidatedAgainstFolio) {
+        if (await allItemsInFolio !== true) {
+          return false;
+        }
       }
 
       // If we've made it this far, all barcodes are valid
@@ -546,11 +565,31 @@ const NewTray = () => {
     if (originalDuplicates.length > 0 || verifyDuplicates.length > 0) {
       // Play error message but don't give popup alert because we are
       // already showing the duplicate barcode error on screen
-      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
       const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Notice when the collection is changed, and update whether we validate
+  // against FOLIO if necessary.
+  useEffect(() => {
+    const getCollectionInfo = (collection) => {
+      if (collection === '') {
+        return {};
+      }
+      else {
+        return data.collections.find(c => c.name === collection);
+      }
+    };
+    const collectionInfo = getCollectionInfo(data.original.collection);
+    if (collectionInfo) {
+      dispatch({
+        type: 'CHANGE_COLLECTION_VALIDATION',
+        value: data.original.collection ? getCollectionInfo(data.original.collection).folio_validated : true
+      });
+    }
+  }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // For handling bad barcode items in the original pane (these are things
   // that aren't duplicates, but intrinsically should not be added)
@@ -558,7 +597,12 @@ const NewTray = () => {
     const barcodes = debouncedLeftPaneItems.split('\n').filter(Boolean);
     let errorItems = [];
     barcodes.forEach(barcode => {
-      if (data.itemAlreadyAlerted.includes(barcode)) {
+      if (data.itemUsedBadStaged.includes(barcode) || data.itemUsedBadSystem.includes(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+      else if (data.collectionValidatedAgainstFolio && data.itemFolioBad.includes(barcode)) {
         if (!errorItems.includes(barcode)) {
           errorItems.push(barcode);
         }
@@ -568,7 +612,7 @@ const NewTray = () => {
     if (errorItemsAsString !== data.errorItems) {
       dispatch({ type: 'UPDATE_BAD_BARCODES', errorItems: errorItemsAsString });
     }
-  }, [debouncedLeftPaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedLeftPaneItems, data.collectionValidatedAgainstFolio]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On load, check local storage for any staged items
   useEffect(() => {
@@ -779,7 +823,7 @@ const NewTray = () => {
           removeTrayFromStaged(tray.barcode);
         }
         else {
-          const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+          const errorPath = process.env.PUBLIC_URL + "/error.mp3";
           const errorAudio = new Audio(errorPath);
           errorAudio.play();
         }

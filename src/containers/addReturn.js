@@ -311,7 +311,10 @@ const AddReturn = () => {
           }
         }
 
-      let itemInFolio = verifyFolioRecord(barcodeToLookupInFolio);
+      // TODO: For adding single item, validate against FOLIO. This is not
+      // necessary for returns
+      // let itemInFolio = verifyFolioRecord(barcodeToLookupInFolio);
+      let itemInFolio = true;
       if (await itemInFolio !== true) {
         return false;
       }
