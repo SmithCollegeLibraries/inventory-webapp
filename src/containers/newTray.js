@@ -654,9 +654,7 @@ const NewTray = () => {
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
       value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
@@ -672,11 +670,9 @@ const NewTray = () => {
     e.preventDefault();
     const verify = data.verify;
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     verify[e.target.name] = value;
     dispatch({ type: 'ADD_VERIFY', verify: verify});

@@ -81,14 +81,9 @@ const ManageTrays = () => {
 
   const handleQueryChange = (e) => {
     e.preventDefault();
-    let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field;
-    // this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
-    value = e.target.value.replace(/\D/g,'');
     dispatch({
       type: "QUERY_CHANGE",
-      payload: value,
+      payload: e.target.value,
     });
   };
 

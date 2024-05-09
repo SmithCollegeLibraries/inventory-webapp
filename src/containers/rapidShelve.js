@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
+import { numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
@@ -313,9 +314,9 @@ const RapidShelve = () => {
     e.persist();
 
     let value = e.target.value;
-    // Remove non-numeric characters from tray barcode
+    // Remove non-accepted characters from tray barcode
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g, '');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     // Remove non-accepted characters from shelf barcode
     if (e.target.name === 'shelf') {
@@ -531,8 +532,8 @@ const CurrentShelvingForm = props => (
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.current.tray)
-            ? <><Badge color="success">{props.current.tray.length}</Badge> ✓</>
-            : <Badge color={props.settings.trayBarcodeLength === props.current.tray.length ? "warning" : "danger"}>{props.current.tray.length}</Badge>
+            ? <><Badge color="success">{numericPortion(props.current.tray).length}</Badge> ✓</>
+            : <Badge color={props.current.tray.length === 0 ? "secondary" : props.settings.trayBarcodeLength === numericPortion(props.current.tray).length ? "warning" : "danger"}>{numericPortion(props.current.tray).length}</Badge>
           }
         </Label>
         <Input
@@ -552,7 +553,7 @@ const CurrentShelvingForm = props => (
         <Label for="shelf">Shelf{ ' ' }
           { props.shelfRegex.test(props.current.shelf)
             ? <><Badge color="success">{props.current.shelf.length}</Badge> ✓</>
-            : (props.current.shelf.length === props.settings.shelfBarcodeLength ? <Badge color="warning">{props.current.shelf.length}</Badge> : <Badge color="danger">{props.current.shelf.length}</Badge>)
+            : <Badge color={props.current.shelf.length === 0 ? "secondary" : (props.current.shelf.length === props.settings.shelfBarcodeLength ? "warning" : "danger")}>{props.current.shelf.length}</Badge>
           }
         </Label>
         <Input
