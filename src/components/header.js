@@ -53,12 +53,26 @@ export default class Header extends Component {
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
               <Nav className="ml-auto" navbar>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
-                </NavItem>
+                { level >= 30 &&
+                  <UncontrolledDropdown nav inNavbar>
+                    <DropdownToggle nav caret>
+                      New
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                      <DropdownItem>
+                        <NavLink className="nav-link" style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink className="nav-link" style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} to="/new-box">New box</NavLink>
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </UncontrolledDropdown>
+                }
+                { level >= 30 &&
+                  <NavItem>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
+                  </NavItem>
+                }
                 { level >= 40 &&
                   <NavItem>
                     <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
@@ -69,7 +83,7 @@ export default class Header extends Component {
                     <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Return</NavLink>
                   </NavItem>
                 }
-                { level >= 35 &&
+                { level >= 20 &&
                   <NavItem>
                     <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/item-search">Search</NavLink>
                   </NavItem>

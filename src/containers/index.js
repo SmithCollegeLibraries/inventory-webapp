@@ -1,4 +1,5 @@
 import NewTray from './newTray';
+import NewBox from './newBox';
 import RapidShelve from './rapidShelve';
 import AddReturn from './addReturn';
 import Picklist from './picklist';
@@ -15,6 +16,7 @@ import CollectionLogs from './logCollections';
 export {
   NewTray,
   RapidShelve,
+  NewBox,
   AddReturn,
   Picklist,
   ItemSearch,

@@ -5,6 +5,7 @@ import './css/index.css';
 import 'react-s-alert/dist/s-alert-default.css';
 import {
     NewTray,
+    NewBox,
     RapidShelve,
     AddReturn,
     Picklist,
@@ -136,6 +137,9 @@ export default class Main extends Component {
                 </Route>
                 <Route path="/new-tray" render={() => (
                   <NewTray />
+                )}/>
+                <Route path="/new-box" render={() => (
+                  <NewBox />
                 )}/>
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />
