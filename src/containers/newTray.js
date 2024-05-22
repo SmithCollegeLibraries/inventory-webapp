@@ -539,7 +539,7 @@ const NewTray = () => {
       // When checking live, don't check the last item if it isn't 15
       // characters long, because it's probably not a complete barcode
       const lastItem = allItems ? allItems[allItems.length - 1] : '';
-      const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
+      const itemsToVerify = lastItem.length < 15 ? allItems.slice(0, -1) : allItems;
       if (itemsToVerify) {
         verifyItemsLive(itemsToVerify);
       }
@@ -601,8 +601,14 @@ const NewTray = () => {
   useEffect(() => {
     const barcodes = debouncedLeftPaneItems.split('\n').filter(Boolean);
     let errorItems = [];
+    var itemRegex = new RegExp(data.settings.itemStructure);
     barcodes.forEach(barcode => {
-      if (data.itemUsedBadStaged.includes(barcode) || data.itemUsedBadSystem.includes(barcode)) {
+      if (!itemRegex.test(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+      else if (data.itemUsedBadStaged.includes(barcode) || data.itemUsedBadSystem.includes(barcode)) {
         if (!errorItems.includes(barcode)) {
           errorItems.push(barcode);
         }
@@ -687,7 +693,7 @@ const NewTray = () => {
 
   const goBackToOriginal = e => {
     e.preventDefault();
-    if (window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
+    if ((!data.verify.tray && !data.verify.items) || window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
       dispatch({ type: 'CHANGE_FORM', form: 'original'});
       dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
     }
@@ -1028,7 +1034,7 @@ const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
       <Label for="collections">Collection</Label>
-      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
+      <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
