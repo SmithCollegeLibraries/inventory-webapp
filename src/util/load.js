@@ -258,6 +258,11 @@ class Load {
     return get;
   }
 
+  getUnverifiedCollections = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-unverified-collections/`, 'GET');
+    return get;
+  }
+
   getDefaultCollection = async () => {
     const get = await this.handleUpdate(`${collectionAPI}get-default/`, 'GET');
     return get;

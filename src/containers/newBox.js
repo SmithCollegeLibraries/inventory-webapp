@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, Fragment } from 'react';
+import React, { useEffect, useReducer, useRef, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
 import { numericPortion } from '../util/helpers';
@@ -78,18 +78,6 @@ const NewBox = () => {
           ...state,
           staged: action.staged,
         };
-      case 'RESET_ORIGINAL':
-        return {
-          ...state,
-          original: {
-            collection: '',
-            item: '',
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
-          },
-        };
       case 'RESET_VERIFY':
         return {
           ...state,
@@ -101,26 +89,6 @@ const NewBox = () => {
             depth: '',
             position: '',
           },
-        };
-      case 'DELETE_ALL':
-        return {
-          ...state,
-          original: {
-            collection: '',
-            item: '',
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
-          },
-          verify: {
-            item: '',
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
-          },
-          staged: [],
         };
       case 'UPDATE_SETTINGS':
         return {
@@ -220,9 +188,6 @@ const NewBox = () => {
           verify: {
             item: '',
             tray: '',
-            shelf: '',
-            depth: '',
-            position: '',
           },
           // Don't add 'verified' here! That should not be cleared on reset!
 
@@ -244,7 +209,7 @@ const NewBox = () => {
 
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
-  const debouncedTray = useDebounce(data.original.tray);
+  const debouncedOriginalTray = useDebounce(data.original.tray);
 
   // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
@@ -254,6 +219,16 @@ const NewBox = () => {
     };
     getLocal();
   }, []);
+
+  // When the form changes, focus on the first input
+  useEffect(() => {
+    if (data.form === 'original') {
+      originalRef.current.focus();
+    }
+    else if (data.form === 'verify') {
+      verifyRef.current.focus();
+    }
+  }, [data.form]);
 
   const checkVerifyPossible = () => {
     // Check that the tray matches the expected structure
@@ -289,10 +264,7 @@ const NewBox = () => {
   const checkAddPossible = () => {
     // Check that the verify section matches the original section
     return ((data.original.item === data.verify.item)
-        && (data.original.tray === data.verify.tray)
-        && (data.original.shelf === data.verify.shelf)
-        && (data.original.depth === data.verify.depth)
-        && (data.original.position === data.verify.position));
+        && (data.original.tray === data.verify.tray));
   }
 
   // This is the verification that's done on a tray in real time,
@@ -345,19 +317,9 @@ const NewBox = () => {
       };
       const locationResults = await Load.searchTraysByLocation(locationPayload);
 
-      // Check that the tray exists in the system
-      if (results === null) {
-        failure(`Tray ${tray} does not exist in the system`);
-        return false;
-      }
-      // // Check that it's not shelved already
-      // else if (results.shelf !== null) {
-      //   failure(`Tray ${tray} is already marked as being on shelf ${results.shelf}`);
-      //   return false;
-      // }
-      // Check that the tray is not empty
-      else if (results.items.length === 0) {
-        failure(`Tray ${tray} is empty and should not be shelved`);
+      // Check that the tray does not in the system
+      if (results !== null) {
+        failure(`Tray ${tray} already exists in the system`);
         return false;
       }
       // Check that the location of the new tray isn't already taken
@@ -387,7 +349,7 @@ const NewBox = () => {
   // Get list of active collections from database on load
   useEffect(() => {
     const getCollections = async () => {
-      const collections = await Load.getAllCollections();
+      const collections = await Load.getUnverifiedCollections();
       dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
     };
     getCollections();
@@ -415,7 +377,7 @@ const NewBox = () => {
 
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
-    const trayBarcodeToVerify = debouncedTray;
+    const trayBarcodeToVerify = debouncedOriginalTray;
     const trayRegex = new RegExp(data.settings.trayStructure);
 
     if (trayBarcodeToVerify) {
@@ -426,7 +388,7 @@ const NewBox = () => {
     if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
       failure(`Valid tray barcodes begin with 1.`);
     }
-  }, [debouncedTray]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
@@ -436,6 +398,9 @@ const NewBox = () => {
       return data.staged[0];
     }
   }
+
+  const originalRef = useRef(null);
+  const verifyRef = useRef(null);
 
   // Make sure that the new tray is shelved in an expected location:
   // i.e. the next position in the same depth, or the first position
@@ -581,7 +546,14 @@ const NewBox = () => {
     dispatch({ type: 'UPDATE_ORIGINAL', original: original});
   }
 
-  const handleVerifyOnChange = handleOriginalOnChange;
+  const handleVerifyOnChange = (e) => {
+    e.preventDefault();
+    e.persist();
+
+    const verify = data.verify;
+    verify[e.target.name] = processFieldChanges(e);
+    dispatch({ type: 'UPDATE_VERIFY', verify: verify});
+  };
 
   const handleSubmitOriginal = async (e) => {
     // If the Add button is disabled, do nothing
@@ -620,9 +592,9 @@ const NewBox = () => {
 
     const processSubmit = async () => {
       const newStaged = [data.original].concat(data.staged);
-      localforage.setItem('load', newStaged);
+      localforage.setItem('newbox', newStaged);
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
-      dispatch({ type: 'RESET_ORIGINAL' });
+      dispatch({ type: 'RESET' });
     }
 
     if (verifyTrayLive(data.original.tray) === true &&
@@ -652,7 +624,7 @@ const NewBox = () => {
       const previousTray = getPreviousTray();
       if (previousTray) {
         removeTrays([previousTray.tray]);
-        dispatch({ type: 'RESET_ORIGINAL' });
+        dispatch({ type: 'RESET' });
       }
     }
   };
@@ -665,7 +637,7 @@ const NewBox = () => {
     };
 
     staged[key] = values;
-    localforage.setItem('load', staged);
+    localforage.setItem('newbox', staged);
     dispatch({ type: 'UPDATE_STAGED', staged: staged});
   };
 
@@ -674,6 +646,9 @@ const NewBox = () => {
     if (navigator.onLine === true) {
       let submittedTrays = [];
       for (const x of Object.keys(data.staged).map(key => data.staged[key])) {
+        // Adjust parameter names for API
+        x['items'] = [x['item']];
+        x['barcode'] = x['tray'];
         const response = await Load.shelveTray(x);
         if (response) {
           success(`Tray ${x.tray} successfully shelved`);
@@ -681,7 +656,7 @@ const NewBox = () => {
         }
       }
       removeTrays(submittedTrays);
-      dispatch({ type: "RESET_ORIGINAL" });
+      dispatch({ type: "RESET" });
     }
     else {
       failure("You must be connected to the internet to process trays. Please check your internet connection.");
@@ -690,12 +665,15 @@ const NewBox = () => {
 
   const clearOriginal = (e) => {
     e.preventDefault();
-    dispatch({ type: 'RESET_ORIGINAL' });
+    dispatch({ type: 'RESET' });
   }
 
-  const clearVerify = (e) => {
+  const goBackToOriginal = (e) => {
     e.preventDefault();
-    dispatch({ type: 'RESET_VERIFY' });
+    if ((!data.verify.item && !data.verify.tray) || window.confirm('Are you sure you want to clear the verification pane and go back to editing the box information? This action cannot be undone.')) {
+      dispatch({ type: 'CHANGE_FORM', form: 'original'});
+      dispatch({ type: 'RESET_VERIFY' });
+    }
   }
 
   // We want to be able to remove more than one tray at a time from the
@@ -710,7 +688,7 @@ const NewBox = () => {
         .map(key => stagedTrays[key])
         .filter(x => !trayBarcodes.includes(x.tray));
     dispatch({ type: 'UPDATE_STAGED', staged: newTrayList});
-    localforage.setItem('load', newTrayList);
+    localforage.setItem('newbox', newTrayList);
   };
 
   const handleEnter = e => {
@@ -728,9 +706,6 @@ const NewBox = () => {
       e.preventDefault();
       e.persist();
       handleSubmitOriginal(e);
-      // Go back to the first element in the form
-      const form = e.target.form;
-      form.elements[0].focus();
     }
   };
 
@@ -739,9 +714,6 @@ const NewBox = () => {
       e.preventDefault();
       e.persist();
       handleSubmitVerify(e);
-      // Go back to the first element in the form
-      const form = e.target.form;
-      form.elements[0].focus();
     }
   }
 
@@ -749,7 +721,7 @@ const NewBox = () => {
     if (window.confirm('Are you sure you want to clear all staged trays as well as the current tray? This action cannot be undone.')) {
       dispatch({ type: "RESET" });
       dispatch({ type: 'UPDATE_STAGED', staged: []});
-      localforage.setItem('load', {});
+      localforage.setItem('newbox', {});
     }
   };
 
@@ -761,6 +733,7 @@ const NewBox = () => {
             <Card>
               <CardBody>
                 <OriginalShelvingForm
+                  ref={originalRef}
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitOriginal}
                   collections={data.collections}
@@ -771,7 +744,9 @@ const NewBox = () => {
                   verifyTrayLive={verifyTrayLive}
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
-                  disabledOriginalClear={data.original.tray === '' && data.original.shelf === '' && data.original.depth === '' && data.original.position === ''}
+                  disabled={data.form === 'verify'}
+                  disabledSubmit={data.original.item === '' || data.original.tray === '' || data.original.shelf === '' || data.original.depth === '' || data.original.position === ''}
+                  disabledClear={data.original.tray === '' && data.original.shelf === '' && data.original.depth === '' && data.original.position === ''}
                   itemRegex={new RegExp(data.settings.itemStructure)}
                   trayRegex={new RegExp(data.settings.trayStructure)}
                   shelfRegex={new RegExp(data.settings.shelfStructure)}
@@ -783,6 +758,7 @@ const NewBox = () => {
             <Card>
               <CardBody>
                 <VerifyShelvingForm
+                  ref={verifyRef}
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitVerify}
                   collections={data.collections}
@@ -792,8 +768,9 @@ const NewBox = () => {
                   handleVerifyOnChange={handleVerifyOnChange}
                   handleSubmitVerify={handleSubmitVerify}
                   checkAddPossible={checkAddPossible}
-                  clearVerify={clearVerify}
-                  disabledVerifyClear={true}
+                  goBackToOriginal={goBackToOriginal}
+                  disabled={data.form === 'original'}
+                  disabledSubmit={data.verify.item === '' || data.verify.tray === '' || data.verify.item !== data.original.item || data.verify.tray !== data.original.tray}
                   itemRegex={new RegExp(data.settings.itemStructure)}
                   trayRegex={new RegExp(data.settings.trayStructure)}
                   shelfRegex={new RegExp(data.settings.shelfStructure)}
@@ -802,8 +779,16 @@ const NewBox = () => {
             </Card>
           </Col>
           <Col md="4">
+            { Object.keys(data.staged).map(items => items).length ?
+              <Row style={{"display": "flex", "marginBottom": "20px"}}>
+                <Button style={{marginBottom: '10px', marginLeft: '15px', marginRight: '10px'}} onClick={(e) => handleProcessBoxes(e)} color="primary">Process all</Button>
+                <Button style={{marginBottom: '10px', marginRight: '10px'}} onClick={(e) => handleUndo(e)} color="warning">Undo last</Button>
+                <Button style={{marginBottom: '10px', marginLeft: 'auto', marginRight: '15px'}} color="danger" onClick={(e) => clearDisplayGrid(e)}>Delete all</Button>
+              </Row>
+              : ''
+            }
             <Display
-              data={data.staged}
+              staged={data.staged}
               removeTrays={removeTrays}
               handleDisplayChange={handleDisplayChange}
               handleProcessBoxes={handleProcessBoxes}
@@ -817,12 +802,12 @@ const NewBox = () => {
   );
 };
 
-const OriginalShelvingForm = props => (
+const OriginalShelvingForm = React.forwardRef((props, ref) =>  (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
         <Label for="collections">Collection</Label>
-        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+        <Input type="select" disabled={props.disabled} value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
           <option>{ COLLECTION_PLACEHOLDER }</option>
           { props.collections
             ? Object.keys(props.collections).map((items, idx) => (
@@ -841,7 +826,9 @@ const OriginalShelvingForm = props => (
         </Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="item"
+          ref={ref}
           placeholder="Item barcode, e.g. 310183630375201"
           value={props.original.item}
           onChange={(e) => props.handleOriginalOnChange(e)}
@@ -861,6 +848,7 @@ const OriginalShelvingForm = props => (
         </Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="tray"
           placeholder="Tray-style barcode, e.g. 10001234"
           value={props.original.tray}
@@ -881,6 +869,7 @@ const OriginalShelvingForm = props => (
         </Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="shelf"
           placeholder="Shelf barcode, e.g. 01R1204"
           value={props.original.shelf}
@@ -896,6 +885,7 @@ const OriginalShelvingForm = props => (
         <Label for="depth">Depth</Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="depth"
           placeholder="Front, Middle, Rear"
           value={props.original.depth}
@@ -911,6 +901,7 @@ const OriginalShelvingForm = props => (
         <Label for="position">Position</Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="position"
           placeholder="Position from the left (1, 2, …)"
           value={props.original.position}
@@ -927,46 +918,40 @@ const OriginalShelvingForm = props => (
           style={{marginRight: '10px'}}
           onClick={e => props.handleSubmitOriginal(e)}
           color="primary"
-          disabled={!props.checkVerifyPossible()}>
-        Add
+          disabled={props.disabled || !props.checkVerifyPossible()}>
+        Verify
       </Button>
       <Button
           style={{marginRight: '10px'}}
           color="warning"
           onClick={(e) => props.clearOriginal(e)}
-          disabled={props.disabledClear}>
+          disabled={props.disabled || props.disabledClear}>
         Clear
       </Button>
     </Form>
   </div>
-);
+));
 
-const VerifyShelvingForm = props => (
+const VerifyShelvingForm = React.forwardRef((props, ref) =>  (
   <div>
     <Form style={{zIndex: 0}} className="sticky-top" autoComplete="off">
       <FormGroup>
         <Label for="collections">Collection</Label>
-        <Input disabled value={props.original.collection} name="collection">
-          <option>{ COLLECTION_PLACEHOLDER }</option>
-          { props.collections
-            ? Object.keys(props.collections).map((items, idx) => (
-                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-              ))
-            : <option></option>
-          }
-        </Input>
+        <Input type="text" disabled name="collection" value={props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection} />
       </FormGroup>
       <FormGroup>
         <Label for="item">Item{ ' ' }
-          { props.trayRegex.test(props.verify.item)
+          { props.itemRegex.test(props.verify.item) && props.original.item === props.verify.item
             ? <><Badge color="success">{props.verify.item.length}</Badge> ✓</>
             : <Badge color={props.verify.item.length === 0 ? "secondary" : (props.settings.itemBarcodeLength === props.verify.item.length ? "warning" : "danger")}>{props.verify.item.length}</Badge>
           }
         </Label>
         <Input
           type="text"
+          ref={ref}
+          disabled={props.disabled}
           name="item"
-          placeholder="Item barcode, e.g. 310183630375201"
+          placeholder={ props.disabled ? "" : "Item barcode, e.g. 310183630375201" }
           value={props.verify.item}
           onChange={(e) => props.handleVerifyOnChange(e)}
           onPaste={(e)=>{
@@ -978,69 +963,19 @@ const VerifyShelvingForm = props => (
       </FormGroup>
       <FormGroup>
         <Label for="tray">Tray (box){ ' ' }
-          { props.trayRegex.test(props.verify.tray)
+          { props.trayRegex.test(props.verify.tray) && props.original.tray === props.verify.tray
             ? <><Badge color="success">{numericPortion(props.verify.tray).length}</Badge> ✓</>
             : <Badge color={props.verify.tray.length === 0 ? "secondary" : (props.settings.trayBarcodeLength === numericPortion(props.verify.tray).length ? "warning" : "danger")}>{numericPortion(props.verify.tray).length}</Badge>
           }
         </Label>
         <Input
           type="text"
+          disabled={props.disabled}
           name="tray"
-          placeholder="Tray-style barcode, e.g. 10001234"
+          placeholder={ props.disabled ? "" : "Tray-style barcode, e.g. 10001234" }
           value={props.verify.tray}
           onChange={(e) => props.handleVerifyOnChange(e)}
           onPaste={(e)=>{
-            e.preventDefault()
-            return false;
-          }}
-          onKeyDown={props.handleEnter}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="shelf">Shelf{ ' ' }
-          { props.shelfRegex.test(props.verify.shelf)
-            ? <><Badge color="success">{props.verify.shelf.length}</Badge> ✓</>
-            : <Badge color={props.verify.shelf.length === 0 ? "secondary" : (props.verify.shelf.length === props.settings.shelfBarcodeLength ? "warning" : "danger")}>{props.verify.shelf.length}</Badge>
-          }
-        </Label>
-        <Input
-          type="text"
-          name="shelf"
-          placeholder="Shelf barcode, e.g. 01R1204"
-          value={props.verify.shelf}
-          onChange={(e) => props.handleVerifyOnChange(e)}
-          onPaste={(e) => {
-            e.preventDefault()
-            return false;
-          }}
-          onKeyDown={props.handleEnter}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="depth">Depth</Label>
-        <Input
-          type="text"
-          name="depth"
-          placeholder="Front, Middle, Rear"
-          value={props.verify.depth}
-          onChange={(e) => props.handleVerifyOnChange(e)}
-          onPaste={(e) => {
-            e.preventDefault()
-            return false;
-          }}
-          onKeyDown={props.handleEnter}
-        />
-      </FormGroup>
-      <FormGroup>
-        <Label for="position">Position</Label>
-        <Input
-          type="text"
-          name="position"
-          placeholder="Position from the left (1, 2, …)"
-          value={props.verify.position}
-          maxLength="2"
-          onChange={(e) => props.handleVerifyOnChange(e)}
-          onPaste={(e) => {
             e.preventDefault()
             return false;
           }}
@@ -1051,60 +986,48 @@ const VerifyShelvingForm = props => (
           style={{marginRight: '10px'}}
           onClick={e => props.handleSubmitVerify(e)}
           color="primary"
-          disabled={!props.checkAddPossible()}>
+          disabled={props.disabled || props.disabledSubmit}>
         Add
       </Button>
       <Button
           style={{marginRight: '10px'}}
           color="warning"
-          onClick={(e) => props.clearVerify(e)}
-          disabled={props.disabledClear}>
-        Clear
+          onClick={(e) => props.goBackToOriginal(e)}
+          disabled={props.disabled}>
+        Go back
       </Button>
     </Form>
   </div>
-);
+));
 
 
 const Display = props => (
-  Object.keys(props.data).map((tray, idx) => {
+  Object.keys(props.staged).map((tray, idx) => {
     return (
       <Card key={tray}>
         <CardBody>
           <dl className="row">
-            <dt className="col-sm-2">Tray</dt>
-            <dd className="col-sm-10">
-              {props.data[tray].tray}
+            <dt className="col-sm-4">Item</dt>
+            <dd className="col-sm-8">
+              {props.staged[tray].item}
             </dd>
-            <dt className="col-sm-2">Shelf</dt>
-            <dd className="col-sm-10">
-              {props.data[tray].shelf}
+            <dt className="col-sm-4">Tray</dt>
+            <dd className="col-sm-8">
+              {props.staged[tray].tray}
             </dd>
-            <dt className="col-sm-2">Depth</dt>
-            <dd className="col-sm-10">
-              {props.data[tray].depth}
+            <dt className="col-sm-4">Shelf</dt>
+            <dd className="col-sm-8">
+              {props.staged[tray].shelf}
             </dd>
-            <dt className="col-sm-2">Position</dt>
-            <dd className="col-sm-10">
-              {parseInt(props.data[tray].position)}
+            <dt className="col-sm-4">Depth</dt>
+            <dd className="col-sm-8">
+              {props.staged[tray].depth}
+            </dd>
+            <dt className="col-sm-4">Position</dt>
+            <dd className="col-sm-8">
+              {parseInt(props.staged[tray].position)}
             </dd>
           </dl>
-          {/* <Button color="danger" onClick={
-              function () {
-                if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeTrays([props.data[tray].tray])
-                }
-              }}>
-            Delete
-          </Button> */}
-          { Object.keys(props.staged).map(items => items).length ?
-            <>
-              <Button style={{marginBottom: '60px', marginRight: '10px'}} onClick={(e) => props.handleProcessBoxes(e)} color="primary">Process all</Button>
-              <Button style={{marginBottom: '10px', marginRight: '10px'}} onClick={(e) => props.handleUndo(e)} color="warning">Undo last</Button>
-              <Button style={{marginBottom: '10px', marginRight: '10px'}} color="danger" onClick={(e) => props.clearDisplayGrid(e)}>Delete all</Button>
-            </>
-            : ''
-          }
         </CardBody>
       </Card>
     );
