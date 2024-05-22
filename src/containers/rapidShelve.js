@@ -361,7 +361,7 @@ const RapidShelve = () => {
     }
 
     const processSubmit = async () => {
-      const newStaged = [data.current].concat(data.staged);
+      const newStaged = data.current ? [data.current].concat(data.staged) : data.staged;
       localforage.setItem('load', newStaged);
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
@@ -641,14 +641,6 @@ const Display = props => (
               {parseInt(props.data[tray].position)}
             </dd>
           </dl>
-          {/* <Button color="danger" onClick={
-              function () {
-                if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeTrays([props.data[tray].tray])
-                }
-              }}>
-            Delete
-          </Button> */}
         </CardBody>
       </Card>
     );
