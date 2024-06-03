@@ -337,7 +337,7 @@ const ManageTrays = () => {
                       <dd className="col-sm-9">{state.fields.created}</dd>
                     </dl>
                     <dl className="row">
-                      <dt className="col-sm-3">Items</dt>
+                      <dt className="col-sm-3">Items ({state.fields.items.length})</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
                           {state.fields.items && state.fields.items.length > 0 ? state.fields.items.join('\n') : "-"}
                         </dd>
