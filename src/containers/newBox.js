@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, Fragment } from 'react';
+import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
 import { numericPortion } from '../util/helpers';
@@ -220,16 +220,6 @@ const NewBox = () => {
     getLocal();
   }, []);
 
-  // When the form changes, focus on the first input
-  useEffect(() => {
-    if (data.form === 'original') {
-      originalRef.current.focus();
-    }
-    else if (data.form === 'verify') {
-      verifyRef.current.focus();
-    }
-  }, [data.form]);
-
   const checkVerifyPossible = () => {
     // Check that the tray matches the expected structure
     const itemRegex = new RegExp(data.settings.itemStructure);
@@ -398,9 +388,6 @@ const NewBox = () => {
       return data.staged[0];
     }
   }
-
-  const originalRef = useRef(null);
-  const verifyRef = useRef(null);
 
   // Make sure that the new tray is shelved in an expected location:
   // i.e. the next position in the same depth, or the first position
@@ -733,7 +720,6 @@ const NewBox = () => {
             <Card>
               <CardBody>
                 <OriginalShelvingForm
-                  ref={originalRef}
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitOriginal}
                   collections={data.collections}
@@ -758,7 +744,6 @@ const NewBox = () => {
             <Card>
               <CardBody>
                 <VerifyShelvingForm
-                  ref={verifyRef}
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitVerify}
                   collections={data.collections}
@@ -802,7 +787,7 @@ const NewBox = () => {
   );
 };
 
-const OriginalShelvingForm = React.forwardRef((props, ref) =>  (
+const OriginalShelvingForm = (props) =>  (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
@@ -828,7 +813,6 @@ const OriginalShelvingForm = React.forwardRef((props, ref) =>  (
           type="text"
           disabled={props.disabled}
           name="item"
-          ref={ref}
           placeholder="Item barcode, e.g. 310183630375201"
           value={props.original.item}
           onChange={(e) => props.handleOriginalOnChange(e)}
@@ -930,9 +914,9 @@ const OriginalShelvingForm = React.forwardRef((props, ref) =>  (
       </Button>
     </Form>
   </div>
-));
+);
 
-const VerifyShelvingForm = React.forwardRef((props, ref) =>  (
+const VerifyShelvingForm = (props) =>  (
   <div>
     <Form style={{zIndex: 0}} className="sticky-top" autoComplete="off">
       <FormGroup>
@@ -948,7 +932,6 @@ const VerifyShelvingForm = React.forwardRef((props, ref) =>  (
         </Label>
         <Input
           type="text"
-          ref={ref}
           disabled={props.disabled}
           name="item"
           placeholder={ props.disabled ? "" : "Item barcode, e.g. 310183630375201" }
@@ -998,7 +981,7 @@ const VerifyShelvingForm = React.forwardRef((props, ref) =>  (
       </Button>
     </Form>
   </div>
-));
+);
 
 
 const Display = props => (
