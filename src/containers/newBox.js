@@ -636,7 +636,7 @@ const NewBox = () => {
         // Adjust parameter names for API
         x['items'] = [x['item']];
         x['barcode'] = x['tray'];
-        const response = await Load.shelveTray(x);
+        const response = await Load.newBox(x);
         if (response) {
           success(`Tray ${x.tray} successfully shelved`);
           submittedTrays.push(x.tray);

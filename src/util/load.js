@@ -101,6 +101,11 @@ class Load {
     return update;
   }
 
+  newBox = async (data) => {
+    const update = await this.handleUpdate(`${trayAPI}new-box/`, 'POST', data);
+    return update;
+  }
+
   deleteTrayAndItems = async (data) => {
     const results = await this.handleUpdate(`${trayAPI}delete-tray/`, 'POST', data);
     return results;
