@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
+import { numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
@@ -41,6 +42,7 @@ const NewTray = () => {
     itemFolioBad: [],
     itemFolioGood: [],
     itemAlreadyAlerted: [],
+    collectionValidatedAgainstFolio: true,
 
     // Containers for the error items we actually display
     duplicateOriginalItems: "",
@@ -54,6 +56,14 @@ const NewTray = () => {
         return {
           ...state,
           original: action.original,
+        };
+      case 'UPDATE_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
         };
       case 'ADD_VERIFY':
         return {
@@ -179,6 +189,11 @@ const NewTray = () => {
           ...state,
           form: action.form,
         };
+      case 'CHANGE_COLLECTION_VALIDATION':
+        return {
+          ...state,
+          collectionValidatedAgainstFolio: action.value,
+        };
       case 'CLEAR_CHECKS':
         return {
           ...state,
@@ -250,13 +265,13 @@ const NewTray = () => {
       dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
     }
     else {
-      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
       const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [data.itemAlreadyAlerted]);
 
-  const verifyItemsOnSubmit = (barcodes) => {
+  const verifyItemsOnSubmit = (barcodes, collection) => {
     // For each barcode, confirm that it's checked against the system
     // and that it's checked against FOLIO
     for (const barcode of barcodes) {
@@ -265,13 +280,15 @@ const NewTray = () => {
           // Do nothing if the barcode is in both lists
         }
         else {
-          if (data.itemFolioBad.includes(barcode)) {
-            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
-            return false;
-          }
-          else {
-            warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
-            return false;
+          if (data.collectionValidatedAgainstFolio) {
+            if (data.itemFolioBad.includes(barcode)) {
+              failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              return false;
+            }
+            else {
+              warning(`Verification of item ${barcode} in FOLIO may still be pending. Please try again in a few seconds, and report this problem if it continues.`);
+              return false;
+            }
           }
         }
       }
@@ -297,6 +314,7 @@ const NewTray = () => {
     }
     return true;
   }
+
 
   // Get settings from database on load
   useEffect(() => {
@@ -377,8 +395,8 @@ const NewTray = () => {
       }
     }
     else {
-      if (data.original.tray.length === data.settings.trayBarcodeLength) {
-        failure(`Valid tray barcodes begin with 1.`);
+      if (numericPortion(data.original.tray).length === data.settings.trayBarcodeLength) {
+        failure(`Valid tray barcodes begin with 0 or 1.`);
       }
       // Don't give popup alert if it's just the wrong length, to avoid
       // excessive alerts
@@ -433,7 +451,7 @@ const NewTray = () => {
         return true;
       };
 
-      const verifyFolioRecord = async (barcodes) => {
+      const verifyFolioRecord = async (barcodes, collection) => {
         dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', items: barcodes });
         for (const barcode of barcodes) {
           if (barcode.length > 0) {
@@ -442,7 +460,9 @@ const NewTray = () => {
               dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
             }
             else {
-              failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              if (data.collectionValidatedAgainstFolio) {
+                failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+              }
               dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
               return false;
             }
@@ -483,8 +503,10 @@ const NewTray = () => {
           brokenBarcodes.push(barcode);
         }
         else if (data.itemFolioBad.includes(barcode)) {
-          failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
-          brokenBarcodes.push(barcode);
+          if (data.collectionValidatedAgainstFolio) {
+            failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+            brokenBarcodes.push(barcode);
+          }
         }
         else {
           if (!data.itemUsedCheckStarted.includes(barcode) && !data.itemUsedGood.includes(barcode)) {
@@ -497,12 +519,14 @@ const NewTray = () => {
       }
 
       let allItemsFree = verifyItemsFree(barcodesToLookupInSystem);
-      let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio);
+      let allItemsInFolio = verifyFolioRecord(barcodesToLookupInFolio, data.original.collection);
       if (await allItemsFree !== true) {
         return false;
       }
-      if (await allItemsInFolio !== true) {
-        return false;
+      if (data.collectionValidatedAgainstFolio) {
+        if (await allItemsInFolio !== true) {
+          return false;
+        }
       }
 
       // If we've made it this far, all barcodes are valid
@@ -515,7 +539,7 @@ const NewTray = () => {
       // When checking live, don't check the last item if it isn't 15
       // characters long, because it's probably not a complete barcode
       const lastItem = allItems ? allItems[allItems.length - 1] : '';
-      const itemsToVerify = lastItem ? (lastItem.length < 15 ? allItems.slice(0, -1) : allItems) : [];
+      const itemsToVerify = lastItem.length < 15 ? allItems.slice(0, -1) : allItems;
       if (itemsToVerify) {
         verifyItemsLive(itemsToVerify);
       }
@@ -546,19 +570,50 @@ const NewTray = () => {
     if (originalDuplicates.length > 0 || verifyDuplicates.length > 0) {
       // Play error message but don't give popup alert because we are
       // already showing the duplicate barcode error on screen
-      const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
       const errorAudio = new Audio(errorPath);
       errorAudio.play();
     }
   }, [debouncedLeftPaneItems, debouncedMiddlePaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Notice when the collection is changed, and update whether we validate
+  // against FOLIO if necessary.
+  useEffect(() => {
+    const getCollectionInfo = (collection) => {
+      if (collection === '') {
+        return {};
+      }
+      else {
+        return data.collections.find(c => c.name === collection);
+      }
+    };
+    const collectionInfo = getCollectionInfo(data.original.collection);
+    if (collectionInfo) {
+      dispatch({
+        type: 'CHANGE_COLLECTION_VALIDATION',
+        value: data.original.collection ? getCollectionInfo(data.original.collection).folio_validated : true
+      });
+    }
+  }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // For handling bad barcode items in the original pane (these are things
   // that aren't duplicates, but intrinsically should not be added)
   useEffect(() => {
     const barcodes = debouncedLeftPaneItems.split('\n').filter(Boolean);
     let errorItems = [];
+    var itemRegex = new RegExp(data.settings.itemStructure);
     barcodes.forEach(barcode => {
-      if (data.itemAlreadyAlerted.includes(barcode)) {
+      if (!itemRegex.test(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+      else if (data.itemUsedBadStaged.includes(barcode) || data.itemUsedBadSystem.includes(barcode)) {
+        if (!errorItems.includes(barcode)) {
+          errorItems.push(barcode);
+        }
+      }
+      else if (data.collectionValidatedAgainstFolio && data.itemFolioBad.includes(barcode)) {
         if (!errorItems.includes(barcode)) {
           errorItems.push(barcode);
         }
@@ -568,7 +623,7 @@ const NewTray = () => {
     if (errorItemsAsString !== data.errorItems) {
       dispatch({ type: 'UPDATE_BAD_BARCODES', errorItems: errorItemsAsString });
     }
-  }, [debouncedLeftPaneItems]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedLeftPaneItems, data.collectionValidatedAgainstFolio]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On load, check local storage for any staged items
   useEffect(() => {
@@ -605,11 +660,9 @@ const NewTray = () => {
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     else if (e.target.name === 'collection') {
       value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
@@ -623,11 +676,9 @@ const NewTray = () => {
     e.preventDefault();
     const verify = data.verify;
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     verify[e.target.name] = value;
     dispatch({ type: 'ADD_VERIFY', verify: verify});
@@ -642,7 +693,7 @@ const NewTray = () => {
 
   const goBackToOriginal = e => {
     e.preventDefault();
-    if (window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
+    if ((!data.verify.tray && !data.verify.items) || window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
       dispatch({ type: 'CHANGE_FORM', form: 'original'});
       dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
     }
@@ -779,7 +830,7 @@ const NewTray = () => {
           removeTrayFromStaged(tray.barcode);
         }
         else {
-          const errorPath = process.env.PUBLIC_URL + "/error.mp3";;
+          const errorPath = process.env.PUBLIC_URL + "/error.mp3";
           const errorAudio = new Audio(errorPath);
           errorAudio.play();
         }
@@ -902,10 +953,10 @@ const TrayFormOriginal = props => (
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.original.tray)
-            ? <Badge color="success">{props.original.tray.length}</Badge>
+            ? <Badge color="success">{numericPortion(props.original.tray).length}</Badge>
             : props.original.tray.length === 0
               ? <Badge>{props.original.tray.length}</Badge>
-              : (<><Badge color={props.trayBarcodeLength === props.original.tray.length ? "warning" : "danger"}>{props.original.tray.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={props.trayBarcodeLength === numericPortion(props.original.tray).length ? "warning" : "danger"}>{numericPortion(props.original.tray).length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
@@ -983,7 +1034,7 @@ const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
       <Label for="collections">Collection</Label>
-      <Input type="text" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } onChange={(e) => props.handleVerifyOnChange(e)} name="collection" disabled={true} />
+      <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }

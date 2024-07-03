@@ -34,3 +34,7 @@ export function getFormattedDate() {
 
     return `${date.getFullYear() + "-" + month + "-" + day + " " +  hour + ":" + min + ":" + sec}`;
 }
+
+export function numericPortion(str) {
+    return str.replace(/\D/g, '');
+}

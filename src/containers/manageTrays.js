@@ -81,14 +81,9 @@ const ManageTrays = () => {
 
   const handleQueryChange = (e) => {
     e.preventDefault();
-    let value = e.target.value;
-    // Automatically remove non-numeric characters from tray field;
-    // this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
-    value = e.target.value.replace(/\D/g,'');
     dispatch({
       type: "QUERY_CHANGE",
-      payload: value,
+      payload: e.target.value,
     });
   };
 
@@ -342,7 +337,7 @@ const ManageTrays = () => {
                       <dd className="col-sm-9">{state.fields.created}</dd>
                     </dl>
                     <dl className="row">
-                      <dt className="col-sm-3">Items</dt>
+                      <dt className="col-sm-3">Items ({state.fields.items.length})</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
                           {state.fields.items && state.fields.items.length > 0 ? state.fields.items.join('\n') : "-"}
                         </dd>

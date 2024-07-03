@@ -101,6 +101,11 @@ class Load {
     return update;
   }
 
+  newBox = async (data) => {
+    const update = await this.handleUpdate(`${trayAPI}new-box/`, 'POST', data);
+    return update;
+  }
+
   deleteTrayAndItems = async (data) => {
     const results = await this.handleUpdate(`${trayAPI}delete-tray/`, 'POST', data);
     return results;
@@ -255,6 +260,11 @@ class Load {
 
   getAllCollections = async () => {
     const get = await this.handleUpdate(`${collectionAPI}get-all-collections/`, 'GET');
+    return get;
+  }
+
+  getUnverifiedCollections = async () => {
+    const get = await this.handleUpdate(`${collectionAPI}get-unverified-collections/`, 'GET');
     return get;
   }
 

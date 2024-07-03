@@ -12,6 +12,7 @@ import {
     DropdownItem,
   } from 'reactstrap';
 import { NavLink } from 'react-router-dom';
+import { firstName } from '../util/helpers';
 
 
 export default class Header extends Component {
@@ -37,13 +38,13 @@ export default class Header extends Component {
     const { level } = account || '';
     const isTestInstance = process.env.REACT_APP_ROOT.includes("-dev");
     const isBetaInstance = process.env.REACT_APP_ROOT.includes("-beta");
-    const versionSuffix = isTestInstance ? "TEST" : (isBetaInstance ? "BETA" : "");
+    const versionSuffix = isTestInstance ? "— TEST SITE: YOUR WORK WILL NOT BE SAVED" : (isBetaInstance ? "BETA" : "");
     const colorAttributes = {
-        color: isTestInstance ? 'light' : 'dark',
+        color: isTestInstance ? 'danger' : (isBetaInstance ? 'light' : 'dark'),
         light: isTestInstance,
         dark: !isTestInstance,
       };
-    const sisHeader = `SIS ’23 ${versionSuffix} (Version ${process.env.REACT_APP_VERSION})`;
+    const sisHeader = `SIS ${process.env.REACT_APP_VERSION} ${versionSuffix} • ${account ? firstName(account.name) + "’s account" : "Not logged in"}`;
     return (
       <div>
         <Navbar {...colorAttributes} expand="md">
@@ -52,46 +53,37 @@ export default class Header extends Component {
           {sessionStorage.getItem('account') ?
             <Collapse isOpen={this.state.isOpen} navbar>
               <Nav className="ml-auto" navbar>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
-                </NavItem>
-                {/*
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/shelf">Shelf</NavLink>
-                </NavItem>
-                <UncontrolledDropdown nav inNavbar>
-                  <DropdownToggle nav caret>
-                    Paging
-                  </DropdownToggle>
-                  <DropdownMenu right>
-                    <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/paging-add">Add</NavLink>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/paging-display">Pick</NavLink>
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/search">Search</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/history">History</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/reports">Reports</NavLink>
-                </NavItem>
-                */}
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Return</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
-                </NavItem>
-                { level >= 35 &&
+                { level >= 30 &&
+                  <UncontrolledDropdown nav inNavbar>
+                    <DropdownToggle nav caret>
+                      New
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                      <DropdownItem>
+                        <NavLink className="nav-link" style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} to="/new-tray">New tray</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink className="nav-link" style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} to="/new-box">New box</NavLink>
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </UncontrolledDropdown>
+                }
+                { level >= 30 &&
+                  <NavItem>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/rapid-shelve">Shelve</NavLink>
+                  </NavItem>
+                }
+                { level >= 40 &&
+                  <NavItem>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/picklist">Pick</NavLink>
+                  </NavItem>
+                }
+                { level >= 40 &&
+                  <NavItem>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Return</NavLink>
+                  </NavItem>
+                }
+                { level >= 20 &&
                   <NavItem>
                     <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/item-search">Search</NavLink>
                   </NavItem>
