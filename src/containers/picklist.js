@@ -88,6 +88,7 @@ const useStagedItems = create(
 
 const Picklist = () => {
   const state = usePicklist();
+  const stagedBarcodes = useStagedItems((state) => state.barcodes);
   const staged = useStagedItems();
 
   // Get updated picklist data from the server; asynchronously update
@@ -106,7 +107,7 @@ const Picklist = () => {
     };
   };
 
-  // Get accurate updated picklists; asynchronously updated the staged items,
+  // Get accurate updated picklists; asynchronously update the staged items,
   // and also return the new staged lists so that they can be used
   // reliably by Process All (we don't want that information to be out
   // of date)
@@ -116,10 +117,10 @@ const Picklist = () => {
     staged.removeNotInList(myBarcodes);
 
     return {
-      'picked': Object.keys(staged.barcodes)
-        .filter(key => myBarcodes.includes(key) && staged.barcodes[key] === 'picked'),
-      'missing': Object.keys(staged.barcodes)
-        .filter(key => myBarcodes.includes(key) && staged.barcodes[key] === 'missing'),
+      'picked': Object.keys(stagedBarcodes)
+        .filter(key => myBarcodes.includes(key) && stagedBarcodes[key] === 'picked'),
+      'missing': Object.keys(stagedBarcodes)
+        .filter(key => myBarcodes.includes(key) && stagedBarcodes[key] === 'missing'),
     };
   };
 
@@ -213,7 +214,7 @@ const Picklist = () => {
   const handleUnclaimAll = async (e) => {
     e.preventDefault();
     const allMyBarcodes = state.picklistMine.map(i => i['barcode']);
-    const myUnstagedBarcodes = allMyBarcodes.filter(i => !staged.barcodes[i]);
+    const myUnstagedBarcodes = allMyBarcodes.filter(i => !stagedBarcodes[i]);
     await Load.unassignItems({"barcodes": myUnstagedBarcodes});
     getPicklist();
   };
@@ -429,7 +430,7 @@ const Picklist = () => {
                   handleMarkPicked={handleMarkPicked}
                   handleMarkMissing={handleMarkMissing}
                   handleUnmark={handleUnmark}
-                  staged={staged}
+                  stagedBarcodes={stagedBarcodes}
                 />
               </CardBody>
             </Card>
@@ -563,7 +564,7 @@ const PicklistRightPane = (props) => {
       text: 'Barcode',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.barcodes[cell] ? "lightgray" : "black"}}>{cell}</span>;
+        return <span style={{color: props.stagedBarcodes[cell] ? "lightgray" : "black"}}>{cell}</span>;
       }
     },
     {
@@ -571,7 +572,7 @@ const PicklistRightPane = (props) => {
       text: 'Title',
       sort: true,
       formatter: (cell, row) => {
-        if (props.staged.barcodes[row.barcode]) {
+        if (props.stagedBarcodes[row.barcode]) {
           return <span style={{"color": "lightgray"}}>{truncate(cell, 64)} {row.volume}</span>;
         }
         else {
@@ -584,7 +585,7 @@ const PicklistRightPane = (props) => {
       text: 'Shelf',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.stagedBarcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
         // When sorting by shelf, ignore the R or L designating row
@@ -606,7 +607,7 @@ const PicklistRightPane = (props) => {
       text: 'Position',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
+        return <span style={{color: props.stagedBarcodes[row.barcode] ? "lightgray" : "black"}}>{row.depth && cell ? row.depth + ", " + cell : "-"}</span>;
       }
     },
     {
@@ -614,7 +615,7 @@ const PicklistRightPane = (props) => {
       text: 'Tray',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.stagedBarcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
     },
     {
@@ -622,7 +623,7 @@ const PicklistRightPane = (props) => {
       text: 'Status',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.staged.barcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
+        return <span style={{color: props.stagedBarcodes[row.barcode] ? "lightgray" : "black"}}>{cell ? cell : "-"}</span>;
       },
     },
     {
@@ -631,14 +632,14 @@ const PicklistRightPane = (props) => {
       sort: true,
       formatter: (cell, row) => {
         return (
-          props.staged.barcodes[row.barcode]
+          props.stagedBarcodes[row.barcode]
           ? <Button
-                className={props.staged.barcodes[row.barcode] === 'picked' ? "btn-outline-primary" : "btn-outline-secondary"}
+                className={props.stagedBarcodes[row.barcode] === 'picked' ? "btn-outline-primary" : "btn-outline-secondary"}
                 size="sm"
                 style={{"margin": "5px"}}
                 onClick={(e) => props.handleUnmark(e, row.barcode)}
             >
-              {"Unmark " + (props.staged.barcodes[row.barcode])}
+              {"Unmark " + (props.stagedBarcodes[row.barcode])}
             </Button>
           :
           <div>
@@ -670,11 +671,12 @@ const PicklistRightPane = (props) => {
         );
       },
       sortFunc: (fieldA, fieldB, order, dataField, rowA, rowB) => {
+        if (!rowA || !rowB) return 0;
         // Items that are marked missing or picked go to the bottom
-        if (props.staged.barcodes[rowA.barcode] && !props.staged.barcodes[rowB.barcode]) {
+        if (props.stagedBarcodes[rowA.barcode] && !props.stagedBarcodes[rowB.barcode]) {
           return 1;
         }
-        else if (props.staged.barcodes[rowB.barcode] && !props.staged.barcodes[rowA.barcode]) {
+        else if (props.stagedBarcodes[rowB.barcode] && !props.stagedBarcodes[rowA.barcode]) {
           return -1;
         }
         else {
@@ -710,7 +712,7 @@ const PicklistRightPane = (props) => {
             depth: item.depth,
             tray: item.tray,
             status: item.status,
-            actions: props.staged.barcodes[item.barcode],
+            actions: props.stagedBarcodes[item.barcode],
           };
          }) }
         columns={ rightPaneColumns }
