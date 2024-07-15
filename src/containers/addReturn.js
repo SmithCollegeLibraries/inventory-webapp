@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
+import { itemError, trayError } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
@@ -294,7 +295,7 @@ const AddReturn = () => {
           // Don't verify empty "barcodes"
         }
         else if (!itemRegex.test(barcode)) {
-          failure(`Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
+          failure(itemError(barcode));
           brokenBarcode = barcode;
         }
         else if (!verifyItemUnstaged(barcode)) {
@@ -333,7 +334,7 @@ const AddReturn = () => {
   useEffect(() => {
     const verifyTrayLive = async (trayBarcode) => {
       if (!trayRegex.test(trayBarcode)) {
-        failure(`Tray barcode must be ${data.settings.trayBarcodeLength} characters long and begin with 1.`);
+        failure(trayError(trayBarcode));
         return false;
       }
     }

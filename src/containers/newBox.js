@@ -1,7 +1,7 @@
-import React, { useEffect, useReducer, Fragment } from 'react';
+import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
-import { numericPortion } from '../util/helpers';
+import { itemError, trayError, numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
@@ -46,6 +46,7 @@ const NewBox = () => {
     itemUsedBadSystem: [],
     itemUsedGood: [],
     itemAlreadyAlerted: [],
+    trayAlreadyAlerted: [],
   };
 
   const loadReducer = (state, action) => {
@@ -150,10 +151,10 @@ const NewBox = () => {
           ...state,
           itemAlreadyAlerted: [...state.itemAlreadyAlerted, action.item],
         };
-      case 'CLEAR_ALREADY_ALERTED':
+      case 'TRAY_ALREADY_ALERTED':
         return {
           ...state,
-          itemAlreadyAlerted: [],
+          itemAlreadyAlerted: [...state.itemAlreadyAlerted, action.item],
         };
       case 'CHANGE_FORM':
         return {
@@ -172,6 +173,7 @@ const NewBox = () => {
           itemUsedBadSystem: [],
           itemUsedGood: [],
           itemAlreadyAlerted: [],
+          trayAlreadyAlerted: [],
         };
       case 'RESET':
         return {
@@ -201,6 +203,7 @@ const NewBox = () => {
           itemUsedBadSystem: [],
           itemUsedGood: [],
           itemAlreadyAlerted: [],
+          trayAlreadyAlerted: [],
         };
       default:
         return state;
@@ -209,6 +212,7 @@ const NewBox = () => {
 
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
+  const debouncedOriginalItem = useDebounce(data.original.item);
   const debouncedOriginalTray = useDebounce(data.original.tray);
 
   // Anytime the DOM is updated, update based on local storage
@@ -238,10 +242,6 @@ const NewBox = () => {
     else if (!shelfRegex.test(data.original.shelf)) {
       return false;
     }
-    // If the tray is already staged, don't allow it to be added again
-    else if (!verifyTrayLive(data.original)) {
-      return false;
-    }
     // Don't allow submission if either the depth or position is empty
     else if (data.original.depth === "" || data.original.position === "") {
       return false;
@@ -264,17 +264,63 @@ const NewBox = () => {
     if (data.staged) {
       const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
       if (stagedTrays.includes(tray)) {
-        failure(`Tray ${tray} is already staged`);
+        failureTrayIfNew(tray, `Tray ${tray} is already staged`);
         return false;
       }
     }
     return true;
   };
 
+  // Similarly for the item
+  const verifyItemLive = item => {
+    if (data.staged) {
+      const stagedItems = Object.keys(data.staged).map(x => data.staged[x].item);
+      if (stagedItems.includes(item)) {
+        failureItemIfNew(item, `Item ${item} is already staged`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Live verification functions, which also get called again on submission
+  const failureItemIfNew = useCallback((barcode, message) => {
+    // Only alert if the barcode is not already in the list of alerted barcodes
+    // This prevents the same barcode from being alerted multiple times.
+    if (!data.itemAlreadyAlerted.includes(barcode)) {
+      failure(message);
+      dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
+    }
+    else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
+      const errorAudio = new Audio(errorPath);
+      errorAudio.play();
+    }
+  }, [data.itemAlreadyAlerted]);
+
+  // Live verification functions, which also get called again on submission
+  const failureTrayIfNew = useCallback((barcode, message) => {
+    // Only alert if the barcode is not already in the list of alerted barcodes
+    // This prevents the same barcode from being alerted multiple times.
+    if (!data.trayAlreadyAlerted.includes(barcode)) {
+      failure(message);
+      dispatch({ type: 'TRAY_ALREADY_ALERTED', item: barcode });
+    }
+    else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
+      const errorAudio = new Audio(errorPath);
+      errorAudio.play();
+    }
+  }, [data.trayAlreadyAlerted]);
+
   // This is the verification that's done when the user submits data
   const verifyOnSubmit = tray => {
     if (parseInt(data.original.position) === 'NaN' || parseInt(data.original.position) > data.settings.maxPosition || parseInt(data.original.position) < 1) {
       failure(`Position should be a number between 1 and ${data.settings.maxPosition}`);
+      return false;
+    }
+    else if (data.original.collection === "") {
+      failure("You must select a collection.");
       return false;
     }
     else if (Object.keys(data.staged).length === 0) {
@@ -367,18 +413,26 @@ const NewBox = () => {
 
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
+    const itemBarcodeToVerify = debouncedOriginalItem;
     const trayBarcodeToVerify = debouncedOriginalTray;
+    const itemRegex = new RegExp(data.settings.itemStructure);
     const trayRegex = new RegExp(data.settings.trayStructure);
 
+    if (itemBarcodeToVerify) {
+      verifyItemLive(itemBarcodeToVerify);
+    }
     if (trayBarcodeToVerify) {
       verifyTrayLive(trayBarcodeToVerify);
     }
-    // If the tray barcode is the right length but doesn't begin with 1,
-    // show a popup message
-    if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
-      failure(`Valid tray barcodes begin with 1.`);
+    // If the item or tray barcode is of the right length but doesn't match
+    // the expected structure, alert the user
+    if (itemBarcodeToVerify.length === data.settings.itemBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
+      failureItemIfNew(itemBarcodeToVerify, itemError(itemBarcodeToVerify));
     }
-  }, [debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
+      failureTrayIfNew(trayBarcodeToVerify, trayError(trayBarcodeToVerify));
+    }
+  }, [debouncedOriginalItem, debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
@@ -731,7 +785,6 @@ const NewBox = () => {
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={data.original.item === '' || data.original.tray === '' || data.original.shelf === '' || data.original.depth === '' || data.original.position === ''}
                   disabledClear={data.original.tray === '' && data.original.shelf === '' && data.original.depth === '' && data.original.position === ''}
                   itemRegex={new RegExp(data.settings.itemStructure)}
                   trayRegex={new RegExp(data.settings.trayStructure)}

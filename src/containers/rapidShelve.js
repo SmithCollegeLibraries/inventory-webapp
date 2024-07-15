@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
-import { numericPortion } from '../util/helpers';
+import { itemError, trayError, numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 import localforage from 'localforage';
 // import PropTypes from 'prop-types';
@@ -197,10 +197,10 @@ const RapidShelve = () => {
     if (trayBarcodeToVerify) {
       verifyTrayLive(trayBarcodeToVerify);
     }
-    // If the tray barcode is the right length but doesn't begin with 1,
-    // show a popup message
+    // If the tray barcode is the right length but doesn't match the
+    // needed structure, alert the user
     if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
-      failure(`Valid tray barcodes begin with 1.`);
+      failure(trayError(trayBarcodeToVerify));
     }
   }, [debouncedTray]); // eslint-disable-line react-hooks/exhaustive-deps
 

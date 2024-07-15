@@ -38,3 +38,11 @@ export function getFormattedDate() {
 export function numericPortion(str) {
     return str.replace(/\D/g, '');
 }
+
+export function itemError(barcode) {
+    return `Item barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`;
+}
+
+export function trayError(barcode) {
+    return `Tray barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what a tray barcode should look like.`;
+}
