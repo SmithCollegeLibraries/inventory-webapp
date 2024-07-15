@@ -226,12 +226,6 @@ const NewBox = () => {
     const trayRegex = new RegExp(data.settings.trayStructure);
     const shelfRegex = new RegExp(data.settings.shelfStructure);
 
-    // Check that the collection is not empty
-    if (data.original.collection === "") {
-      failure(`You must select a collection.`);
-      return false;
-    }
-
     // Check that the item matches the expected structure
     if (!itemRegex.test(data.original.item)) {
       return false;
@@ -281,6 +275,10 @@ const NewBox = () => {
   const verifyOnSubmit = tray => {
     if (parseInt(data.original.position) === 'NaN' || parseInt(data.original.position) > data.settings.maxPosition || parseInt(data.original.position) < 1) {
       failure(`Position should be a number between 1 and ${data.settings.maxPosition}`);
+      return false;
+    }
+    else if (data.original.collection === "") {
+      failure("You must select a collection.");
       return false;
     }
     else if (Object.keys(data.staged).length === 0) {
