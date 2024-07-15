@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
-import { numericPortion } from '../util/helpers';
+import { itemError, trayError, numericPortion } from '../util/helpers';
 import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge } from 'reactstrap';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
@@ -295,7 +295,7 @@ const NewTray = () => {
       else {
         var itemRegex = new RegExp(data.settings.itemStructure);
         if (!itemRegex.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`);
+          failureIfNew(barcode, itemError(barcode));
           return false;
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -381,8 +381,8 @@ const NewTray = () => {
       }
     };
 
-    // Don't bother doing the live verification if it's not even the
-    // correct length or doesn't begin with 1. (We're already showing the
+    // Don't bother doing the live verification if it's not the correct
+    // length or doesn't match the structure. (We're already showing the
     // user that it's incorrect with the badge, so no need to give a
     // popup alert.)
     if (trayRegex.test(data.original.tray)) {
@@ -396,7 +396,7 @@ const NewTray = () => {
     }
     else {
       if (numericPortion(data.original.tray).length === data.settings.trayBarcodeLength) {
-        failure(`Valid tray barcodes begin with 0 or 1.`);
+        failure(trayError(data.original.tray));
       }
       // Don't give popup alert if it's just the wrong length, to avoid
       // excessive alerts
@@ -491,7 +491,7 @@ const NewTray = () => {
           // These are known to be good, so don't verify them again
         }
         else if (!itemRegex.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`);
+          failureIfNew(barcode, itemError(barcode));
           brokenBarcodes.push(barcode);
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -716,7 +716,7 @@ const NewTray = () => {
     const inspectTray = (tray) => {
       const { trayLength } = data;
       if (!trayRegex.test(tray)) {
-        failure(`Tray barcode must be ${trayLength} characters long and begin with 1.`);
+        failure(trayError(tray));
         return false;
       }
       else {
