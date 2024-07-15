@@ -226,6 +226,12 @@ const NewBox = () => {
     const trayRegex = new RegExp(data.settings.trayStructure);
     const shelfRegex = new RegExp(data.settings.shelfStructure);
 
+    // Check that the collection is not empty
+    if (data.original.collection === "") {
+      failure(`You must select a collection.`);
+      return false;
+    }
+
     // Check that the item matches the expected structure
     if (!itemRegex.test(data.original.item)) {
       return false;
@@ -731,7 +737,6 @@ const NewBox = () => {
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
                   disabled={data.form === 'verify'}
-                  disabledSubmit={data.original.item === '' || data.original.tray === '' || data.original.shelf === '' || data.original.depth === '' || data.original.position === ''}
                   disabledClear={data.original.tray === '' && data.original.shelf === '' && data.original.depth === '' && data.original.position === ''}
                   itemRegex={new RegExp(data.settings.itemStructure)}
                   trayRegex={new RegExp(data.settings.trayStructure)}
