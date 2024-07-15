@@ -295,7 +295,7 @@ const NewTray = () => {
       else {
         var itemRegex = new RegExp(data.settings.itemStructure);
         if (!itemRegex.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes are 15 characters long and begin with 31.`);
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`);
           return false;
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {
@@ -491,7 +491,7 @@ const NewTray = () => {
           // These are known to be good, so don't verify them again
         }
         else if (!itemRegex.test(barcode)) {
-          failureIfNew(barcode, `Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
+          failureIfNew(barcode, `Barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`);
           brokenBarcodes.push(barcode);
         }
         else if (data.itemUsedBadStaged.includes(barcode)) {

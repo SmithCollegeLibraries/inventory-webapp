@@ -294,7 +294,7 @@ const AddReturn = () => {
           // Don't verify empty "barcodes"
         }
         else if (!itemRegex.test(barcode)) {
-          failure(`Barcode ${barcode} is not valid. Item barcodes begin with 31 and are 15 characters long.`);
+          failure(`Barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what an item barcode should look like.`);
           brokenBarcode = barcode;
         }
         else if (!verifyItemUnstaged(barcode)) {
