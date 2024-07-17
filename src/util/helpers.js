@@ -17,6 +17,11 @@ export function firstName(str) {
     }
 };
 
+export function twoDigits(i) {
+    var formattedNumber = ("0" + i).slice(-2);
+    return formattedNumber;
+}
+
 export function getFormattedDate() {
     let date = new Date();
 
