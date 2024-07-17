@@ -46,3 +46,13 @@ export function itemError(barcode) {
 export function trayError(barcode) {
     return `Tray barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what a tray barcode should look like.`;
 }
+
+// Take a list of items, with the barcode, flag and status given.
+// Return a string that displays the items in the list in a human-readable format.
+// list in a human-readable format, with the status displayed as a color:
+// "danger" red if the item has a flag, and "info" teal if the item
+// does not have status Trayed.
+export function displayItemList(items) {
+    console.log(items.map(item => <span key={item.barcode} className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }>{item.barcode}</span>));
+    return items.map(item => <span key={item.barcode} className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }>{item.barcode}<br /></span>);
+}
