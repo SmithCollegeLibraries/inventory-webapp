@@ -155,7 +155,6 @@ class Load {
 
   updateItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
-    console.log(data);
     return update;
   };
 
@@ -166,7 +165,6 @@ class Load {
 
   addReturn = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}add-return/`, 'POST', data);
-    console.log(data);
     return update;
   };
 

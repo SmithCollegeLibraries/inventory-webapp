@@ -460,7 +460,6 @@ const AddReturn = () => {
     if (navigator.onLine === true) {
       for (const itemInfo of Object.keys(data.verified).map(key => data.verified[key])) {
         itemInfo["status"] = "Trayed";
-        console.log(itemInfo);
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
           success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);

@@ -231,8 +231,6 @@ const ManageTrays = () => {
       items: [],
     };
     const load = await Load.newTray(data);
-    console.log(data);
-    console.log(load);
     if (load) {
       success(`Tray ${load['barcode']} successfully added`);
       dispatch({ type: 'RESET', payload: '' });
