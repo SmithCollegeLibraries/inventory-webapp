@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
 import ContentSearch from '../util/search'
-import Load from '../util/load'
 import Alerts from '../components/alerts'
 import {getFormattedDate} from '../util/helpers'
 import { Col, Row, Form, Input, Button, FormGroup, Label } from 'reactstrap'
 import ReactTable from 'react-table'
-import { success, failure, warning } from '../components/toastAlerts'
 import FoldableTableHOC from "react-table/lib/hoc/foldableTable";
 import 'react-table/react-table.css'
 
