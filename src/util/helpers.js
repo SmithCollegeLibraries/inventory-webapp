@@ -65,5 +65,13 @@ export function trayError(barcode) {
 // "danger" red if the item has a flag, and "info" teal if the item
 // does not have status Trayed.
 export function displayItemList(items) {
-    return items.map(item => <span key={item.barcode} className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }>{item.barcode}<br /></span>);
+    return items.map(item =>
+        <span
+            key={item.barcode}
+            className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }
+          >
+          {item.barcode}
+          <br />
+        </span>
+    );
 }

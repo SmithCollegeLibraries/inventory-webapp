@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer } from 'react';
-import { Button, Card, CardBody, Form, Input, Row, Table } from 'reactstrap';
+import { Button, Card, CardBody, Form, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Table } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
 import { displayItemList, twoDigits } from '../util/helpers';
@@ -45,7 +45,7 @@ const reducer = (state, action) => {
     case 'UPDATE_SELECTION':
       return {
         ...state,
-        fields: action.payload,
+        currentTray: action.payload,
       };
     case 'UPDATE_COUNT':
       return {
@@ -67,6 +67,7 @@ const reducer = (state, action) => {
           rung: '',
         },
         shelves: [],
+        currentTray: null,
       }
     default:
       throw new Error();
@@ -82,6 +83,7 @@ const ManageShelves = () => {
       rung: '',
     },
     shelves: [],
+    currentTray: null,
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -214,8 +216,18 @@ const ManageShelves = () => {
               return (
                 <ResultDisplay
                   data={state.shelves[shelf]}
+                  currentTray={state.currentTray}
                   index={idx}
                   key={idx}
+                  handleTraySelect={
+                    (tray) => {
+                      if (!tray || tray.barcode === '-')
+                        dispatch({ type: 'UPDATE_SELECTION', payload: null });
+                      else {
+                        dispatch({ type: 'UPDATE_SELECTION', payload: tray });
+                      }
+                    }
+                  }
                 />
               );
             })
@@ -271,50 +283,75 @@ const SearchForm = props => {
   );
 };
 
-// TODO: Redo this entire form for shelves (existing code is for trays)
-// TODO: Add functionality for modal popup showing items in tray
-// onClick={(e) => props.handleTraySelect(props.data, e)}
 const ResultDisplay = (props) => {
   return (
-    <Card>
-      <CardBody>
-        <div style={{marginBottom: "2ex"}}>
-          <span style={{fontWeight: "bold", paddingRight: "1ex"}}>Barcode</span>
-          {props.data.barcode}
-          <span style={{marginLeft: "2ex", marginRight: "2ex"}}>•</span>
-          {/* TODO: Put size here */}
-          <span style={{fontWeight: "bold", marginRight: "1ex"}}>Trays</span>
-          {props.data.trays.length}
-        </div>
-        <Table style={{tableLayout: "fixed"}}>
-          <tbody>
-            { Object.keys(processTrayInformation(props.data.trays).trayGrid).map(
-              (depth, idx) => {
-                return (
-                  <tr key={idx}>
-                    { processTrayInformation(props.data.trays).trayGrid[depth].map((tray, idx) => {
-                      return (
-                        <td
-                            idx={idx}
-                            key={idx}
-                            title={`${props.data.barcode} • ${tray.depth} • ${tray.position}`}
-                            className={tray.flag ? "text-danger" : ""}
-                            style={{
-                              cursor: "pointer",
-                              textAlign: "center",
-                              backgroundColor: tray.barcode === "-" ? "lightgray" : "white"}}
-                          >
-                          {tray.barcode}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-          </tbody>
-        </Table>
-      </CardBody>
-    </Card>
+    <>
+      <Modal isOpen={!!props.currentTray} toggle={() => props.handleTraySelect(null)}>
+        <ModalHeader>Tray {props.currentTray ? props.currentTray.barcode : ''} {props.currentTray && props.currentTray.flag ? '(flagged)' : ''}</ModalHeader>
+        <ModalBody>
+          <dl>
+            <dt>Trayer</dt>
+            <dd>{props.currentTray && props.currentTray.trayer ? props.currentTray.trayer : '(No trayer)'}</dd>
+            <dt>Items</dt>
+            <dd>
+              {props.currentTray && props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : '(No items)'}
+            </dd>
+          </dl>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => props.handleTraySelect(null)}>Close</Button>
+        </ModalFooter>
+      </Modal>
+      <Card>
+        <CardBody>
+          <div style={{marginBottom: "2ex"}}>
+            <dl>
+              <dt style={{display: "inline", marginRight: "1ex"}}>Barcode</dt>
+              <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.barcode}</dd>
+              {/* TODO: Put size here */}
+              <dt style={{display: "inline", marginRight: "1ex"}}>Trays</dt>
+              <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.trays.length}</dd>
+            </dl>
+          </div>
+          <Table style={{tableLayout: "fixed"}}>
+            <tbody>
+              { Object.keys(processTrayInformation(props.data.trays).trayGrid).map(
+                (depth, idx) => {
+                  return (
+                    <tr key={idx}>
+                      { processTrayInformation(props.data.trays).trayGrid[depth].map((tray, idx) => {
+                        return (
+                          <td
+                              idx={idx}
+                              key={idx}
+                              title={`${props.data.barcode} • ${tray.depth} • ${tray.position}`}
+                              className={tray.flag ? "text-danger" : ""}
+                              style={{
+                                cursor: tray.barcode === "-" ? "default" : "pointer",
+                                textAlign: "center",
+                                backgroundColor: tray.barcode === "-" ? "lightgray" : "white",
+                                color: tray.barcode === "-" ? "gray" : "black",
+                                whiteSpace: "nowrap",
+                              }}
+                              onClick={(e) => props.handleTraySelect(tray, e)}
+                            >
+                            {tray.barcode === '-' ? '-' :
+                              <>
+                                {tray.barcode}<br />
+                                {`${tray.items.length} ${tray.items.length === 1 ? 'item' : 'items'}`}
+                              </>
+                            }
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </Table>
+        </CardBody>
+      </Card>
+    </>
   );
 };
 
