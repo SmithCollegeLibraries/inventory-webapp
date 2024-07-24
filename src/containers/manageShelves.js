@@ -287,16 +287,23 @@ const ResultDisplay = (props) => {
   return (
     <>
       <Modal isOpen={!!props.currentTray} toggle={() => props.handleTraySelect(null)}>
-        <ModalHeader>Tray {props.currentTray ? props.currentTray.barcode : ''} {props.currentTray && props.currentTray.flag ? '(flagged)' : ''}</ModalHeader>
+        <ModalHeader>Tray details</ModalHeader>
         <ModalBody>
-          <dl>
-            <dt>Trayer</dt>
-            <dd>{props.currentTray && props.currentTray.trayer ? props.currentTray.trayer : '(No trayer)'}</dd>
-            <dt>Items</dt>
-            <dd>
-              {props.currentTray && props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : '(No items)'}
-            </dd>
-          </dl>
+          {props.currentTray ?
+            <dl>
+              <dt>Barcode</dt>
+              <dd>{props.currentTray.barcode}</dd>
+              { props.currentTray.flag ? <><dt className="text-danger">Flagged</dt><dd></dd></> : null}
+              <dt>Location</dt>
+              <dd>{`${props.data.barcode} • ${props.currentTray.depth} • ${props.currentTray.position}`}</dd>
+              <dt>Trayer</dt>
+              <dd>{props.currentTray.trayer ?? '-'}</dd>
+              <dt>Items ({props?.currentTray?.items?.length})</dt>
+              <dd>
+                {props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : '-'}
+              </dd>
+            </dl>
+          : null}
         </ModalBody>
         <ModalFooter>
           <Button color="secondary" onClick={() => props.handleTraySelect(null)}>Close</Button>
