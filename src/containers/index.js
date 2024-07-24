@@ -6,6 +6,7 @@ import Picklist from './picklist';
 import ItemSearch from './itemSearch';
 import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
+import ManageShelves from './manageShelves';
 import ManageCollections from './manageCollections';
 import ManageUsers from './users';
 import ItemLogs from './logItems';
@@ -22,6 +23,7 @@ export {
   ItemSearch,
   ManageItems,
   ManageTrays,
+  ManageShelves,
   ManageCollections,
   ManageUsers,
   ItemLogs,

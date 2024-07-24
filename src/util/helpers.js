@@ -18,8 +18,15 @@ export function firstName(str) {
 };
 
 export function twoDigits(i) {
-    var formattedNumber = ("0" + i).slice(-2);
-    return formattedNumber;
+    // For SQL wildcard _, a single underscore should be expanded to
+    // two so that we are searching for __ rather than 0_.
+    if (i === "_") {
+        return "__";
+    }
+    else {
+        var formattedNumber = ("0" + i).slice(-2);
+        return formattedNumber;
+    }
 }
 
 export function getFormattedDate() {

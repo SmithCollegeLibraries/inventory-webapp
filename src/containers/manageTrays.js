@@ -222,6 +222,8 @@ const ManageTrays = () => {
       }
     }
 
+    // TODO: Validate tray barcode structure against settings
+
     const data = {
       barcode: state.fields.new_tray_barcode,
       shelf: state.fields.shelf || null,
