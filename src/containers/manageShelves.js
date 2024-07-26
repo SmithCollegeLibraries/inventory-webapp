@@ -93,7 +93,7 @@ const ManageShelves = () => {
     dispatch({
       type: 'QUERY_CHANGE',
       field: e.target.name,
-      value: e.target.value.replace(/[^0-9LRlr?_-]/g, '').replace(/[\?-]/g,'_').toUpperCase(),
+      value: e.target.value.replace(/[^0-9LRlr?_-]/g, '').replace(/[?-]/g,'_').toUpperCase(),
     });
     const index = Array.prototype.indexOf.call(e.target.form, e.target);
     if (e.target.value.length === (e.target.name === "side" ? 1 : 2)) {
@@ -344,7 +344,7 @@ const ResultDisplay = (props) => {
                             >
                             {tray.barcode === '-' ? '-' :
                               <>
-                                {tray.barcode}<br />
+                                {tray.barcode.replace(/\D/g,'')}<br />
                                 {`${tray.items.length} ${tray.items.length === 1 ? 'item' : 'items'}`}
                               </>
                             }
