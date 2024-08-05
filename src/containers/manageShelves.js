@@ -6,9 +6,14 @@ import { displayItemList, twoDigits } from '../util/helpers';
 import { failure, success, warning } from '../components/toastAlerts';
 
 const processTrayInformation = (trays, size=null) => {
-  let trayGrid = {'Front': [], 'Middle': [], 'Rear': []};
+  let trayGrid = {'Front': [], 'Middle': [], 'Rear': [], 'Other': []};
   trays.forEach(tray => {
-    trayGrid[tray.depth][tray.position - 1] = tray;
+    if (tray.depth && tray.position) {
+      trayGrid[tray.depth][tray.position - 1] = tray;
+    }
+    else {
+      trayGrid['Other'].push(tray);
+    }
   });
   let trayData = {
     // TODO: Get this from settings based on shelf size
@@ -17,10 +22,13 @@ const processTrayInformation = (trays, size=null) => {
     trayGrid: trayGrid,
   };
   // Go through each depth, and fill in any missing positions with empty trays
-  for (let depth in trayData.trayGrid) {
-    for (let i = 0; i < trayData.maxPosition; i++) {
-      if (!trayData.trayGrid[depth][i]) {
-        trayData.trayGrid[depth][i] = {barcode: '-', position: i + 1, depth: depth};
+  for (let depth of ["Front", "Middle", "Rear", "Other"]) {
+    // Depths other than Front and Rear shouldn't display if they're empty
+    if (depth === 'Front' || depth === 'Rear' || trayData.trayGrid[depth].length > 0) {
+      for (let i = 0; i < trayData.maxPosition; i++) {
+        if (!trayData.trayGrid[depth][i]) {
+          trayData.trayGrid[depth][i] = {barcode: '-', position: i + 1, depth: depth};
+        }
       }
     }
   }
@@ -114,12 +122,6 @@ const ManageShelves = () => {
       (state.query.rung ? twoDigits(state.query.rung) : '__')
     );
 
-    // Only do search if at most one field is blank
-    if ((shelfQuery.match(/_/g)||[]).length > 2) {
-      warning("Please search with only one blank field or up to two wildcard characters.");
-      return false;
-    }
-
     const results = await ContentSearch.shelves(shelfQuery);
     if (results && results[0]) {
       dispatch({
@@ -209,7 +211,7 @@ const ManageShelves = () => {
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} shelves total`}</Button>
         }
       </Row>
-      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use _ as a wildcard character, or leave one search field blank.</div>
+      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use _ as a wildcard character. Up to 60 results will be shown.</div>
       <div style={{marginTop: "20px"}}>
         { state.shelves
           ? Object.keys(state.shelves).map((shelf, idx) => {
