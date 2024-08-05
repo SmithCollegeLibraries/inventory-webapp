@@ -53,7 +53,8 @@ const reducer = (state, action) => {
     case 'UPDATE_SELECTION':
       return {
         ...state,
-        currentTray: action.payload,
+        currentTray: action.tray,
+        currentShelf: action.shelf,
       };
     case 'UPDATE_COUNT':
       return {
@@ -76,6 +77,7 @@ const reducer = (state, action) => {
         },
         shelves: [],
         currentTray: null,
+        currentShelf: null,
       }
     default:
       throw new Error();
@@ -92,6 +94,7 @@ const ManageShelves = () => {
     },
     shelves: [],
     currentTray: null,
+    currentShelf: null,
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -218,15 +221,17 @@ const ManageShelves = () => {
               return (
                 <ResultDisplay
                   data={state.shelves[shelf]}
+                  thisShelf={shelf}
                   currentTray={state.currentTray}
+                  currentShelf={state.currentShelf}
                   index={idx}
                   key={idx}
                   handleTraySelect={
                     (tray) => {
                       if (!tray || tray.barcode === '-')
-                        dispatch({ type: 'UPDATE_SELECTION', payload: null });
+                        dispatch({ type: 'UPDATE_SELECTION', tray: null, shelf: null });
                       else {
-                        dispatch({ type: 'UPDATE_SELECTION', payload: tray });
+                        dispatch({ type: 'UPDATE_SELECTION', tray: tray, shelf: shelf });
                       }
                     }
                   }
@@ -288,7 +293,7 @@ const SearchForm = props => {
 const ResultDisplay = (props) => {
   return (
     <>
-      <Modal isOpen={!!props.currentTray} toggle={() => props.handleTraySelect(null)}>
+      <Modal isOpen={!!props.currentTray && props.currentShelf === props.thisShelf} toggle={() => props.handleTraySelect(null)}>
         <ModalHeader>Tray details</ModalHeader>
         <ModalBody>
           {props.currentTray ?
