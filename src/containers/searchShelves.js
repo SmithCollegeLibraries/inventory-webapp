@@ -1,8 +1,8 @@
 import React, { useEffect, useReducer } from 'react';
-import { Button, Card, CardBody, Form, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Table } from 'reactstrap';
+import { Button, Card, CardBody, Form, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Table, Label } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
-import { displayItemList, twoDigits } from '../util/helpers';
+import { displayItemList, padShelfBarcode } from '../util/helpers';
 import { failure, success, warning } from '../components/toastAlerts';
 
 const processTrayInformation = (trays, size=null) => {
@@ -70,10 +70,8 @@ const reducer = (state, action) => {
       return {
         ...state,
         query: {
-          row: '',
-          side: '',
-          ladder: '',
-          rung: '',
+          shelf: '',
+          tray: '',
         },
         shelves: [],
         currentTray: null,
@@ -84,17 +82,16 @@ const reducer = (state, action) => {
   }
 };
 
-const ShelfSearch = () => {
+const SearchShelves = () => {
   const initialState = {
     query: {
-      row: '',
-      side: '',
-      ladder: '',
-      rung: '',
+      shelf: '',
+      tray: '',
     },
     shelves: [],
     currentTray: null,
     currentShelf: null,
+    settings: {},
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -104,12 +101,12 @@ const ShelfSearch = () => {
     dispatch({
       type: 'QUERY_CHANGE',
       field: e.target.name,
-      value: e.target.value.replace(/[^0-9LRlr?_-]/g, '').replace(/[?-]/g,'_').toUpperCase(),
+      value: e.target.value.replace(/[^0-9A-Za-z?_-]/g, '').replace(/[?_]/g,'-').toUpperCase(),
     });
-    const index = Array.prototype.indexOf.call(e.target.form, e.target);
-    if (e.target.value.length === (e.target.name === "side" ? 1 : 2)) {
-      e.target.form.elements[index + 1].focus();
-    }
+    // const index = Array.prototype.indexOf.call(e.target.form, e.target);
+    // if (e.target.value.length === (e.target.name === "side" ? 1 : 2)) {
+    //   e.target.form.elements[index + 1].focus();
+    // }
   };
 
   const handleClearSearch = (e) => {
@@ -118,14 +115,10 @@ const ShelfSearch = () => {
   };
 
   const handleSearch = async (e) => {
-    const shelfQuery = (
-      (state.query.row ? twoDigits(state.query.row) : '__') +
-      (state.query.side ? state.query.side : '_') +
-      (state.query.ladder ? twoDigits(state.query.ladder) : '__') +
-      (state.query.rung ? twoDigits(state.query.rung) : '__')
-    );
+    const shelfQuery = (padShelfBarcode(state.query.shelf));
+    const trayQuery = (state.query.tray);
 
-    const results = await ContentSearch.shelves(shelfQuery);
+    const results = await ContentSearch.shelves(shelfQuery, trayQuery);
     if (results && results[0]) {
       dispatch({
         type: 'UPDATE_RESULTS',
@@ -135,45 +128,8 @@ const ShelfSearch = () => {
       });
     }
     else {
-      // If no results were found, and all fields were filled out,
-      // the user may be trying to create a new shelf
-      if (!shelfQuery.includes('_')) {
-        if (window.confirm(`No results found. Would you like to create a new shelf with barcode ${shelfQuery}?`)) {
-          handleCreateShelf(e);
-        }
-        else {
-          dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
-        }
-      }
-      else {
-        dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
-        warning('No results found.');
-      }
-    }
-  };
-
-  const handleCreateShelf = async (e) => {
-    e.preventDefault();
-    // If the user supplies shelf, depth or position, double-check
-    // with the user if they're not all present
-    if (!(state.query.row && state.query.side && state.query.rung && state.query.ladder)) {
-      failure("Please provide complete information for the new tray");
-      return;
-    }
-    let shelfBarcode = twoDigits(state.query.row) + state.query.side + twoDigits(state.query.ladder) + twoDigits(state.query.rung);
-    // TODO: Validate against shelf structure from settings
-
-    const data = {
-      barcode: shelfBarcode,
-    };
-    const load = await Load.newShelf(data);
-    if (load) {
-      success(`Shelf ${load['barcode']} successfully added`);
-      dispatch({ type: 'RESET', payload: '' });
-      handleSearch(false);
-    }
-    else {
-      // There should already be a 400/403 popup from the API
+      dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
+      warning('No results found.');
     }
   };
 
@@ -208,13 +164,12 @@ const ShelfSearch = () => {
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
           handleClearSearch={handleClearSearch}
-          handleCreateShelf={handleCreateShelf}
         />
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} shelves total`}</Button>
         }
       </Row>
-      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use _ as a wildcard character. Up to 60 results will be shown.</div>
+      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use <code>-</code> as a wildcard character for shelf barcodes. Up to 60 results will be shown.</div>
       <div style={{marginTop: "20px"}}>
         { state.shelves
           ? Object.keys(state.shelves).map((shelf, idx) => {
@@ -248,40 +203,27 @@ const ShelfSearch = () => {
 const SearchForm = props => {
   return (
     <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <Label for="shelf" style={{marginRight:'10px'}}>
+        Shelf
+      </Label>
       <Input
         type="text"
-        style={{"marginRight": "10px", "width": "6em"}}
-        name="row"
-        placeholder="Row"
-        value={props.query.row}
-        maxLength={2}
+        name="shelf"
+        placeholder="09R--1-"
+        value={props.query.shelf}
+        maxLength={7}
+        style={{marginRight:'20px'}}
         onChange={(e) => props.handleQueryChange(e)}
       />
+      <Label for="tray" style={{marginRight:'10px'}}>
+        Tray
+      </Label>
       <Input
         type="text"
-        style={{"marginRight": "10px", "width": "4em"}}
-        name="side"
-        placeholder="Side"
-        value={props.query.side}
-        maxLength={1}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Input
-        type="text"
-        style={{"marginRight": "10px", "width": "6em"}}
-        name="ladder"
-        placeholder="Ladder"
-        value={props.query.ladder}
-        maxLength={2}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Input
-        type="text"
-        style={{"marginRight": "10px", "width": "6em"}}
-        name="rung"
-        placeholder="Rung"
-        value={props.query.rung}
-        maxLength={2}
+        name="tray"
+        placeholder="10001234"
+        value={props.query.tray}
+        style={{marginRight:'20px'}}
         onChange={(e) => props.handleQueryChange(e)}
       />
       <Button color="primary" type="submit" style={{"marginRight": "10px"}}>Search</Button>
@@ -370,4 +312,4 @@ const ResultDisplay = (props) => {
   );
 };
 
-export default ShelfSearch;
+export default SearchShelves;

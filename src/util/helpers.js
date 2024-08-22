@@ -29,6 +29,22 @@ export function twoDigits(i) {
     }
 }
 
+export function padShelfBarcode(barcode) {
+    if (!barcode) {
+        return '-------';
+    }
+    else if (barcode.length >= 7) {
+        return barcode;
+    }
+    else {
+        let paddedBarcode = barcode;
+        while (paddedBarcode.length < 7) {
+            paddedBarcode += "-";
+        }
+        return paddedBarcode;
+    }
+}
+
 export function getFormattedDate() {
     let date = new Date();
 

@@ -3,8 +3,8 @@ import NewBox from './newBox';
 import RapidShelve from './rapidShelve';
 import AddReturn from './addReturn';
 import Picklist from './picklist';
-import ItemSearch from './itemSearch';
-import ShelfSearch from './shelfSearch';
+import SearchItems from './searchItems';
+import SearchShelves from './searchShelves';
 import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
 import ManageCollections from './manageCollections';
@@ -20,8 +20,8 @@ export {
   NewBox,
   AddReturn,
   Picklist,
-  ItemSearch,
-  ShelfSearch,
+  SearchItems,
+  SearchShelves,
   ManageItems,
   ManageTrays,
   ManageCollections,

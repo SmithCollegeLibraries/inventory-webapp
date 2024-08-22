@@ -21,8 +21,8 @@ class ContentSearch {
     return search;
   }
 
-  shelves = async (searchTerm) => {
-    let search = await this.search(`${shelfAPI}search/?query=${searchTerm}`);
+  shelves = async (shelfBarcode, trayBarcode) => {
+    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode}&tray=${trayBarcode}`);
     return search;
   }
 

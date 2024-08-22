@@ -9,8 +9,8 @@ import {
     RapidShelve,
     AddReturn,
     Picklist,
-    ItemSearch,
-    ShelfSearch,
+    SearchItems,
+    SearchShelves,
     ManageItems,
     ManageTrays,
     ManageCollections,
@@ -150,11 +150,11 @@ export default class Main extends Component {
                 <Route path="/picklist" render={() => (
                   <Picklist />
                 )}/>
-                <Route path="/item-search" render={() => (
-                  <ItemSearch />
+                <Route path="/search-items" render={() => (
+                  <SearchItems />
                 )}/>
-                <Route path="/shelf-search" render={() => (
-                  <ShelfSearch />
+                <Route path="/search-shelves" render={() => (
+                  <SearchShelves />
                 )}/>
                 <Route path="/manage-items" render={() => (
                   <ManageItems />

@@ -26,7 +26,7 @@ const reducer = (state, action) => {
   }
 };
 
-const ItemSearch = (props) => {
+const SearchItems = (props) => {
   const initialState = {
     collections: [],
     item_list_as_string: '',
@@ -171,4 +171,4 @@ const TableRow = ({ item, idx }) => (
   </tr>
 )
 
-export default ItemSearch;
+export default SearchItems;

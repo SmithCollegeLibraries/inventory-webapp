@@ -90,10 +90,10 @@ export default class Header extends Component {
                     </DropdownToggle>
                     <DropdownMenu right>
                       <DropdownItem>
-                        <NavLink style={{color: 'black'}} className="nav-link" activeStyle={{ color: '#007BFF' }} to="/item-search">Items</NavLink>
+                        <NavLink style={{color: 'black'}} className="nav-link" activeStyle={{ color: '#007BFF' }} to="/search-items">Items</NavLink>
                       </DropdownItem>
                       <DropdownItem>
-                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/shelf-search">Shelves/Trays</NavLink>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/search-shelves">Shelves/Trays</NavLink>
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
