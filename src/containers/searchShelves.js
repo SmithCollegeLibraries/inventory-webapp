@@ -3,7 +3,7 @@ import { Button, Card, CardBody, Form, Input, Modal, ModalHeader, ModalBody, Mod
 import Load from '../util/load';
 import ContentSearch from '../util/search';
 import { displayItemList, padShelfBarcode } from '../util/helpers';
-import { failure, success, warning } from '../components/toastAlerts';
+import { warning } from '../components/toastAlerts';
 
 const processTrayInformation = (trays, size=null) => {
   let trayGrid = {'Rear': [], 'Middle': [], 'Front': [], 'Other': []};
