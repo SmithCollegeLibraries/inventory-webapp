@@ -10,9 +10,9 @@ import {
     AddReturn,
     Picklist,
     ItemSearch,
+    ShelfSearch,
     ManageItems,
     ManageTrays,
-    ManageShelves,
     ManageCollections,
     ManageUsers,
     // ManageSettings,
@@ -153,14 +153,14 @@ export default class Main extends Component {
                 <Route path="/item-search" render={() => (
                   <ItemSearch />
                 )}/>
+                <Route path="/shelf-search" render={() => (
+                  <ShelfSearch />
+                )}/>
                 <Route path="/manage-items" render={() => (
                   <ManageItems />
                 )}/>
                 <Route path="/manage-trays" render={() => (
                   <ManageTrays />
-                )}/>
-                <Route path="/manage-shelves" render={() => (
-                  <ManageShelves />
                 )}/>
                 <Route path="/manage-collections" render={() => (
                   <ManageCollections />

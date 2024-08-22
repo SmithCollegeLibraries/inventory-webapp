@@ -6,7 +6,7 @@ import { displayItemList, twoDigits } from '../util/helpers';
 import { failure, success, warning } from '../components/toastAlerts';
 
 const processTrayInformation = (trays, size=null) => {
-  let trayGrid = {'Front': [], 'Middle': [], 'Rear': [], 'Other': []};
+  let trayGrid = {'Rear': [], 'Middle': [], 'Front': [], 'Other': []};
   trays.forEach(tray => {
     if (tray.depth && tray.position) {
       trayGrid[tray.depth][tray.position - 1] = tray;
@@ -84,7 +84,7 @@ const reducer = (state, action) => {
   }
 };
 
-const ManageShelves = () => {
+const ShelfSearch = () => {
   const initialState = {
     query: {
       row: '',
@@ -333,6 +333,7 @@ const ResultDisplay = (props) => {
                 (depth, idx) => {
                   return (
                     <tr key={idx}>
+                      { processTrayInformation(props.data.trays).trayGrid[depth].length > 0 ? <th>{depth}</th> : null }
                       { processTrayInformation(props.data.trays).trayGrid[depth].map((tray, idx) => {
                         return (
                           <td
@@ -369,4 +370,4 @@ const ResultDisplay = (props) => {
   );
 };
 
-export default ManageShelves;
+export default ShelfSearch;
