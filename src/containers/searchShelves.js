@@ -115,6 +115,9 @@ const SearchShelves = () => {
   };
 
   const handleSearch = async (e) => {
+    e.preventDefault();
+    dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
+
     const shelfQuery = (padShelfBarcode(state.query.shelf));
     const trayQuery = (state.query.tray);
 
