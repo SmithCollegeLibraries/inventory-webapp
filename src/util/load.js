@@ -77,6 +77,16 @@ class Load {
     return get;
   }
 
+  newShelf = async (data) => {
+    const insert = await this.handleUpdate(`${shelfAPI}new-shelf/`, 'POST', data);
+    return insert;
+  };
+
+  shelfCount = async () => {
+    const count = await this.handleUpdate(`${shelfAPI}total-count/`, 'GET');
+    return count;
+  }
+
   /**
     * @desc Tray
   */
@@ -155,7 +165,6 @@ class Load {
 
   updateItem = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}update-item/`, 'POST', data);
-    console.log(data);
     return update;
   };
 
@@ -166,7 +175,6 @@ class Load {
 
   addReturn = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}add-return/`, 'POST', data);
-    console.log(data);
     return update;
   };
 

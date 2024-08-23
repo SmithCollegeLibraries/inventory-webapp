@@ -17,6 +17,34 @@ export function firstName(str) {
     }
 };
 
+export function twoDigits(i) {
+    // For SQL wildcard _, a single underscore should be expanded to
+    // two so that we are searching for __ rather than 0_.
+    if (i === "_") {
+        return "__";
+    }
+    else {
+        var formattedNumber = ("0" + i).slice(-2);
+        return formattedNumber;
+    }
+}
+
+export function padShelfBarcode(barcode) {
+    if (!barcode) {
+        return '-------';
+    }
+    else if (barcode.length >= 7) {
+        return barcode;
+    }
+    else {
+        let paddedBarcode = barcode;
+        while (paddedBarcode.length < 7) {
+            paddedBarcode += "-";
+        }
+        return paddedBarcode;
+    }
+}
+
 export function getFormattedDate() {
     let date = new Date();
 
@@ -45,4 +73,21 @@ export function itemError(barcode) {
 
 export function trayError(barcode) {
     return `Tray barcode ${barcode} is not valid. Please check with a Five Colleges staff member if you are unsure of what a tray barcode should look like.`;
+}
+
+// Take a list of items, with the barcode, flag and status given.
+// Return a string that displays the items in the list in a human-readable format.
+// list in a human-readable format, with the status displayed as a color:
+// "danger" red if the item has a flag, and "info" teal if the item
+// does not have status Trayed.
+export function displayItemList(items) {
+    return items.map(item =>
+        <span
+            key={item.barcode}
+            className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }
+          >
+          {item.barcode}
+          <br />
+        </span>
+    );
 }

@@ -84,9 +84,19 @@ export default class Header extends Component {
                   </NavItem>
                 }
                 { level >= 20 &&
-                  <NavItem>
-                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/item-search">Search</NavLink>
-                  </NavItem>
+                  <UncontrolledDropdown nav inNavbar>
+                    <DropdownToggle nav caret>
+                      Search
+                    </DropdownToggle>
+                    <DropdownMenu right>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} className="nav-link" activeStyle={{ color: '#007BFF' }} to="/search-items">Items</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/search-shelves">Shelves/Trays</NavLink>
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </UncontrolledDropdown>
                 }
                 { level >= 35 &&
                   <UncontrolledDropdown nav inNavbar>
@@ -100,9 +110,6 @@ export default class Header extends Component {
                       <DropdownItem>
                         <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-trays">Trays</NavLink>
                       </DropdownItem>
-                      {/* <DropdownItem>
-                        <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-shelves">Shelves</NavLink>
-                      </DropdownItem> */}
                       <DropdownItem>
                         <NavLink style={{color: 'black'}} activeStyle={{ color: '#007BFF' }} className="nav-link" to="/manage-collections">Collections</NavLink>
                       </DropdownItem>

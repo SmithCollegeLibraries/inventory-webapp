@@ -243,42 +243,6 @@ const AddReturn = () => {
         }
       };
 
-      const verifyFolioRecord = async (barcode) => {
-        if (navigator.onLine) {
-          dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', item: barcode });
-          if (barcode) {
-            // First check to see if it's in the database already
-            const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
-            if (databaseResults.length > 0) {
-              dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
-              dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
-            }
-            else {
-              const itemInFolio = await Load.itemInFolio(barcode);
-              if (itemInFolio) {
-                dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
-                dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
-              }
-              else {
-                failure(`Unable to locate FOLIO record for ${barcode}.`);
-                dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
-                dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
-                dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-                dispatch({ type: 'CHANGE_FORM', form: 'original'});
-                return false;
-              }
-            }
-            // If it's in the database, don't check FOLIO
-          }
-          // After getting the results, clear that we've started checking
-          // so that we don't get a "perpetual pending" error
-        }
-        else {
-          dispatch({ type: 'ITEM_FOLIO_OFFLINE', item: barcode });
-        }
-        return true;
-      };
-
       // Look up the item in the database, but don't necessarily check
       // against the tray and status or give any warnings yet
       checkItemInSystem(barcode);
@@ -289,32 +253,26 @@ const AddReturn = () => {
       // calls aren't made to the FOLIO server every time the input field
       // is changed.
 
-      let barcodeToLookupInFolio = null;
       let brokenBarcode = null;
-        if (barcode === '') {
-          // Don't verify empty "barcodes"
-        }
-        else if (!itemRegex.test(barcode)) {
-          failure(itemError(barcode));
-          brokenBarcode = barcode;
-        }
-        else if (!verifyItemUnstaged(barcode)) {
-          // Already giving an alert when checking
-          brokenBarcode = barcode;
-        }
-        else if (data.itemFolioBad.includes(barcode)) {
-          failure(`Unable to locate FOLIO record for ${barcode}.`);
-          brokenBarcode = barcode;
-        }
-        else {
-          if (!data.itemFolioCheckStarted.includes(barcode) && !data.itemFolioGood.includes(barcode) && !data.itemFolioOffline.includes(barcode)) {
-            barcodeToLookupInFolio = barcode;
-          }
-        }
+      
+      if (barcode === '') {
+        // Don't verify empty "barcodes"
+      }
+      else if (!itemRegex.test(barcode)) {
+        failure(itemError(barcode));
+        brokenBarcode = barcode;
+      }
+      else if (!verifyItemUnstaged(barcode)) {
+        // Already giving an alert when checking
+        brokenBarcode = barcode;
+      }
+      else if (data.itemFolioBad.includes(barcode)) {
+        failure(`Unable to locate FOLIO record for ${barcode}.`);
+        brokenBarcode = barcode;
+      }
 
       // TODO: For adding single item, validate against FOLIO. This is not
       // necessary for returns
-      // let itemInFolio = verifyFolioRecord(barcodeToLookupInFolio);
       let itemInFolio = true;
       if (await itemInFolio !== true) {
         return false;
@@ -502,7 +460,6 @@ const AddReturn = () => {
     if (navigator.onLine === true) {
       for (const itemInfo of Object.keys(data.verified).map(key => data.verified[key])) {
         itemInfo["status"] = "Trayed";
-        console.log(itemInfo);
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
           success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);

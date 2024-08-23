@@ -67,12 +67,12 @@ const ItemLogs = () => {
   // Get list of all actions
   useEffect(() => {
     Load.getItemActions().then((actionList) => {state.updateActionList(actionList)});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get list of user names
   useEffect(() => {
     Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>

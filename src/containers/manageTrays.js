@@ -2,6 +2,7 @@ import React, { useEffect, useReducer } from 'react';
 import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
+import { displayItemList } from '../util/helpers';
 import { success, warning } from '../components/toastAlerts';
 
 const reducer = (state, action) => {
@@ -221,6 +222,8 @@ const ManageTrays = () => {
       }
     }
 
+    // TODO: Validate tray barcode structure against settings
+
     const data = {
       barcode: state.fields.new_tray_barcode,
       shelf: state.fields.shelf || null,
@@ -230,8 +233,6 @@ const ManageTrays = () => {
       items: [],
     };
     const load = await Load.newTray(data);
-    console.log(data);
-    console.log(load);
     if (load) {
       success(`Tray ${load['barcode']} successfully added`);
       dispatch({ type: 'RESET', payload: '' });
@@ -339,7 +340,7 @@ const ManageTrays = () => {
                     <dl className="row">
                       <dt className="col-sm-3">Items ({state.fields.items.length})</dt>
                         <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
-                          {state.fields.items && state.fields.items.length > 0 ? state.fields.items.join('\n') : "-"}
+                          { state.fields.items && state.fields.items.length > 0 ? displayItemList(state.fields.items) : "-" }
                         </dd>
                     </dl>
                   </CardBody>

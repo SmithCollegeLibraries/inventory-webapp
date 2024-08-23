@@ -3,6 +3,7 @@ import Load from './load';
 
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
+const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
 const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/itemlog-api/`
 const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/traylog-api/`
@@ -17,6 +18,11 @@ class ContentSearch {
 
   trays = async (searchTerm) => {
     let search = await this.search(`${trayAPI}search/?query=${searchTerm}`);
+    return search;
+  }
+
+  shelves = async (shelfBarcode, trayBarcode) => {
+    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode}&tray=${trayBarcode}`);
     return search;
   }
 

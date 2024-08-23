@@ -714,7 +714,6 @@ const NewTray = () => {
     // When inspecting trays upon submission, we want to give a popup for
     // tray length, plus the ordinary live checking
     const inspectTray = (tray) => {
-      const { trayLength } = data;
       if (!trayRegex.test(tray)) {
         failure(trayError(tray));
         return false;
