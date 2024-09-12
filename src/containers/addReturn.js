@@ -31,18 +31,16 @@ const AddReturn = () => {
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
-    itemSystemCheckStarted: null,
-    itemFolioCheckStarted: [],
     itemFolioBad: [],
     itemFolioGood: [],
-    itemFolioOffline: [],
     itemAlreadyAlerted: [],
     collectionValidatedAgainstFolio: true,
 
-    // The following two keep track of items that have been looked up
-    // in the database
+    // The following two keep track of items and trays that have been
+    // looked up in the database
     itemTraysInSystem: {},
     itemStatusesInSystem: {},
+    trayInformation: {},
   };
 
   const trayReducer = (state, action) => {
@@ -88,26 +86,6 @@ const AddReturn = () => {
           ...state,
           settings: action.settings,
         };
-      case 'ITEM_SYSTEM_CHECK_STARTED':
-        return {
-          ...state,
-          itemCollectionCheckStarted: action.item,
-        };
-      case 'ITEM_SYSTEM_CHECK_CLEAR':
-        return {
-          ...state,
-          itemCollectionCheckStarted: null,
-        };
-      case 'ITEM_FOLIO_CHECK_STARTED':
-        return {
-          ...state,
-          itemFolioCheckStarted: [...state.itemFolioCheckStarted, action.item],
-        };
-      case 'ITEM_FOLIO_CHECK_CLEAR':
-        return {
-          ...state,
-          itemFolioCheckStarted: [],
-        };
       case 'ITEM_FOLIO_BAD':
         return {
           ...state,
@@ -118,16 +96,14 @@ const AddReturn = () => {
           ...state,
           itemFolioGood: [...state.itemFolioGood, action.item],
         };
-      case 'ITEM_FOLIO_OFFLINE':
-        return {
-          ...state,
-          itemFolioOffline: [...state.itemFolioBad, action.item],
-        };
       case 'ITEM_TRAYS_IN_SYSTEM':
         state.itemTraysInSystem[action.item] = action.tray;
         return state;
       case 'ITEM_STATUSES_IN_SYSTEM':
         state.itemStatusesInSystem[action.item] = action.status;
+        return state;
+      case 'TRAY_INFORMATION':
+        state.trayInformation[action.tray] = action.information;
         return state;
       case 'UPDATE_COLLECTIONS':
         return {
@@ -158,17 +134,6 @@ const AddReturn = () => {
             tray: '',
           },
           // Don't add 'verified' here! That should not be cleared on reset!
-
-          // Containers for all the possible states of verifying trays and items
-          itemSystemCheckStarted: null,
-          itemFolioCheckStarted: [],
-          itemFolioBad: [],
-          itemFolioGood: [],
-          itemFolioOffline: [],
-          // The following two keep track of items that have been looked up
-          // in the database
-          itemTraysInSystem: {},
-          itemStatusesInSystem: {},
         };
       default:
         return state;
@@ -325,7 +290,6 @@ const AddReturn = () => {
         // If the item is already in the database, make sure it's not marked
         // as belonging to a different collection
         if (navigator.onLine) {
-          dispatch({ type: 'ITEM_SYSTEM_CHECK_STARTED', item: barcode });
           const databaseResults = await Load.itemSearch({"barcodes": [barcode]});
           if (databaseResults.length > 0) {
             var result = databaseResults[0];
@@ -336,7 +300,6 @@ const AddReturn = () => {
             dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: null });
             dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: null });
           }
-          dispatch({ type: 'ITEM_SYSTEM_CHECK_CLEAR' });
         }
         // If we're not online, acknowledge that we tried to check this item
         // and allow it to pass the test. Any anomalies will be flagged when
@@ -384,10 +347,30 @@ const AddReturn = () => {
 
   useEffect(() => {
     const verifyTrayLive = async (trayBarcode) => {
+      const checkTrayInSystem = async (barcode) => {
+        if (navigator.onLine) {
+          // Make sure that the tray is already in the system
+          const result = await Load.getTray({"barcode": [barcode]});
+          dispatch({ type: 'TRAY_INFORMATION', tray: barcode, information: result });
+        }
+        // If we're not online, acknowledge that we tried to check this item
+        // and allow it to pass the test. Any anomalies will be flagged when
+        // actually added to the database.
+        else {
+          dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: null });
+          dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: null });
+        }
+      }
+
+      // Gives an alert to the user if a barcode has been entered that
+      // doesn't match the tray structure
       if (!trayRegex.test(trayBarcode)) {
         failure(trayError(trayBarcode));
         return false;
       }
+      // Start the tray check against the database; the data should come
+      // in by the time the original pane is submitted
+      checkTrayInSystem(trayBarcode);
     }
 
     if (debouncedLeftPaneTray && debouncedLeftPaneTray.length >= data.settings.trayBarcodeLength) {
@@ -519,15 +502,17 @@ const AddReturn = () => {
     };
 
     // When inspecting trays upon submission, we want to give a popup for
-    // tray length, plus the ordinary live checking. We also want to check
-    // against the system to get the number of items and the full count.
-    // The tray needs to exist in the system.
+    // tray length, plus the ordinary live checking. Also, the tray needs
+    // to exist in the system.
     const inspectTray = (tray) => {
       if (!trayRegex.test(tray)) {
         return false;
       }
+      else if (!data.trayInformation[tray]) {
+        failure(`Tray ${tray} does not exist in the system.`);
+        return false;
+      }
       else {
-        // TODO: Check against the system
         return true;
       }
     };
