@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, Fragment } from 'react';
+import React, { useCallback, useEffect, useReducer, Fragment } from 'react';
 // import ContentSearch from '../util/search';
 import Load from '../util/load';
 import { itemError, trayError } from '../util/helpers';
@@ -7,19 +7,27 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
 
+// Put default collection for each user separately
+const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+
 
 const AddReturn = () => {
   const initialState = {
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
+      collection: '',
       item: '',
       tray: '',
     },
+    trayDetails: {},
     verify: {
       item: '',
       tray: '',
     },
     verified: [],  // List of things that have been verified and staged
+    collections: [],
+    defaultCollection: '',
+    defaultCollectionMessage: false,
     settings: {},
 
     // Containers for all the possible states of verifying trays and items
@@ -28,6 +36,9 @@ const AddReturn = () => {
     itemFolioBad: [],
     itemFolioGood: [],
     itemFolioOffline: [],
+    itemAlreadyAlerted: [],
+    collectionValidatedAgainstFolio: true,
+
     // The following two keep track of items that have been looked up
     // in the database
     itemTraysInSystem: {},
@@ -41,10 +52,31 @@ const AddReturn = () => {
           ...state,
           original: action.original,
         };
+      case 'UPDATE_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
+        };
       case 'ADD_VERIFY':
         return {
           ...state,
           verify: action.verify,
+        };
+      case 'ADD_DEFAULT_COLLECTION':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            collection: action.collection,
+          },
+        };
+      case 'DEFAULT_COLLECTION_MESSAGE':
+        return {
+          ...state,
+          defaultCollectionMessage: action.value,
         };
       case 'UPDATE_STAGED':
         return {
@@ -97,16 +129,27 @@ const AddReturn = () => {
       case 'ITEM_STATUSES_IN_SYSTEM':
         state.itemStatusesInSystem[action.item] = action.status;
         return state;
+      case 'UPDATE_COLLECTIONS':
+        return {
+          ...state,
+          collections: action.collections,
+        };
       case 'CHANGE_FORM':
         return {
           ...state,
           form: action.form,
+        };
+      case 'CHANGE_COLLECTION_VALIDATION':
+        return {
+          ...state,
+          collectionValidatedAgainstFolio: action.value,
         };
       case 'RESET':
         return {
           ...state,
           form: "original",
           original: {
+            collection: state.original.collection,
             item: '',
             tray: '',
           },
@@ -166,8 +209,23 @@ const AddReturn = () => {
     return () => clearTimeout(timer);
   }
 
-  const verifyItemOnSubmit = (barcode) => {
-    performLastCheck(barcode);
+  // Live verification functions, which also get called again on submission
+  const failureIfNew = useCallback((barcode, message) => {
+    // Only alert if the barcode is not already in the list of alerted barcodes
+    // This prevents the same barcode from being alerted multiple times
+    // if the user doesn't clear the list of barcodes
+    if (!data.itemAlreadyAlerted.includes(barcode)) {
+      failure(message);
+      dispatch({ type: 'ITEM_ALREADY_ALERTED', item: barcode });
+    }
+    else {
+      const errorPath = process.env.PUBLIC_URL + "/error.mp3";
+      const errorAudio = new Audio(errorPath);
+      errorAudio.play();
+    }
+  }, [data.itemAlreadyAlerted]);
+
+  const verifyItemOnSubmit = (barcode, collection) => {
     // For each barcode, check against the system and then also make sure
     // that it's checked against FOLIO
     var itemRegex = new RegExp(data.settings.itemStructure);
@@ -177,16 +235,13 @@ const AddReturn = () => {
     else if (!verifyItemUnstaged(barcode)) {
       return false;
     }
-    else if (data.itemFolioBad.includes(barcode)) {
-      failure(`Unable to locate FOLIO record for ${barcode}.`);
-      return false;
-    }
     else {
       // While this doesn't catch items that have been looked up in FOLIO
       // and haven't yet thrown an error, we will catch those when the
       // Verify screen has been submitted. We don't want to hold up the
       // process -- otherwise the user will get a warning on every single
       // submission that verification is still in process.
+      performLastCheck(barcode);
       return true;
     }
   }
@@ -210,6 +265,55 @@ const AddReturn = () => {
     };
     getSettings();
   }, []);
+
+
+  // Get current user's default collection
+  useEffect(() => {
+    const getDefaultCollection = async () => {
+      const collection = await Load.getDefaultCollection();
+      if (collection) {
+        // Don't override a selected collection -- just an empty default;
+        // also make sure that there is in fact an active default collection
+        // for the current user
+        if (!data.original.collection) {
+          dispatch({ type: 'ADD_DEFAULT_COLLECTION', collection: collection.name});
+        }
+      }
+      else {
+        dispatch({ type: 'DEFAULT_COLLECTION_MESSAGE', value: true});
+      }
+    };
+    getDefaultCollection();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
+    };
+    getCollections();
+  }, []);
+
+  // Notice when the collection is changed, and update whether we validate
+  // against FOLIO if necessary.
+  useEffect(() => {
+    const getCollectionInfo = (collection) => {
+      if (collection === '') {
+        return {};
+      }
+      else {
+        return data.collections.find(c => c.name === collection);
+      }
+    };
+    const collectionInfo = getCollectionInfo(data.original.collection);
+    if (collectionInfo) {
+      dispatch({
+        type: 'CHANGE_COLLECTION_VALIDATION',
+        value: data.original.collection ? getCollectionInfo(data.original.collection).folio_validated : true
+      });
+    }
+  }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Now the actual hooks that implement the live checks
 
@@ -254,7 +358,7 @@ const AddReturn = () => {
       // is changed.
 
       let brokenBarcode = null;
-      
+
       if (barcode === '') {
         // Don't verify empty "barcodes"
       }
@@ -265,17 +369,6 @@ const AddReturn = () => {
       else if (!verifyItemUnstaged(barcode)) {
         // Already giving an alert when checking
         brokenBarcode = barcode;
-      }
-      else if (data.itemFolioBad.includes(barcode)) {
-        failure(`Unable to locate FOLIO record for ${barcode}.`);
-        brokenBarcode = barcode;
-      }
-
-      // TODO: For adding single item, validate against FOLIO. This is not
-      // necessary for returns
-      let itemInFolio = true;
-      if (await itemInFolio !== true) {
-        return false;
       }
 
       // If we've made it this far, all barcodes are valid
@@ -325,6 +418,28 @@ const AddReturn = () => {
 
   // Handling interactions with the form
 
+  const verifyFolioRecord = async (barcode) => {
+    dispatch({ type: 'ITEM_FOLIO_CHECK_STARTED', item: barcode });
+    if (barcode.length > 0) {
+      const itemInFolio = await Load.itemInFolio(barcode);
+      if (itemInFolio) {
+        dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
+      }
+      else if (data.collectionValidatedAgainstFolio) {
+        failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
+        dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
+        const timer = setTimeout(() => {
+          dispatch({ type: 'CHANGE_FORM', form: 'original'});
+          dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
+        }, 200);
+        return () => clearTimeout(timer);
+      }
+    }
+    // After getting the results, clear that we've started checking
+    // so that we don't get a "perpetual pending" error
+    dispatch({ type: 'ITEM_FOLIO_CHECK_CLEAR' });
+  };
+
   const handleEnter = (e) => {
     if (e.keyCode === 13) {
       const form = e.target.form;
@@ -351,11 +466,12 @@ const AddReturn = () => {
   const handleOriginalOnChange = e => {
     e.preventDefault();
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
+    }
+    else if (e.target.name === 'collection') {
+      value = e.target.value === COLLECTION_PLACEHOLDER ? '' : e.target.value;
     }
     const original = data.original;
     original[e.target.name] = value;
@@ -366,11 +482,9 @@ const AddReturn = () => {
     e.preventDefault();
     const verify = data.verify;
     let value = e.target.value;
-    // Automatically remove non-numeric characters from tray and items
-    // fields; this is important because the actual barcodes for trays are
-    // prefixed with SM, which the barcode scanners will add to the input
+    // Automatically remove certain characters from tray barcode input
     if (e.target.name === 'tray') {
-      value = e.target.value.replace(/\D/g,'');
+      value = e.target.value.replace(/[^0-9A-Z]/g,'');
     }
     verify[e.target.name] = value;
     dispatch({ type: 'ADD_VERIFY', verify: verify});
@@ -392,13 +506,28 @@ const AddReturn = () => {
   };
 
   const handleOriginalSubmit = (e) => {
+    // Collections aren't inspected live
+    const inspectCollection = () => {
+      // Check for blank collection only if it's a new item
+      if (!data.original.collection && data.itemStatusesInSystem[data.original.item] === null) {
+        failure(`You must select a collection.`);
+        return false;
+      }
+      else {
+        return true;
+      }
+    };
+
     // When inspecting trays upon submission, we want to give a popup for
-    // tray length, plus the ordinary live checking
+    // tray length, plus the ordinary live checking. We also want to check
+    // against the system to get the number of items and the full count.
+    // The tray needs to exist in the system.
     const inspectTray = (tray) => {
       if (!trayRegex.test(tray)) {
         return false;
       }
       else {
+        // TODO: Check against the system
         return true;
       }
     };
@@ -413,10 +542,12 @@ const AddReturn = () => {
     }
 
     e.preventDefault();
+    const collectionPassedInspection = inspectCollection();
     const itemPassedInspection = inspectItem(data.original.item);
     const trayPassedInspection = inspectTray(data.original.tray);
+    verifyFolioRecord(data.original.item);
     const timer = setTimeout(() => {
-      if (itemPassedInspection && trayPassedInspection ) {
+      if (collectionPassedInspection && itemPassedInspection && trayPassedInspection ) {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
       }
@@ -442,6 +573,7 @@ const AddReturn = () => {
     else {
       addItemToStaged({
         barcode: data.original.item,
+        collection: data.original.collection,
         tray: data.original.tray,
       });
       updateStagedFromLocalStorage();
@@ -508,6 +640,14 @@ const AddReturn = () => {
   return (
     <Fragment>
       <div style={{marginTop: "20px"}}>
+        {
+          data.defaultCollectionMessage &&
+          <Row>
+            <Col>
+              <p>If you would like a default collection set for your account, please contact {data.settings.databaseAdministrator}.</p>
+            </Col>
+          </Row>
+        }
         <Row>
           <Col md="4">
             <Card>
@@ -515,6 +655,7 @@ const AddReturn = () => {
                 <AddReturnFormOriginal
                   handleEnter={handleEnter}
                   handleEnterSubmit={handleEnterOriginalSubmit}
+                  collections={data.collections}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleOriginalSubmit={handleOriginalSubmit}
@@ -574,6 +715,18 @@ const AddReturn = () => {
 const AddReturnFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
+      <FormGroup>
+        <Label for="collections">Collection</Label>
+        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+          <option>{ COLLECTION_PLACEHOLDER }</option>
+          { props.collections
+            ? Object.keys(props.collections).map((items, idx) => (
+                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+              ))
+            : <option></option>
+          }
+        </Input>
+      </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
           { props.trayRegex.test(props.original.tray)
@@ -650,6 +803,10 @@ const AddReturnFormOriginal = props => (
 
 const AddReturnFormVerify = props => (
   <Form autoComplete="off">
+    <FormGroup>
+      <Label for="collections">Collection</Label>
+      <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
+    </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
         { props.trayRegex.test(props.verify.tray)
@@ -736,6 +893,10 @@ const Display = props => (
             <dt className="col-sm-3">Item</dt>
             <dd className="col-sm-9" style={{whiteSpace: 'pre'}}>
               {props.data[itemInfo].barcode ? props.data[itemInfo].barcode : '-'}
+            </dd>
+            <dt className="col-sm-3">Collection</dt>
+            <dd className="col-sm-9">
+              {props.data[itemInfo].collection}
             </dd>
           </dl>
           <Button color="danger" onClick={

@@ -80,7 +80,7 @@ export default class Header extends Component {
                 }
                 { level >= 40 &&
                   <NavItem>
-                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/return">Return</NavLink>
+                    <NavLink className="nav-link" activeStyle={{ color: '#007BFF' }} to="/add-return">Add/Return</NavLink>
                   </NavItem>
                 }
                 { level >= 20 &&

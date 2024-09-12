@@ -144,7 +144,7 @@ export default class Main extends Component {
                 <Route path="/rapid-shelve" render={() => (
                   <RapidShelve />
                 )}/>
-                <Route path="/return" render={() => (
+                <Route path="/add-return" render={() => (
                   <AddReturn />
                 )}/>
                 <Route path="/picklist" render={() => (

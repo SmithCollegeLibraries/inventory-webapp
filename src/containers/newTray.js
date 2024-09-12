@@ -271,7 +271,7 @@ const NewTray = () => {
     }
   }, [data.itemAlreadyAlerted]);
 
-  const verifyItemsOnSubmit = (barcodes, collection) => {
+  const verifyItemsOnSubmit = (barcodes) => {
     // For each barcode, confirm that it's checked against the system
     // and that it's checked against FOLIO
     for (const barcode of barcodes) {
