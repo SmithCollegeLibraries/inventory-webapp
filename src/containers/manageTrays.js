@@ -50,6 +50,7 @@ const reducer = (state, action) => {
           shelf: '',
           depth: '',
           position: null,
+          full_count: null,
           items: [],
           trayer: '',
           created: '',
@@ -71,6 +72,7 @@ const ManageTrays = () => {
       shelf: '',
       depth: '',
       position: null,
+      full_count: null,
       items: [],
       trayer: '',
       created: '',
@@ -110,6 +112,7 @@ const ManageTrays = () => {
         shelf: data.shelf,
         depth: data.depth,
         position: data.position,
+        full_count: data.full_count,
         items: data.items,
         trayer: data.trayer,
         created: data.created,
@@ -149,6 +152,7 @@ const ManageTrays = () => {
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : null,
+        full_count: results[0].full_count ? results[0].full_count : null,
         items: items,
         trayer: results[0].trayer ? results[0].trayer : "",
         created: results[0].created ? results[0].created : "",
@@ -172,6 +176,7 @@ const ManageTrays = () => {
             shelf: '',
             depth: '',
             position: null,
+            full_count: null,
             items: [],
             trayer: '',
             created: '',
@@ -200,6 +205,7 @@ const ManageTrays = () => {
       shelf: state.fields.shelf || null,
       depth: state.fields.depth || null,
       position: state.fields.position || null,
+      full_count: state.fields.full_count || null,
     };
     const load = await Load.updateTray(data);
     if (load) {
@@ -433,6 +439,10 @@ const TrayForm = (props) => {
           <FormGroup>
             <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
             <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
+          </FormGroup>
+          <FormGroup>
+            <Label for="full_count" style={{"fontWeight":"bold"}}>Number of items when full</Label>
+            <Input type="number" style={{"width":"6em"}} value={props.fields.full_count || ''} onChange={(e) => props.handleTrayChange(e)} name="full_count" />
           </FormGroup>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button
