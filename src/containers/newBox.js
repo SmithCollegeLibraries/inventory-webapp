@@ -213,7 +213,6 @@ const NewBox = () => {
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
   const debouncedOriginalItem = useDebounce(data.original.item);
-  const debouncedOriginalTray = useDebounce(data.original.tray);
 
   // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
@@ -414,7 +413,7 @@ const NewBox = () => {
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
     const itemBarcodeToVerify = debouncedOriginalItem;
-    const trayBarcodeToVerify = debouncedOriginalTray;
+    const trayBarcodeToVerify = data.original.tray;
     const itemRegex = new RegExp(data.settings.itemStructure);
     const trayRegex = new RegExp(data.settings.trayStructure);
 
@@ -432,7 +431,7 @@ const NewBox = () => {
     if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
       failureTrayIfNew(trayBarcodeToVerify, trayError(trayBarcodeToVerify));
     }
-  }, [debouncedOriginalItem, debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedOriginalItem, data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
@@ -634,8 +633,8 @@ const NewBox = () => {
     const processSubmit = async () => {
       const newStaged = [data.original].concat(data.staged);
       localforage.setItem('newbox', newStaged);
-      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET' });
+      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
     }
 
     if (verifyTrayLive(data.original.tray) === true &&
