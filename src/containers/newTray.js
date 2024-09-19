@@ -778,7 +778,7 @@ const NewTray = () => {
     return () => clearTimeout(timer);
   };
 
-  const handleVerifySubmit = (e) => {
+  const handleVerifySubmit = (e, fullStatus) => {
     e.preventDefault();
 
     const findMismatches = (originalList, verifyList) => {
@@ -810,7 +810,8 @@ const NewTray = () => {
       addTrayToStaged({
         barcode: data.verify.tray,
         collection: data.original.collection,
-        items: originalItemsAsArray
+        items: originalItemsAsArray,
+        full_count: fullStatus ? originalItemsAsArray.length : null,
       });
       updateStagedFromLocalStorage();
       dispatch({ type: "RESET" });
@@ -1091,11 +1092,19 @@ const TrayFormVerify = props => (
     </FormGroup>
     <Button
         style={{marginRight: '10px'}}
-        onClick={(e) => props.handleVerifySubmit(e)}
+        onClick={(e) => props.handleVerifySubmit(e, true)}
         color="primary"
         disabled={props.disabled || props.disabledSubmit}
       >
-      Add
+      Add (full)
+    </Button>
+    <Button
+        style={{marginRight: '10px'}}
+        onClick={(e) => props.handleVerifySubmit(e, false)}
+        color="info"
+        disabled={props.disabled || props.disabledSubmit}
+      >
+      Add (not full)
     </Button>
     <Button
         style={{marginRight: '10px'}}
