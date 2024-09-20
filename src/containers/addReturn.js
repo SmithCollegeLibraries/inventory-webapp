@@ -103,7 +103,20 @@ const AddReturn = () => {
         state.itemStatusesInSystem[action.item] = action.status;
         return state;
       case 'TRAY_INFORMATION':
-        state.trayInformation[action.tray] = action.information;
+        state.trayInformation[action.tray] = {
+          currentCount: action.currentCount,
+          fullCount: action.fullCount,
+        };
+        return state;
+      case 'INCREMENT_TRAY_COUNT':
+        if (state.trayInformation[action.trayBarcode]) {
+          state.trayInformation[action.trayBarcode].currentCount += 1;
+        }
+        return state;
+      case 'DECREMENT_TRAY_COUNT':
+        if (state.trayInformation[action.trayBarcode]) {
+          state.trayInformation[action.trayBarcode].currentCount -= 1;
+        }
         return state;
       case 'UPDATE_COLLECTIONS':
         return {
@@ -133,6 +146,7 @@ const AddReturn = () => {
             item: '',
             tray: '',
           },
+          trayInformation: {},
           // Don't add 'verified' here! That should not be cleared on reset!
         };
       default:
@@ -351,7 +365,17 @@ const AddReturn = () => {
         if (navigator.onLine) {
           // Make sure that the tray is already in the system
           const result = await Load.getTray({"barcode": [barcode]});
-          dispatch({ type: 'TRAY_INFORMATION', tray: barcode, information: result });
+          // Only fetch the tray information once, because any future items
+          // added to the tray in this session will update the count
+          if (result && !data.trayInformation[barcode]) {
+            dispatch({
+              type: 'TRAY_INFORMATION',
+              tray: barcode,
+              items: result.items,
+              currentCount: result.items.length,
+              fullCount: result.full_count,
+            });
+          }
         }
         // If we're not online, acknowledge that we tried to check this item
         // and allow it to pass the test. Any anomalies will be flagged when
@@ -580,7 +604,8 @@ const AddReturn = () => {
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
           success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);
-          removeItemFromStaged(itemInfo.barcode);
+          removeItemFromStaged(itemInfo);
+          dispatch({ type: 'RESET' });
         }
         else {
           const errorPath = process.env.PUBLIC_URL + "/error.mp3";
@@ -602,11 +627,13 @@ const AddReturn = () => {
     else {
       itemInfo.folioVerified = false;
     }
+    dispatch({ type: 'INCREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
     localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
   };
 
-  const removeItemFromStaged = (itemBarcode) => {
-    delete localStorage['addreturnitem-' + itemBarcode];
+  const removeItemFromStaged = (itemInfo) => {
+    dispatch({ type: 'DECREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
+    delete localStorage['addreturnitem-' + itemInfo.barcode];
     updateStagedFromLocalStorage();
   };
 
@@ -615,6 +642,7 @@ const AddReturn = () => {
       for (const tray of Object.keys(localStorage).filter(key => key.includes('addreturnitem-'))) {
         delete localStorage[tray];
       }
+      dispatch({ type: 'RESET' });
       updateStagedFromLocalStorage();
     }
   };
@@ -887,7 +915,7 @@ const Display = props => (
           <Button color="danger" onClick={
               function () {
                 if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
-                  props.removeItemFromStaged(props.data[itemInfo].barcode);
+                  props.removeItemFromStaged(props.data[itemInfo]);
                 }
               }}>
             Delete
