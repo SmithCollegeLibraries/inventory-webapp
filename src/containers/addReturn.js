@@ -227,7 +227,7 @@ const AddReturn = () => {
 
   const verifyItemUnstaged = (barcode) => {
     // First see whether it already exists in staged trays
-    const arrayOfStagedItems = Object.keys(data.verified).map(tray => data.verified[tray].item);
+    const arrayOfStagedItems = Object.keys(data.verified).map(index => data.verified[index].barcode);
     const stagedItems = [].concat.apply([], arrayOfStagedItems);
     if (stagedItems.includes(barcode)) {
       failure(`Item ${barcode} is already staged`);
