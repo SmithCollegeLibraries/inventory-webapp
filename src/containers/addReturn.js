@@ -97,27 +97,55 @@ const AddReturn = () => {
           itemFolioGood: [...state.itemFolioGood, action.item],
         };
       case 'ITEM_TRAYS_IN_SYSTEM':
-        state.itemTraysInSystem[action.item] = action.tray;
-        return state;
-      case 'ITEM_STATUSES_IN_SYSTEM':
-        state.itemStatusesInSystem[action.item] = action.status;
-        return state;
-      case 'TRAY_INFORMATION':
-        state.trayInformation[action.tray] = {
-          currentCount: action.currentCount,
-          fullCount: action.fullCount,
+        return {
+          ...state,
+          itemTraysInSystem: {
+            ...state.itemTraysInSystem,
+            [action.item]: action.tray,
+          },
         };
-        return state;
+      case 'ITEM_STATUSES_IN_SYSTEM':
+        return {
+          ...state,
+          itemStatusesInSystem: {
+            ...state.itemStatusesInSystem,
+            [action.item]: action.status,
+          },
+        };
+      case 'TRAY_INFORMATION':
+        return {
+          ...state,
+          trayInformation: {
+            ...state.trayInformation,
+            [action.tray]: {
+              items: action.items,
+              currentCount: action.currentCount,
+              fullCount: action.fullCount,
+            },
+          },
+        };
       case 'INCREMENT_TRAY_COUNT':
-        if (state.trayInformation[action.trayBarcode]) {
-          state.trayInformation[action.trayBarcode].currentCount += 1;
-        }
-        return state;
-      case 'DECREMENT_TRAY_COUNT':
-        if (state.trayInformation[action.trayBarcode]) {
-          state.trayInformation[action.trayBarcode].currentCount -= 1;
-        }
-        return state;
+        return {
+          ...state,
+          trayInformation: {
+            ...state.trayInformation,
+            [action.trayBarcode]: {
+              ...state.trayInformation[action.trayBarcode],
+              currentCount: state.trayInformation[action.trayBarcode].currentCount + 1,
+            }
+          },
+        };
+        case 'DECREMENT_TRAY_COUNT':
+          return {
+            ...state,
+            trayInformation: {
+              ...state.trayInformation,
+              [action.trayBarcode]: {
+                ...state.trayInformation[action.trayBarcode],
+                currentCount: state.trayInformation[action.trayBarcode].currentCount - 1,
+              }
+            },
+          };
       case 'UPDATE_COLLECTIONS':
         return {
           ...state,
@@ -146,9 +174,13 @@ const AddReturn = () => {
             item: '',
             tray: '',
           },
-          trayInformation: {},
           // Don't add 'verified' here! That should not be cleared on reset!
         };
+        case 'RESET_TRAY_INFORMATION':
+          return {
+            ...state,
+            trayInformation: {},
+          };
       default:
         return state;
     }
@@ -371,7 +403,7 @@ const AddReturn = () => {
             dispatch({
               type: 'TRAY_INFORMATION',
               tray: barcode,
-              items: result.items,
+              items: Object.keys(result.items).map(key => result.items[key].barcode),
               currentCount: result.items.length,
               fullCount: result.full_count,
             });
@@ -499,9 +531,7 @@ const AddReturn = () => {
 
   const clearOriginal = e => {
     e.preventDefault();
-    if (window.confirm('Are you sure you want to clear this pane? This action cannot be undone.')) {
-      dispatch({ type: "RESET" });
-    }
+    dispatch({ type: "RESET" });
   };
 
   const goBackToOriginal = e => {
@@ -603,9 +633,20 @@ const AddReturn = () => {
         itemInfo["status"] = "Trayed";
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
+          // TODO: Make this "added" instead of "returned" if the item is new
           success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo);
-          dispatch({ type: 'RESET' });
+          // Re-fetch tray information
+          const result = await Load.getTray({"barcode": [itemInfo.tray]});
+          if (result) {
+            dispatch({
+              type: 'TRAY_INFORMATION',
+              tray: itemInfo.tray,
+              items: Object.keys(result.items).map(key => result.items[key].barcode),
+              currentCount: result.items.length,
+              fullCount: result.full_count,
+            });
+          }
         }
         else {
           const errorPath = process.env.PUBLIC_URL + "/error.mp3";
@@ -613,6 +654,7 @@ const AddReturn = () => {
           errorAudio.play();
         }
       }
+      dispatch({ type: 'RESET' });
     }
     else {
       failure("You must be connected to the internet to process trays. Please check your internet connection.");
@@ -627,7 +669,9 @@ const AddReturn = () => {
     else {
       itemInfo.folioVerified = false;
     }
-    dispatch({ type: 'INCREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
+    if (data.trayInformation[itemInfo.tray] && !data.trayInformation[itemInfo.tray].items.includes(itemInfo.barcode)) {
+      dispatch({ type: 'INCREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
+    }
     localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
   };
 
@@ -643,6 +687,7 @@ const AddReturn = () => {
         delete localStorage[tray];
       }
       dispatch({ type: 'RESET' });
+      dispatch({ type: 'RESET_TRAY_INFORMATION' });
       updateStagedFromLocalStorage();
     }
   };
