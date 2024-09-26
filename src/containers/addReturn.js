@@ -125,6 +125,7 @@ const AddReturn = () => {
             ...state.trayInformation,
             [action.tray]: {
               items: action.items,
+              itemInformation: action.itemInformation,
               currentCount: action.currentCount,
               fullCount: action.fullCount,
             },
@@ -197,24 +198,29 @@ const AddReturn = () => {
   const debouncedLeftPaneItem = useDebounce(data.original.item);
   const debouncedLeftPaneTray = useDebounce(data.original.tray);
 
+  const trayIsFull = (trayBarcode) => {
+    if (!data.trayInformation[trayBarcode]) {
+      return false;
+    }
+    if (!data.trayInformation[trayBarcode].fullCount) {
+      return false;
+    }
+    return data.trayInformation[trayBarcode].currentCount >= data.trayInformation[trayBarcode].fullCount;
+  }
+
+  const trayCirculatingItemCount = (trayBarcode) => {
+    if (!data.trayInformation[trayBarcode]) {
+      return null;
+    }
+    // Go through the items in the trayInformation and count how many are
+    // marked as circulating
+    return data.trayInformation[trayBarcode].itemInformation?.filter(item => item.status !== "Trayed").length;
+  }
+
   const performLastCheck = (barcode) => {
     const handleLastCheck = (barcode) => {
-      var itemTrayMessage = "";
-      var itemStatusMessage = "";
       if (data.itemTraysInSystem[barcode] && data.itemTraysInSystem[barcode] !== data.original.tray) {
-        itemTrayMessage = "The tray given does not match the item's current tray. ";
-      }
-      if (data.itemStatusesInSystem[barcode] && data.itemStatusesInSystem[barcode] !== "Circulating") {
-        if (itemTrayMessage) {
-          itemStatusMessage = "Also, this item is not currently marked as circulating. ";
-        }
-        else {
-          itemStatusMessage = "This item is not currently marked as circulating. ";
-        }
-      }
-
-      if (itemTrayMessage || itemStatusMessage) {
-        if (!window.confirm(itemTrayMessage + itemStatusMessage + "Are you sure you want to continue?")) {
+        if (!window.confirm("The tray given does not match the item's current tray. Are you sure you want to continue?")) {
           dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
           dispatch({ type: 'CHANGE_FORM', form: 'original'});
         }
@@ -417,6 +423,8 @@ const AddReturn = () => {
               type: 'TRAY_INFORMATION',
               tray: barcode,
               items: Object.keys(result.items).map(key => result.items[key].barcode),
+              // Dictionary of item barcodes with the item's status
+              itemInformation: result.items,
               currentCount: currentCount,
               fullCount: result.full_count,
             });
@@ -644,9 +652,7 @@ const AddReturn = () => {
         collection: data.original.collection,
         tray: data.original.tray,
       });
-      if (trayFull) {
-        addTrayToStaged(data.original.tray);
-      }
+      addTrayToStaged(data.original.tray, trayFull);
       updateStagedItemsFromLocalStorage();
       updateStagedTraysFromLocalStorage();
       dispatch({ type: "RESET" });
@@ -671,12 +677,14 @@ const AddReturn = () => {
           removeItemFromStaged(itemInfo);
           removeTrayFromStaged(itemInfo.tray);
           // Re-fetch tray information
+          // TODO: make this DRY - only call this dispatch in one place in the code
           const result = await Load.getTray({"barcode": [itemInfo.tray]});
           if (result) {
             dispatch({
               type: 'TRAY_INFORMATION',
               tray: itemInfo.tray,
               items: Object.keys(result.items).map(key => result.items[key].barcode),
+              itemInformation: result.items,
               currentCount: result.items.length,
               fullCount: result.full_count,
             });
@@ -711,11 +719,9 @@ const AddReturn = () => {
     localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
   };
 
-  const addTrayToStaged = (trayBarcode) => {
-    console.log(data.trayInformation[trayBarcode].currentCount);
+  const addTrayToStaged = (trayBarcode, trayFull) => {
     let fullCount = data.trayInformation[trayBarcode].currentCount;
-    localStorage['addreturntray-' + trayBarcode] = fullCount;
-    console.log(data.trayInformation[trayBarcode].currentCount);
+    localStorage['addreturntray-' + trayBarcode] = trayFull ? fullCount : null;
   }
 
   const removeItemFromStaged = (itemInfo) => {
@@ -796,6 +802,8 @@ const AddReturn = () => {
                 itemRegex={itemRegex}
                 trayBarcodeLength={data.settings.trayBarcodeLength}
                 itemBarcodeLength={data.settings.itemBarcodeLength}
+                trayIsFull={trayIsFull(data.original.tray)}
+                trayCirculatingItemCount={trayCirculatingItemCount(data.original.tray)}
               />
               </CardBody>
             </Card>
@@ -905,6 +913,8 @@ const AddReturnFormOriginal = props => (
         Clear
       </Button>
     </Form>
+    {/* Empty paragraph to align the original and verify forms */}
+    <p></p>
   </div>
 );
 
@@ -992,6 +1002,8 @@ const AddReturnFormVerify = props => (
       >
       Go back
     </Button>
+    <p className={"text-danger"} style={{marginTop:"15px",marginBottom:"0"}}>{ props.trayIsFull ? "This tray is currently marked as full." : "" }</p>
+    <p className={"text-danger"} style={{marginTop:"10px",marginBottom:"0"}}>{ props.trayCirculatingItemCount ? `This tray has ${props.trayCirculatingItemCount} circulating ${props.trayCirculatingItemCount === 1 ? 'item.' : 'items.'}` : "" }</p>
   </Form>
 );
 
@@ -1014,8 +1026,14 @@ const Display = props => (
               {props.data[itemInfo].collection}
             </dd>
           </dl>
-          { // If the tray is marked as full, show multiple delete buttons
-            localStorage['addreturntray-' + props.data[itemInfo].tray] ?
+          { // If the tray is marked as full, and it's not the only
+            // item staged to that tray, ask whether the tray is still full
+            (localStorage['addreturntray-' + props.data[itemInfo].tray] &&
+              Object.keys(localStorage)
+                .filter(key => key.includes('addreturnitem-'))
+                .filter(key => JSON.parse(localStorage[key]).tray === props.data[itemInfo].tray)
+                .length > 1
+            ) ?
             <>
               <Button color="danger" style={{marginRight: "10px"}} onClick={
                   function () {
