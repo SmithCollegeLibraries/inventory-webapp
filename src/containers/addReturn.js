@@ -25,6 +25,7 @@ const AddReturn = () => {
       tray: '',
     },
     verified: [],  // List of things that have been verified and staged
+    traysAdded: [],
     collections: [],
     defaultCollection: '',
     defaultCollectionMessage: false,
@@ -76,10 +77,15 @@ const AddReturn = () => {
           ...state,
           defaultCollectionMessage: action.value,
         };
-      case 'UPDATE_STAGED':
+      case 'UPDATE_STAGED_ITEMS':
         return {
           ...state,
           verified: action.verified,
+        };
+      case 'UPDATE_STAGED_TRAYS':
+        return {
+          ...state,
+          traysAdded: action.traysAdded,
         };
       case 'UPDATE_SETTINGS':
         return {
@@ -443,10 +449,11 @@ const AddReturn = () => {
 
   // On load, check local storage for any staged items
   useEffect(() => {
-    updateStagedFromLocalStorage();
+    updateStagedItemsFromLocalStorage();
+    updateStagedTraysFromLocalStorage();
   }, []);
 
-  const updateStagedFromLocalStorage = () => {
+  const updateStagedItemsFromLocalStorage = () => {
     let localItems = [];
     // Narrow in only on things relevant to the new tray form
     Object.keys(localStorage).forEach(function(key, index) {
@@ -459,7 +466,23 @@ const AddReturn = () => {
         }
       }
     });
-    dispatch({type: 'UPDATE_STAGED', verified: localItems});
+    dispatch({type: 'UPDATE_STAGED_ITEMS', verified: localItems});
+  }
+
+  const updateStagedTraysFromLocalStorage = () => {
+    let localTrays = [];
+    // Narrow in only on things relevant to the new tray form
+    Object.keys(localStorage).forEach(function(key, index) {
+      if (key.includes('addreturntray-')) {
+        try {
+          localTrays.push(JSON.parse(localStorage[key]));
+        }
+        catch (e) {
+          console.error(e);
+        }
+      }
+    });
+    dispatch({type: 'UPDATE_STAGED_TRAYS', traysAdded: localTrays});
   }
 
   // Handling interactions with the form
@@ -502,10 +525,9 @@ const AddReturn = () => {
     }
   };
 
-  const handleEnterVerifySubmit = e => {
+  const handleEnterVerifyDontSubmit = e => {
     if (e.keyCode === 13) {
       e.preventDefault();
-      handleVerifySubmit(e);
     }
   };
 
@@ -605,7 +627,7 @@ const AddReturn = () => {
     return () => clearTimeout(timer);
   };
 
-  const handleVerifySubmit = (e) => {
+  const handleVerifySubmit = (e, trayFull) => {
     e.preventDefault();
 
     // If we only now checked against FOLIO and the item isn't there,
@@ -622,7 +644,11 @@ const AddReturn = () => {
         collection: data.original.collection,
         tray: data.original.tray,
       });
-      updateStagedFromLocalStorage();
+      if (trayFull) {
+        addTrayToStaged(data.original.tray);
+      }
+      updateStagedItemsFromLocalStorage();
+      updateStagedTraysFromLocalStorage();
       dispatch({ type: "RESET" });
     }
     const timer = setTimeout(() => {
@@ -643,6 +669,7 @@ const AddReturn = () => {
           // TODO: Make this "added" instead of "returned" if the item is new
           success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo);
+          removeTrayFromStaged(itemInfo.tray);
           // Re-fetch tray information
           const result = await Load.getTray({"barcode": [itemInfo.tray]});
           if (result) {
@@ -676,26 +703,41 @@ const AddReturn = () => {
     else {
       itemInfo.folioVerified = false;
     }
+    // If the item wasn't already assigned to that tray: increment the
+    // tray count, and check whether we need to ask about the tray being full
     if (data.trayInformation[itemInfo.tray] && !data.trayInformation[itemInfo.tray].items.includes(itemInfo.barcode)) {
       dispatch({ type: 'INCREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
     }
     localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
   };
 
+  const addTrayToStaged = (trayBarcode) => {
+    console.log(data.trayInformation[trayBarcode].currentCount);
+    let fullCount = data.trayInformation[trayBarcode].currentCount;
+    localStorage['addreturntray-' + trayBarcode] = fullCount;
+    console.log(data.trayInformation[trayBarcode].currentCount);
+  }
+
   const removeItemFromStaged = (itemInfo) => {
     dispatch({ type: 'DECREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
     delete localStorage['addreturnitem-' + itemInfo.barcode];
-    updateStagedFromLocalStorage();
+    updateStagedItemsFromLocalStorage();
   };
 
+  const removeTrayFromStaged = (trayBarcode) => {
+    delete localStorage['addreturntray-' + trayBarcode];
+    updateStagedTraysFromLocalStorage();
+  }
+
   const clearStagedAddReturns = () => {
-    if (window.confirm('Are you sure you want to clear all staged trays? This action cannot be undone.')) {
-      for (const tray of Object.keys(localStorage).filter(key => key.includes('addreturnitem-'))) {
-        delete localStorage[tray];
+    if (window.confirm('Are you sure you want to clear all staged items? This action cannot be undone.')) {
+      for (const key of Object.keys(localStorage).filter(key => key.includes('addreturn'))) {
+        delete localStorage[key];
       }
       dispatch({ type: 'RESET' });
       dispatch({ type: 'RESET_TRAY_INFORMATION' });
-      updateStagedFromLocalStorage();
+      updateStagedItemsFromLocalStorage();
+      updateStagedTraysFromLocalStorage();
     }
   };
 
@@ -742,7 +784,7 @@ const AddReturn = () => {
               <CardBody>
               <AddReturnFormVerify
                 handleEnter={handleEnter}
-                handleEnterSubmit={handleEnterVerifySubmit}
+                handleEnterSubmit={handleEnterVerifyDontSubmit}
                 original={data.original}
                 verify={data.verify}
                 handleVerifyOnChange={handleVerifyOnChange}
@@ -928,11 +970,19 @@ const AddReturnFormVerify = props => (
     </FormGroup>
     <Button
         style={{marginRight: '10px'}}
-        onClick={(e) => props.handleVerifySubmit(e)}
+        onClick={(e) => props.handleVerifySubmit(e, true)}
         color="primary"
         disabled={props.disabled || props.disabledSubmit}
       >
-      Add
+      Add (full)
+    </Button>
+    <Button
+        style={{marginRight: '10px'}}
+        onClick={(e) => props.handleVerifySubmit(e, false)}
+        color="info"
+        disabled={props.disabled || props.disabledSubmit}
+      >
+      Add (not full)
     </Button>
     <Button
         style={{marginRight: '10px'}}
@@ -964,14 +1014,36 @@ const Display = props => (
               {props.data[itemInfo].collection}
             </dd>
           </dl>
-          <Button color="danger" onClick={
+          { // If the tray is marked as full, show multiple delete buttons
+            localStorage['addreturntray-' + props.data[itemInfo].tray] ?
+            <>
+              <Button color="danger" style={{marginRight: "10px"}} onClick={
+                  function () {
+                    if (window.confirm('Are you sure you want to delete this item?')) {
+                      props.removeItemFromStaged(props.data[itemInfo]);
+                    }
+                  }}>
+                Delete (tray full)
+              </Button>
+              <Button color="danger" onClick={
+                  function () {
+                    if (window.confirm('Are you sure you want to delete this item?')) {
+                      props.removeItemFromStaged(props.data[itemInfo]);
+                      props.removeTrayFromStaged(props.data[itemInfo].tray);
+                    }
+                  }}>
+                Delete (tray not full)
+              </Button>
+            </> :
+            <Button color="danger" onClick={
               function () {
-                if (window.confirm('Are you sure you want to delete this tray? This action cannot be undone.')) {
+                if (window.confirm('Are you sure you want to delete this tray?')) {
                   props.removeItemFromStaged(props.data[itemInfo]);
                 }
               }}>
             Delete
           </Button>
+          }
         </CardBody>
       </Card>
     );
