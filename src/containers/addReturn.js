@@ -400,11 +400,18 @@ const AddReturn = () => {
           // Only fetch the tray information once, because any future items
           // added to the tray in this session will update the count
           if (result && !data.trayInformation[barcode]) {
+            // Add staged items to the currentCount also
+            let currentCount = result.items.length;
+            for (const item of Object.keys(data.verified).map(key => data.verified[key])) {
+              if (item.tray === barcode) {
+                currentCount++;
+              }
+            }
             dispatch({
               type: 'TRAY_INFORMATION',
               tray: barcode,
               items: Object.keys(result.items).map(key => result.items[key].barcode),
-              currentCount: result.items.length,
+              currentCount: currentCount,
               fullCount: result.full_count,
             });
           }
