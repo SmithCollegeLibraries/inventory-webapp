@@ -289,7 +289,6 @@ const AddReturn = () => {
     getSettings();
   }, []);
 
-
   // Get current user's default collection
   useEffect(() => {
     const getDefaultCollection = async () => {
@@ -405,39 +404,6 @@ const AddReturn = () => {
 
   useEffect(() => {
     const verifyTrayLive = async (trayBarcode) => {
-      const checkTrayInSystem = async (barcode) => {
-        if (navigator.onLine) {
-          // Make sure that the tray is already in the system
-          const result = await Load.getTray({"barcode": [barcode]});
-          // Only fetch the tray information once, because any future items
-          // added to the tray in this session will update the count
-          if (result && !data.trayInformation[barcode]) {
-            // Add staged items to the currentCount also
-            let currentCount = result.items.length;
-            for (const item of Object.keys(data.verified).map(key => data.verified[key])) {
-              if (item.tray === barcode) {
-                currentCount++;
-              }
-            }
-            dispatch({
-              type: 'TRAY_INFORMATION',
-              tray: barcode,
-              items: Object.keys(result.items).map(key => result.items[key].barcode),
-              // Dictionary of item barcodes with the item's status
-              itemInformation: result.items,
-              currentCount: currentCount,
-              fullCount: result.full_count,
-            });
-          }
-        }
-        // If we're not online, acknowledge that we tried to check this item
-        // and allow it to pass the test. Any anomalies will be flagged when
-        // actually added to the database.
-        else {
-          dispatch({ type: 'ITEM_TRAYS_IN_SYSTEM', item: barcode, tray: null });
-          dispatch({ type: 'ITEM_STATUSES_IN_SYSTEM', item: barcode, status: null });
-        }
-      }
 
       // Gives an alert to the user if a barcode has been entered that
       // doesn't match the tray structure
@@ -455,6 +421,41 @@ const AddReturn = () => {
     }
   }, [debouncedLeftPaneTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Look up tray in system and update tray information, including
+  // current count from staged items
+  const checkTrayInSystem = async (barcode) => {
+    if (navigator.onLine) {
+      // Make sure that the tray is already in the system
+      const result = await Load.getTray({"barcode": [barcode]});
+      // Only fetch the tray information once, because any future items
+      // added to the tray in this session will update the count
+      if (result && !data.trayInformation[barcode]) {
+        // Add staged items to the currentCount also
+        let currentCount = result.items.length;
+        for (const item of Object.keys(data.verified).map(key => data.verified[key])) {
+          if (item.tray === barcode) {
+            currentCount++;
+          }
+        }
+        dispatch({
+          type: 'TRAY_INFORMATION',
+          tray: barcode,
+          items: Object.keys(result.items).map(key => result.items[key].barcode),
+          // Dictionary of item barcodes with the item's status
+          itemInformation: result.items,
+          currentCount: currentCount,
+          fullCount: result.full_count,
+        });
+      }
+    }
+    // If we're not online, acknowledge that we tried to check this item
+    // and allow it to pass the test. Any anomalies will be flagged when
+    // actually added to the database.
+    else {
+      dispatch({ type: 'TRAY_INFORMATION', tray: barcode, items: null, itemInformation: null, currentCount: null, fullCount: null });
+    }
+  }
+
   // On load, check local storage for any staged items
   useEffect(() => {
     updateStagedItemsFromLocalStorage();
@@ -468,6 +469,7 @@ const AddReturn = () => {
       if (key.includes('addreturnitem-')) {
         try {
           localItems.push(JSON.parse(localStorage[key]));
+
         }
         catch (e) {
           console.error(e);
@@ -484,6 +486,8 @@ const AddReturn = () => {
       if (key.includes('addreturntray-')) {
         try {
           localTrays.push(JSON.parse(localStorage[key]));
+          // Get tray information for accurate current counts
+          checkTrayInSystem(JSON.parse(localStorage[key]));
         }
         catch (e) {
           console.error(e);
@@ -677,18 +681,7 @@ const AddReturn = () => {
           removeItemFromStaged(itemInfo);
           removeTrayFromStaged(itemInfo.tray);
           // Re-fetch tray information
-          // TODO: make this DRY - only call this dispatch in one place in the code
-          const result = await Load.getTray({"barcode": [itemInfo.tray]});
-          if (result) {
-            dispatch({
-              type: 'TRAY_INFORMATION',
-              tray: itemInfo.tray,
-              items: Object.keys(result.items).map(key => result.items[key].barcode),
-              itemInformation: result.items,
-              currentCount: result.items.length,
-              fullCount: result.full_count,
-            });
-          }
+          checkTrayInSystem(itemInfo.tray);
         }
         else {
           const errorPath = process.env.PUBLIC_URL + "/error.mp3";
@@ -812,6 +805,7 @@ const AddReturn = () => {
             <Display
               data={data.verified}
               removeItemFromStaged={removeItemFromStaged}
+              removeTrayFromStaged={removeTrayFromStaged}
             />
             { Object.keys(data.verified).map(items => items).length
               ? <>
