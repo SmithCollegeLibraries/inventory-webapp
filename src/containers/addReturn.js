@@ -506,7 +506,9 @@ const AddReturn = () => {
       if (itemInFolio) {
         dispatch({ type: 'ITEM_FOLIO_GOOD', item: barcode });
       }
-      else if (data.collectionValidatedAgainstFolio) {
+      // Don't look up the item if the collection isn't validated against
+      // FOLIO, or if the item already belongs to that tray
+      else if (data.collectionValidatedAgainstFolio && !data.trayInformation[data.original.tray]?.items.includes(barcode)) {
         failureIfNew(barcode, `Unable to locate FOLIO record for ${barcode}.`);
         dispatch({ type: 'ITEM_FOLIO_BAD', item: barcode });
         const timer = setTimeout(() => {
