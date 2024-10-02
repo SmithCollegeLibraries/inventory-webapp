@@ -469,7 +469,6 @@ const AddReturn = () => {
       if (key.includes('addreturnitem-')) {
         try {
           localItems.push(JSON.parse(localStorage[key]));
-
         }
         catch (e) {
           console.error(e);
@@ -487,7 +486,7 @@ const AddReturn = () => {
         try {
           localTrays.push(JSON.parse(localStorage[key]));
           // Get tray information for accurate current counts
-          checkTrayInSystem(JSON.parse(localStorage[key]));
+          checkTrayInSystem(JSON.parse(localStorage[key]).barcode);
         }
         catch (e) {
           console.error(e);
@@ -715,8 +714,12 @@ const AddReturn = () => {
   };
 
   const addTrayToStaged = (trayBarcode, trayFull) => {
-    let fullCount = data.trayInformation[trayBarcode].currentCount;
-    localStorage['addreturntray-' + trayBarcode] = trayFull ? fullCount : null;
+    var fullCount = data.trayInformation[trayBarcode].currentCount;
+    var trayInformationToAdd = {
+      barcode: trayBarcode,
+      full_count: trayFull ? fullCount : null,
+    }
+    localStorage['addreturntray-' + trayBarcode] = JSON.stringify(trayInformationToAdd);
   }
 
   const removeItemFromStaged = (itemInfo) => {
