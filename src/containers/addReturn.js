@@ -678,8 +678,8 @@ const AddReturn = () => {
         itemInfo["status"] = "Trayed";
         const response = await Load.addReturn(itemInfo);
         if (response && (response.barcode === itemInfo.barcode)) {
-          // TODO: Make this "added" instead of "returned" if the item is new
-          success(`Item ${itemInfo.barcode} successfully returned to tray ${itemInfo.tray}.`);
+          var verb = data.trayInformation[itemInfo.tray].items.includes(itemInfo.barcode) ? "returned" : "added";
+          success(`Item ${itemInfo.barcode} successfully ${verb} to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo);
           removeTrayFromStaged(itemInfo.tray);
           // Re-fetch tray information
