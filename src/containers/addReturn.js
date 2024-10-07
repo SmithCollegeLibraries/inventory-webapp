@@ -217,21 +217,6 @@ const AddReturn = () => {
     return data.trayInformation[trayBarcode].itemInformation?.filter(item => item.status !== "Trayed").length;
   }
 
-  const performLastCheck = (barcode) => {
-    const handleLastCheck = (barcode) => {
-      if (data.itemTraysInSystem[barcode] && data.itemTraysInSystem[barcode] !== data.original.tray) {
-        if (!window.confirm("The tray given does not match the item's current tray. Are you sure you want to continue?")) {
-          dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-          dispatch({ type: 'CHANGE_FORM', form: 'original'});
-        }
-      }
-    }
-    const timer = setTimeout(() => {
-      return handleLastCheck(barcode);
-    }, 800);
-    return () => clearTimeout(timer);
-  }
-
   // Live verification functions, which also get called again on submission
   const failureIfNew = useCallback((barcode, message) => {
     // Only alert if the barcode is not already in the list of alerted barcodes
@@ -264,7 +249,6 @@ const AddReturn = () => {
       // Verify screen has been submitted. We don't want to hold up the
       // process -- otherwise the user will get a warning on every single
       // submission that verification is still in process.
-      performLastCheck(barcode);
       return true;
     }
   }
@@ -578,10 +562,8 @@ const AddReturn = () => {
 
   const goBackToOriginal = e => {
     e.preventDefault();
-    if (window.confirm('Are you sure you want to clear the verification pane and go back to editing the original list? This action cannot be undone.')) {
-      dispatch({ type: 'CHANGE_FORM', form: 'original'});
-      dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
-    }
+    dispatch({ type: 'CHANGE_FORM', form: 'original'});
+    dispatch({ type: 'ADD_VERIFY', verify: {item: '', tray: ''} });
   };
 
   const handleOriginalSubmit = (e) => {
@@ -800,6 +782,7 @@ const AddReturn = () => {
                 itemRegex={itemRegex}
                 trayBarcodeLength={data.settings.trayBarcodeLength}
                 itemBarcodeLength={data.settings.itemBarcodeLength}
+                itemTraysInSystem={data.itemTraysInSystem}
                 trayIsFull={trayIsFull(data.original.tray)}
                 trayCirculatingItemCount={trayCirculatingItemCount(data.original.tray)}
               />
@@ -1001,8 +984,29 @@ const AddReturnFormVerify = props => (
       >
       Go back
     </Button>
-    <p className={"text-danger"} style={{marginTop:"15px",marginBottom:"0"}}>{ props.trayIsFull ? "This tray is currently marked as full." : "" }</p>
-    <p className={"text-danger"} style={{marginTop:"10px",marginBottom:"0"}}>{ props.trayCirculatingItemCount ? `This tray has ${props.trayCirculatingItemCount} circulating ${props.trayCirculatingItemCount === 1 ? 'item.' : 'items.'}` : "" }</p>
+    {/* Alert if the given tray is full, unless it's being returned to the
+      * place it's already trayed */}
+    <p className={"text-danger"} style={{marginTop:"15px",marginBottom:"0"}}>{
+        props.trayIsFull &&
+          (!props.itemTraysInSystem[props.original.item] ||
+          (props.itemTraysInSystem[props.original.item] && props.itemTraysInSystem[props.original.item])) !== props.original.tray
+        ? "This tray is currently marked as full."
+        : ""
+      }
+    </p>
+    <p className={"text-danger"} style={{marginTop:"10px",marginBottom:"0"}}>{
+        props.trayCirculatingItemCount
+          ? `This tray has ${props.trayCirculatingItemCount} circulating ${props.trayCirculatingItemCount === 1 ? 'item.' : 'items.'}`
+          : ""
+      }
+    </p>
+    <p className={"text-danger"} style={{marginTop:"10px",marginBottom:"0"}}>{
+        props.itemTraysInSystem[props.original.item] &&
+          props.itemTraysInSystem[props.original.item] !== props.original.tray
+        ? "The tray given does not match the item's current tray."
+        : ""
+      }
+    </p>
   </Form>
 );
 
