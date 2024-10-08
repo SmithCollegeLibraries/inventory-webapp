@@ -250,7 +250,7 @@ const ResultDisplay = (props) => {
               <dd>{`${props.data.barcode} • ${props.currentTray.depth} • ${props.currentTray.position}`}</dd>
               <dt>Trayer</dt>
               <dd>{props.currentTray.trayer ?? '-'}</dd>
-              <dt>Items ({props?.currentTray?.items?.length})</dt>
+              <dt>Items { props?.currentTray?.items?.length ? `(${props?.currentTray?.items?.length}/${props?.currentTray?.freeSpace !== null ? props?.currentTray.items.length + props.currentTray.freeSpace : '?' })` : "" }</dt>
               <dd>
                 {props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : '-'}
               </dd>
@@ -285,7 +285,7 @@ const ResultDisplay = (props) => {
                               idx={idx}
                               key={idx}
                               title={`${props.data.barcode} • ${tray.depth} • ${tray.position}`}
-                              className={tray.flag ? "text-danger" : ""}
+                              className={tray.flag ? "text-danger" : (tray.freeSpace === null || tray.freeSpace > 0 ? "text-info" : null)}
                               style={{
                                 cursor: tray.barcode === "-" ? "default" : "pointer",
                                 textAlign: "center",
@@ -295,12 +295,13 @@ const ResultDisplay = (props) => {
                               }}
                               onClick={(e) => props.handleTraySelect(tray, e)}
                             >
-                            {tray.barcode === '-' ? '-' :
+                            { tray.barcode === '-' ? '-' :
                               <>
                                 {tray.barcode.replace(/\D/g,'')}<br />
                                 {`${tray.items.length} ${tray.items.length === 1 ? 'item' : 'items'}`}
                               </>
-                            }
+                            }<br />
+                            { tray.freeSpace === null ? '? free' : (tray.freeSpace > 0 ? `~${tray.freeSpace} free` : '') }
                           </td>
                         );
                       })}

@@ -398,8 +398,14 @@ const ResultDisplay = (props) => {
                 {props.data.updated}
               </dd>
               <dt className="col-sm-3">Items</dt>
-              <dd className="col-sm-9">
-                {props.data.items.length}
+              <dd className={props.data.full_count !== null && props.data.items.length === props.data.full_count ? "col-sm-9" : "text-info col-sm-9" }>
+                {props.data.items.length} ({props.data.full_count !== null
+                  ? (
+                    props.data.items.length === props.data.full_count
+                      ? 'full'
+                      : `~${props.data.full_count - props.data.items.length} spaces free`
+                    )
+                  : 'may have free space'})
               </dd>
           </dl>
         </Row>
