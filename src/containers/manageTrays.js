@@ -199,13 +199,14 @@ const ManageTrays = () => {
         return;
       }
     }
+    // Pass an empty string or 0 in order to clear the value on the API call
     const data = {
       barcode: state.fields.tray_barcode,
       new_barcode: state.fields.new_tray_barcode || null,
-      shelf: state.fields.shelf || null,
-      depth: state.fields.depth || null,
-      position: state.fields.position || null,
-      full_count: state.fields.full_count || null,
+      shelf: state.fields.shelf || "",
+      depth: state.fields.depth || "",
+      position: state.fields.position || 0,
+      full_count: state.fields.full_count || "",
     };
     const load = await Load.updateTray(data);
     if (load) {
@@ -398,7 +399,7 @@ const ResultDisplay = (props) => {
                 {props.data.updated}
               </dd>
               <dt className="col-sm-3">Items</dt>
-              <dd className={props.data.full_count !== null && props.data.items.length === props.data.full_count ? "col-sm-9" : "text-info col-sm-9" }>
+              <dd className={ `col-sm-9 ${props.data.full_count !== null && props.data.items.length === props.data.full_count ? 'text-info' : ''}` }>
                 {props.data.items.length} ({props.data.full_count !== null
                   ? (
                     props.data.items.length === props.data.full_count
