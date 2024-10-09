@@ -411,9 +411,7 @@ const AddReturn = () => {
     if (navigator.onLine) {
       // Make sure that the tray is already in the system
       const result = await Load.getTray({"barcode": [barcode]});
-      // Only fetch the tray information once, because any future items
-      // added to the tray in this session will update the count
-      if (result && !data.trayInformation[barcode]) {
+      if (result) {
         // Add staged items to the currentCount also
         let currentCount = result.items.length;
         for (const item of Object.keys(data.verified).map(key => data.verified[key])) {
@@ -638,8 +636,7 @@ const AddReturn = () => {
         barcode: data.original.item,
         collection: data.original.collection,
         tray: data.original.tray,
-      });
-      addTrayToStaged(data.original.tray, trayFull);
+      }, trayFull);
       updateStagedItemsFromLocalStorage();
       updateStagedTraysFromLocalStorage();
       dispatch({ type: "RESET" });
@@ -655,6 +652,10 @@ const AddReturn = () => {
   const handleProcessAddReturn = async (e) => {
     e.preventDefault();
     if (navigator.onLine === true) {
+      // We don't want to submit trays for items that didn't go through,
+      // so we need to keep a list of items that gave an error. It doesn't
+      // work to see which items are left, because of race conditions.
+      var traysToKeep = [];
       for (const itemInfo of Object.keys(data.verified).map(key => data.verified[key])) {
         itemInfo["status"] = "Trayed";
         const response = await Load.addReturn(itemInfo);
@@ -662,16 +663,29 @@ const AddReturn = () => {
           var verb = data.trayInformation[itemInfo.tray].items.includes(itemInfo.barcode) ? "returned" : "added";
           success(`Item ${itemInfo.barcode} successfully ${verb} to tray ${itemInfo.tray}.`);
           removeItemFromStaged(itemInfo);
-          removeTrayFromStaged(itemInfo.tray);
           // Re-fetch tray information
           checkTrayInSystem(itemInfo.tray);
         }
         else {
+          traysToKeep.push(itemInfo.tray);
           const errorPath = process.env.PUBLIC_URL + "/error.mp3";
           const errorAudio = new Audio(errorPath);
           errorAudio.play();
         }
       }
+
+      const submitTrays = async () => {
+        // For all staged trays, if they have no items staged, process them
+        for (const trayInfo of Object.keys(data.traysAdded).map(key => data.traysAdded[key])) {
+          if (!traysToKeep.includes(trayInfo.barcode)) {
+            const response = await Load.updateTray(trayInfo);
+            if (response && (response.barcode === trayInfo.barcode)) {
+              removeTrayFromStaged(trayInfo.barcode);
+            }
+          }
+        }
+      }
+      setTimeout(submitTrays, 800);
       dispatch({ type: 'RESET' });
     }
     else {
@@ -679,7 +693,8 @@ const AddReturn = () => {
     }
   };
 
-  const addItemToStaged = (itemInfo) => {
+  const addItemToStaged = (itemInfo, trayFull) => {
+    // Stage the item.
     // Mark whether the item is verified in FOLIO or not
     if (data.itemFolioGood.includes(itemInfo.item)) {
       itemInfo.folioVerified = true;
@@ -687,25 +702,35 @@ const AddReturn = () => {
     else {
       itemInfo.folioVerified = false;
     }
+    localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
+
+    // Now stage the tray.
     // If the item wasn't already assigned to that tray: increment the
-    // tray count, and check whether we need to ask about the tray being full
+    // tray count for future items. But increment newFullCount now to avoid
+    // race conditions with the dispatch.
+    var newFullCount = data.trayInformation[itemInfo.tray].currentCount;
     if (data.trayInformation[itemInfo.tray] && !data.trayInformation[itemInfo.tray].items.includes(itemInfo.barcode)) {
+      newFullCount++;
       dispatch({ type: 'INCREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
     }
-    localStorage['addreturnitem-' + itemInfo.barcode] = JSON.stringify(itemInfo);
-  };
-
-  const addTrayToStaged = (trayBarcode, trayFull) => {
-    var fullCount = data.trayInformation[trayBarcode].currentCount;
-    var trayInformationToAdd = {
-      barcode: trayBarcode,
-      full_count: trayFull ? fullCount : null,
+    // If the tray is marked as not full: if the current tray count is
+    // larger than the existing full count, do nothing, but otherwise clear
+    // the full count because it's inaccurate.
+    var emptyFullCount = null;
+    if (data.trayInformation[itemInfo.tray].fullCount <= newFullCount) {
+      emptyFullCount = "";
     }
-    localStorage['addreturntray-' + trayBarcode] = JSON.stringify(trayInformationToAdd);
-  }
+    var trayInformationToAdd = {
+      barcode: itemInfo.tray,
+      full_count: trayFull ? newFullCount : emptyFullCount,
+    };
+    localStorage['addreturntray-' + itemInfo.tray] = JSON.stringify(trayInformationToAdd);
+  };
 
   const removeItemFromStaged = (itemInfo) => {
     dispatch({ type: 'DECREMENT_TRAY_COUNT', trayBarcode: itemInfo.tray });
+    // If the item wasn't deleted, it was submitted, and the tray count
+    // shouldn't be decremented
     delete localStorage['addreturnitem-' + itemInfo.barcode];
     updateStagedItemsFromLocalStorage();
   };
@@ -1058,7 +1083,7 @@ const Display = props => (
             </> :
             <Button color="danger" onClick={
               function () {
-                if (window.confirm('Are you sure you want to delete this tray?')) {
+                if (window.confirm('Are you sure you want to delete this item?')) {
                   props.removeItemFromStaged(props.data[itemInfo]);
                 }
               }}>
