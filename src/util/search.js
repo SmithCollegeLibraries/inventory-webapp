@@ -16,8 +16,8 @@ class ContentSearch {
     return search;
   }
 
-  trays = async (searchTerm) => {
-    let search = await this.search(`${trayAPI}search/?query=${searchTerm}`);
+  trays = async (trayBarcode, freeSpace) => {
+    let search = await this.search(`${trayAPI}search/?barcode=${trayBarcode}&free_space=${freeSpace}`);
     return search;
   }
 

@@ -10,7 +10,7 @@ const reducer = (state, action) => {
     case 'QUERY_CHANGE':
       return {
         ...state,
-        query: action.payload,
+        [action.payload.field]: action.payload.value,
       };
     case 'UPDATE_RESULTS':
       return {
@@ -40,6 +40,11 @@ const reducer = (state, action) => {
         ...state,
         settings: action.settings,
       };
+    case 'RESET_RESULTS':
+      return {
+        ...state,
+        search_results: [],
+      };
     case 'RESET':
       return {
         ...state,
@@ -63,7 +68,8 @@ const reducer = (state, action) => {
 
 const ManageTrays = () => {
   const initialState = {
-    query: '',
+    barcode: '',
+    free_space: '',
     search_results: [],
     fields: {
       new_tray: false,
@@ -86,7 +92,10 @@ const ManageTrays = () => {
     e.preventDefault();
     dispatch({
       type: "QUERY_CHANGE",
-      payload: e.target.value,
+      payload: {
+        field: e.target.name,
+        value: e.target.value,
+      },
     });
   };
 
@@ -139,7 +148,8 @@ const ManageTrays = () => {
   }
 
   const handleSearch = async (showWarnings = false) => {
-    const results = await ContentSearch.trays(state.query);
+    dispatch({ type: 'RESET_RESULTS', payload: '' });
+    const results = await ContentSearch.trays(state.barcode, state.free_space);
     if (results && results[0]) {
       let items = [];
       for (let barcode of results[0].items) {
@@ -289,7 +299,8 @@ const ManageTrays = () => {
     <div>
       <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
         <SearchForm
-          query={state.query}
+          barcode={state.barcode}
+          free_space={state.free_space}
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
@@ -367,9 +378,17 @@ const SearchForm = props => {
       <Input
         type="text"
         style={{"marginRight": "10px"}}
-        name="query"
+        name="barcode"
         placeholder="Tray barcode"
-        value={props.query}
+        value={props.barcode}
+        onChange={(e) => props.handleQueryChange(e)}
+      />
+      <Input
+        type="number"
+        style={{"marginRight": "10px", "width": "8em"}}
+        name="free_space"
+        placeholder="Free space"
+        value={props.free_space}
         onChange={(e) => props.handleQueryChange(e)}
       />
       <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
@@ -399,7 +418,7 @@ const ResultDisplay = (props) => {
                 {props.data.updated}
               </dd>
               <dt className="col-sm-3">Items</dt>
-              <dd className={ `col-sm-9 ${props.data.full_count !== null && props.data.items.length === props.data.full_count ? 'text-info' : ''}` }>
+              <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ''}` }>
                 {props.data.items.length} ({props.data.full_count !== null
                   ? (
                     props.data.items.length >= props.data.full_count
