@@ -402,9 +402,9 @@ const ResultDisplay = (props) => {
               <dd className={ `col-sm-9 ${props.data.full_count !== null && props.data.items.length === props.data.full_count ? 'text-info' : ''}` }>
                 {props.data.items.length} ({props.data.full_count !== null
                   ? (
-                    props.data.items.length === props.data.full_count
-                      ? 'full'
-                      : `~${props.data.full_count - props.data.items.length} spaces free`
+                    props.data.items.length >= props.data.full_count
+                      ? (props.data.items.length === props.data.full_count ? 'full' : 'overfull')
+                      : `~${props.data.full_count - props.data.items.length} ${props.data.full_count - props.data.items.length === 1 ? "space" : "spaces" } free`
                     )
                   : 'may have free space'})
               </dd>
