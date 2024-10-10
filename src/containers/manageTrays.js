@@ -418,7 +418,7 @@ const ResultDisplay = (props) => {
                 {props.data.updated}
               </dd>
               <dt className="col-sm-3">Items</dt>
-              <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ''}` }>
+              <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ( props.data.items.length > props.data.full_count ? 'text-danger' : '')}` }>
                 {props.data.items.length} ({props.data.full_count !== null
                   ? (
                     props.data.items.length >= props.data.full_count
