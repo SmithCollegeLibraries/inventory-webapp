@@ -1079,8 +1079,16 @@ const TrayFormOriginal = props => (
 const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
-      <Label for="collection">Collection</Label>
-      <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
+      <Row>
+        <Col md="8">
+          <Label for="collection">Collection</Label>
+          <Input type="text" disabled name="collection" value={ props.original.collection } />
+        </Col>
+        <Col md="4">
+        <Label for="size">Size</Label>
+          <Input type="text" disabled name="size" value={ props.original.size } />
+        </Col>
+      </Row>
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
@@ -1179,7 +1187,11 @@ const Display = props => (
             </dd>
             <dt className="col-sm-3">Collection</dt>
             <dd className="col-sm-9">
-              {props.data[tray].collection}
+              {props.data[tray].collection ?? '-'}
+            </dd>
+            <dt className="col-sm-3">Size</dt>
+            <dd className="col-sm-9">
+              {props.data[tray].size ?? '-'}
             </dd>
           </dl>
           <Button color="danger" onClick={
