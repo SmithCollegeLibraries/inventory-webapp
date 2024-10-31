@@ -4,6 +4,7 @@ const settings = `${process.env.REACT_APP_DATABASE_URL}/setting-api/`
 const account = `${process.env.REACT_APP_DATABASE_URL}/user/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
 const collectionAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-api/`
+const sizeAPI = `${process.env.REACT_APP_DATABASE_URL}/size-api/`
 const shelfAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-api/`
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
@@ -268,6 +269,11 @@ class Load {
 
   getAllCollections = async () => {
     const get = await this.handleUpdate(`${collectionAPI}get-all-collections/`, 'GET');
+    return get;
+  }
+
+  getAllSizes = async (data) => {
+    const get = await this.handleUpdate(`${sizeAPI}get-all-sizes/`, 'GET');
     return get;
   }
 

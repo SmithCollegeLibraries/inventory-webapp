@@ -843,7 +843,7 @@ const OriginalShelvingForm = (props) =>  (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collection</Label>
+        <Label for="collection">Collection</Label>
         <Input type="select" disabled={props.disabled} value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
           <option>{ COLLECTION_PLACEHOLDER }</option>
           { props.collections
@@ -972,7 +972,7 @@ const VerifyShelvingForm = (props) =>  (
   <div>
     <Form style={{zIndex: 0}} className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collection</Label>
+        <Label for="collection">Collection</Label>
         <Input type="text" disabled name="collection" value={props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection} />
       </FormGroup>
       <FormGroup>

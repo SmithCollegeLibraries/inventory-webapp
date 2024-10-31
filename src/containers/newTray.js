@@ -9,6 +9,8 @@ import { success, warning, failure } from '../components/toastAlerts';
 
 // Put default collection for each user separately
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+const SIZE_PLACEHOLDER = '- Size -';
+const UNKNOWN_SIZE = 'Unknown';
 
 
 const NewTray = () => {
@@ -16,6 +18,7 @@ const NewTray = () => {
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
       collection: '',
+      size: '',
       tray: '',
       barcodes: ''
     },
@@ -25,6 +28,7 @@ const NewTray = () => {
     },
     verified: [],  // List of trays that have been verified and staged
     collections: [],
+    sizes: [],
     defaultCollection: '',
     defaultCollectionMessage: false,
     settings: {},
@@ -65,6 +69,14 @@ const NewTray = () => {
             collection: action.collection,
           },
         };
+      case 'UPDATE_SIZE':
+        return {
+          ...state,
+          original: {
+            ...state.original,
+            size: action.size,
+          },
+        };
       case 'ADD_VERIFY':
         return {
           ...state,
@@ -97,6 +109,11 @@ const NewTray = () => {
         return {
           ...state,
           collections: action.collections,
+        };
+      case 'UPDATE_SIZES':
+        return {
+          ...state,
+          sizes: action.sizes,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -216,6 +233,7 @@ const NewTray = () => {
           form: "original",
           original: {
             collection: state.original.collection,
+            size: state.original.size,
             tray: '',
             barcodes: '',
           },
@@ -351,6 +369,15 @@ const NewTray = () => {
       dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
     };
     getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      dispatch({ type: 'UPDATE_SIZES', sizes: sizes});
+    };
+    getSizes();
   }, []);
 
   // Now the actual hooks that implement the live checks
@@ -810,6 +837,7 @@ const NewTray = () => {
       addTrayToStaged({
         barcode: data.verify.tray,
         collection: data.original.collection,
+        size: data.original.size,
         items: originalItemsAsArray,
         full_count: fullStatus ? originalItemsAsArray.length : null,
       });
@@ -879,6 +907,7 @@ const NewTray = () => {
                 <TrayFormOriginal
                   handleEnter={handleEnter}
                   collections={data.collections}
+                  sizes={data.sizes}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -939,16 +968,33 @@ const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collection</Label>
-        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-          <option>{ COLLECTION_PLACEHOLDER }</option>
-          { props.collections
-            ? Object.keys(props.collections).map((items, idx) => (
-                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-              ))
-            : <option></option>
-          }
-        </Input>
+        <Row>
+          <Col md="8">
+            <Label for="collection">Collection</Label>
+            <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+              <option>{ COLLECTION_PLACEHOLDER }</option>
+              { props.collections
+                ? Object.keys(props.collections).map((items, idx) => (
+                    <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+          <Col md="4">
+            <Label for="size">Size</Label>
+            <Input type="select" value={props.original.size} onChange={(e) => props.handleOriginalOnChange(e)} name="size" disabled={props.disabled}>
+              <option value="SIZE_PLACEHOLDER">{ SIZE_PLACEHOLDER }</option>
+              <option>{ UNKNOWN_SIZE }</option>
+              { props.sizes
+                ? Object.keys(props.sizes).map((items, idx) => (
+                    <option value={props.sizes[items].code} key={idx}>{props.sizes[items].code}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+        </Row>
       </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
@@ -1033,7 +1079,7 @@ const TrayFormOriginal = props => (
 const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
-      <Label for="collections">Collection</Label>
+      <Label for="collection">Collection</Label>
       <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
     </FormGroup>
     <FormGroup>
