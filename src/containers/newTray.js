@@ -10,7 +10,7 @@ import { success, warning, failure } from '../components/toastAlerts';
 // Put default collection for each user separately
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 const SIZE_PLACEHOLDER = '- Size -';
-const UNKNOWN_SIZE = 'Unknown';
+const UNKNOWN = 'Unknown';
 
 
 const NewTray = () => {
@@ -232,8 +232,9 @@ const NewTray = () => {
           ...state,
           form: "original",
           original: {
-            collection: state.original.collection,
-            size: state.original.size,
+            // Make the user manually select "Unknown" each time if they want to use it
+            collection: state.original.collection === UNKNOWN ? '' : state.original.collection,
+            size: state.original.size === UNKNOWN ? '' : state.original.size,
             tray: '',
             barcodes: '',
           },
@@ -607,20 +608,21 @@ const NewTray = () => {
   // against FOLIO if necessary.
   useEffect(() => {
     const getCollectionInfo = (collection) => {
-      if (collection === '') {
-        return {};
+      if (!collection) {
+        return { folio_validated: true };
+      }
+      else if (collection === UNKNOWN) {
+        return { folio_validated: false };
       }
       else {
         return data.collections.find(c => c.name === collection);
       }
     };
     const collectionInfo = getCollectionInfo(data.original.collection);
-    if (collectionInfo) {
-      dispatch({
-        type: 'CHANGE_COLLECTION_VALIDATION',
-        value: data.original.collection ? getCollectionInfo(data.original.collection).folio_validated : true
-      });
-    }
+    dispatch({
+      type: 'CHANGE_COLLECTION_VALIDATION',
+      value: data.original.collection ? collectionInfo.folio_validated : true
+    });
   }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // For handling bad barcode items in the original pane (these are things
@@ -730,10 +732,18 @@ const NewTray = () => {
     // Collections aren't inspected live
     const inspectCollection = () => {
       const { original } = data;
+      let missingData = [];
       if (!original.collection) {
-        failure(`You must select a collection.`);
+        missingData.push('collection');
+      }
+      if (!original.size) {
+        missingData.push('size');
+      }
+      if (missingData.length > 0) {
+        failure(`You must select a ${missingData.join(' and ')}.`);
         return false;
-      } else {
+      }
+      else {
         return true;
       }
     };
@@ -836,8 +846,8 @@ const NewTray = () => {
     else {
       addTrayToStaged({
         barcode: data.verify.tray,
-        collection: data.original.collection,
-        size: data.original.size,
+        collection: data.original.collection === UNKNOWN ? null : data.original.size,
+        size: data.original.size === UNKNOWN ? null : data.original.size,
         items: originalItemsAsArray,
         full_count: fullStatus ? originalItemsAsArray.length : null,
       });
@@ -853,7 +863,7 @@ const NewTray = () => {
     if (navigator.onLine === true) {
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
         const response = await Load.newTray(tray);
-        if (response.barcode === tray.barcode) {
+        if (response?.barcode === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
           removeTrayFromStaged(tray.barcode);
         }
@@ -972,7 +982,8 @@ const TrayFormOriginal = props => (
           <Col md="8">
             <Label for="collection">Collection</Label>
             <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-              <option>{ COLLECTION_PLACEHOLDER }</option>
+              <option value="">{ COLLECTION_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
               { props.collections
                 ? Object.keys(props.collections).map((items, idx) => (
                     <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
@@ -984,8 +995,8 @@ const TrayFormOriginal = props => (
           <Col md="4">
             <Label for="size">Size</Label>
             <Input type="select" value={props.original.size} onChange={(e) => props.handleOriginalOnChange(e)} name="size" disabled={props.disabled}>
-              <option value="SIZE_PLACEHOLDER">{ SIZE_PLACEHOLDER }</option>
-              <option>{ UNKNOWN_SIZE }</option>
+              <option value="">{ SIZE_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
               { props.sizes
                 ? Object.keys(props.sizes).map((items, idx) => (
                     <option value={props.sizes[items].code} key={idx}>{props.sizes[items].code}</option>
