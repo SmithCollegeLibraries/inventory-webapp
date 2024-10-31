@@ -35,8 +35,10 @@ class ContentSearch {
       // Get the info from FOLIO
       let info = await Load.infoFromFolio(item.barcode);
       // Add the info to the item
-      item.title = info.title;
-      item.callNumber = info.callNumber;
+      if (info) {
+        item.title = info.title;
+        item.callNumber = info.callNumber;
+      }
       return item;
     }));
     return results;
