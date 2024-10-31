@@ -8,8 +8,9 @@ import localforage from 'localforage';
 import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
 
-// Put default collection for each user separately
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+const SIZE_PLACEHOLDER = '- Size -';
+const UNKNOWN = 'Unknown';
 
 
 const NewBox = () => {
@@ -17,6 +18,7 @@ const NewBox = () => {
     form: 'original',
     original: {
       collection: '',
+      size: '',
       item: '',
       tray: '',
       shelf: '',
@@ -32,6 +34,7 @@ const NewBox = () => {
     },
     staged: [],
     collections: [],
+    sizes: [],
     defaultCollection: '',
     defaultCollectionMessage: false,
     settings: {},
@@ -100,6 +103,11 @@ const NewBox = () => {
         return {
           ...state,
           collections: action.collections,
+        };
+      case 'UPDATE_SIZES':
+        return {
+          ...state,
+          sizes: action.sizes,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -180,7 +188,9 @@ const NewBox = () => {
           ...state,
           form: "original",
           original: {
-            collection: state.original.collection,
+            // Make the user manually select "Unknown" each time if they want to use it
+            collection: state.original.collection === UNKNOWN ? '' : state.original.collection,
+            size: state.original.size === UNKNOWN ? '' : state.original.size,
             item: '',
             tray: '',
             shelf: '',
@@ -322,6 +332,10 @@ const NewBox = () => {
       failure("You must select a collection.");
       return false;
     }
+    else if (data.original.size === "") {
+      failure("You must select a size.");
+      return false;
+    }
     else if (Object.keys(data.staged).length === 0) {
       return true;
     }
@@ -388,6 +402,15 @@ const NewBox = () => {
       dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
     };
     getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      dispatch({ type: 'UPDATE_SIZES', sizes: sizes});
+    };
+    getSizes();
   }, []);
 
   // Get current user's default collection
@@ -631,6 +654,10 @@ const NewBox = () => {
     }
 
     const processSubmit = async () => {
+      // Turn UNKNOWN size or collection into empty strings
+      let newBox = data.original;
+      newBox['collection'] = data.original.collection === UNKNOWN ? '' : data.original.collection;
+      newBox['size'] = data.original.size === UNKNOWN ? '' : data.original.size;
       const newStaged = [data.original].concat(data.staged);
       localforage.setItem('newbox', newStaged);
       dispatch({ type: 'RESET' });
@@ -776,6 +803,7 @@ const NewBox = () => {
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitOriginal}
                   collections={data.collections}
+                  sizes={data.sizes}
                   original={data.original}
                   settings={data.settings}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -799,6 +827,7 @@ const NewBox = () => {
                   handleEnter={handleEnter}
                   handleEnterTabSubmit={handleEnterTabSubmitVerify}
                   collections={data.collections}
+                  sizes={data.sizes}
                   original={data.original}
                   verify={data.verify}
                   settings={data.settings}
@@ -843,16 +872,34 @@ const OriginalShelvingForm = (props) =>  (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collection">Collection</Label>
-        <Input type="select" disabled={props.disabled} value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection">
-          <option>{ COLLECTION_PLACEHOLDER }</option>
-          { props.collections
-            ? Object.keys(props.collections).map((items, idx) => (
-                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-              ))
-            : <option></option>
-          }
-        </Input>
+        <Row>
+          <Col md="8">
+            <Label for="collection">Collection</Label>
+            <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+              <option value="">{ COLLECTION_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
+              { props.collections
+                ? Object.keys(props.collections).map((items, idx) => (
+                    <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+          <Col md="4">
+            <Label for="size">Size</Label>
+            <Input type="select" value={props.original.size} onChange={(e) => props.handleOriginalOnChange(e)} name="size" disabled={props.disabled}>
+              <option value="">{ SIZE_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
+              { props.sizes
+                ? Object.keys(props.sizes).map((items, idx) => (
+                    <option value={props.sizes[items].code} key={idx}>{props.sizes[items].code}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+        </Row>
       </FormGroup>
       <FormGroup>
         <Label for="item">Item{ ' ' }
@@ -972,8 +1019,16 @@ const VerifyShelvingForm = (props) =>  (
   <div>
     <Form style={{zIndex: 0}} className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collection">Collection</Label>
-        <Input type="text" disabled name="collection" value={props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection} />
+        <Row>
+          <Col md="8">
+            <Label for="collection">Collection</Label>
+            <Input type="text" disabled name="collection" value={ props.original.collection } />
+          </Col>
+          <Col md="4">
+          <Label for="size">Size</Label>
+            <Input type="text" disabled name="size" value={ props.original.size } />
+          </Col>
+        </Row>
       </FormGroup>
       <FormGroup>
         <Label for="item">Item{ ' ' }
@@ -1049,6 +1104,10 @@ const Display = props => (
             <dt className="col-sm-4">Tray</dt>
             <dd className="col-sm-8">
               {props.staged[tray].tray}
+            </dd>
+            <dt className="col-sm-4">Size</dt>
+            <dd className="col-sm-8">
+              {props.staged[tray].size === '' ? '-' : props.staged[tray].size}
             </dd>
             <dt className="col-sm-4">Shelf</dt>
             <dd className="col-sm-8">

@@ -7,7 +7,6 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
-// Put default collection for each user separately
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 const SIZE_PLACEHOLDER = '- Size -';
 const UNKNOWN = 'Unknown';
@@ -60,22 +59,6 @@ const NewTray = () => {
         return {
           ...state,
           original: action.original,
-        };
-      case 'UPDATE_COLLECTION':
-        return {
-          ...state,
-          original: {
-            ...state.original,
-            collection: action.collection,
-          },
-        };
-      case 'UPDATE_SIZE':
-        return {
-          ...state,
-          original: {
-            ...state.original,
-            size: action.size,
-          },
         };
       case 'ADD_VERIFY':
         return {
@@ -730,7 +713,7 @@ const NewTray = () => {
 
   const handleOriginalSubmit = (e) => {
     // Collections aren't inspected live
-    const inspectCollection = () => {
+    const inspectCollectionAndSize = () => {
       const { original } = data;
       let missingData = [];
       if (!original.collection) {
@@ -804,10 +787,10 @@ const NewTray = () => {
       dispatch({ type: 'ADD_ORIGINAL', original: original});
     }
     const timer = setTimeout(() => {
-      const collectionPassedInspection = inspectCollection();
+      const collectionSizePassedInspection = inspectCollectionAndSize();
       const trayPassedInspection = inspectTray(data.original.tray);
       const itemsPassedInspection = inspectItems(data.original.barcodes);
-      if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
+      if (collectionSizePassedInspection && trayPassedInspection && itemsPassedInspection) {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
       }
