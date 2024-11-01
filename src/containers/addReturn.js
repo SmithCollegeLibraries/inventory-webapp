@@ -838,7 +838,7 @@ const AddReturnFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collection</Label>
+        <Label for="collection">Collection</Label>
         <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
           <option>{ COLLECTION_PLACEHOLDER }</option>
           { props.collections
@@ -928,7 +928,7 @@ const AddReturnFormOriginal = props => (
 const AddReturnFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
-      <Label for="collections">Collection</Label>
+      <Label for="collection">Collection</Label>
       <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
     </FormGroup>
     <FormGroup>

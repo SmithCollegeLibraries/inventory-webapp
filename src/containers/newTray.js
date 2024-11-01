@@ -7,8 +7,9 @@ import { Button, Form, FormGroup, Label, Input, Col, Row, Card, CardBody, Badge 
 import useDebounce from '../components/debounce';
 import { success, warning, failure } from '../components/toastAlerts';
 
-// Put default collection for each user separately
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
+const SIZE_PLACEHOLDER = '- Size -';
+const UNKNOWN = 'Unknown';
 
 
 const NewTray = () => {
@@ -16,6 +17,7 @@ const NewTray = () => {
     form: 'original',  // Which form is currently being displayed (original or verify)
     original: {
       collection: '',
+      size: '',
       tray: '',
       barcodes: ''
     },
@@ -25,6 +27,7 @@ const NewTray = () => {
     },
     verified: [],  // List of trays that have been verified and staged
     collections: [],
+    sizes: [],
     defaultCollection: '',
     defaultCollectionMessage: false,
     settings: {},
@@ -56,14 +59,6 @@ const NewTray = () => {
         return {
           ...state,
           original: action.original,
-        };
-      case 'UPDATE_COLLECTION':
-        return {
-          ...state,
-          original: {
-            ...state.original,
-            collection: action.collection,
-          },
         };
       case 'ADD_VERIFY':
         return {
@@ -97,6 +92,11 @@ const NewTray = () => {
         return {
           ...state,
           collections: action.collections,
+        };
+      case 'UPDATE_SIZES':
+        return {
+          ...state,
+          sizes: action.sizes,
         };
       case 'TRAY_CHECK_STARTED':
         return {
@@ -215,7 +215,9 @@ const NewTray = () => {
           ...state,
           form: "original",
           original: {
-            collection: state.original.collection,
+            // Make the user manually select "Unknown" each time if they want to use it
+            collection: state.original.collection === UNKNOWN ? '' : state.original.collection,
+            size: state.original.size === UNKNOWN ? '' : state.original.size,
             tray: '',
             barcodes: '',
           },
@@ -351,6 +353,15 @@ const NewTray = () => {
       dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
     };
     getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      dispatch({ type: 'UPDATE_SIZES', sizes: sizes});
+    };
+    getSizes();
   }, []);
 
   // Now the actual hooks that implement the live checks
@@ -580,20 +591,21 @@ const NewTray = () => {
   // against FOLIO if necessary.
   useEffect(() => {
     const getCollectionInfo = (collection) => {
-      if (collection === '') {
-        return {};
+      if (!collection) {
+        return { folio_validated: true };
+      }
+      else if (collection === UNKNOWN) {
+        return { folio_validated: false };
       }
       else {
         return data.collections.find(c => c.name === collection);
       }
     };
     const collectionInfo = getCollectionInfo(data.original.collection);
-    if (collectionInfo) {
-      dispatch({
-        type: 'CHANGE_COLLECTION_VALIDATION',
-        value: data.original.collection ? getCollectionInfo(data.original.collection).folio_validated : true
-      });
-    }
+    dispatch({
+      type: 'CHANGE_COLLECTION_VALIDATION',
+      value: data.original.collection ? collectionInfo.folio_validated : true
+    });
   }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // For handling bad barcode items in the original pane (these are things
@@ -701,12 +713,20 @@ const NewTray = () => {
 
   const handleOriginalSubmit = (e) => {
     // Collections aren't inspected live
-    const inspectCollection = () => {
+    const inspectCollectionAndSize = () => {
       const { original } = data;
+      let missingData = [];
       if (!original.collection) {
-        failure(`You must select a collection.`);
+        missingData.push('collection');
+      }
+      if (!original.size) {
+        missingData.push('size');
+      }
+      if (missingData.length > 0) {
+        failure(`You must select a ${missingData.join(' and ')}.`);
         return false;
-      } else {
+      }
+      else {
         return true;
       }
     };
@@ -767,10 +787,10 @@ const NewTray = () => {
       dispatch({ type: 'ADD_ORIGINAL', original: original});
     }
     const timer = setTimeout(() => {
-      const collectionPassedInspection = inspectCollection();
+      const collectionSizePassedInspection = inspectCollectionAndSize();
       const trayPassedInspection = inspectTray(data.original.tray);
       const itemsPassedInspection = inspectItems(data.original.barcodes);
-      if (collectionPassedInspection && trayPassedInspection && itemsPassedInspection) {
+      if (collectionSizePassedInspection && trayPassedInspection && itemsPassedInspection) {
         dispatch({ type: 'CHANGE_FORM', form: 'verify'});
         dispatch({ type: 'ADD_VERIFY', verify: {tray: '', barcodes: ''} });
       }
@@ -809,7 +829,8 @@ const NewTray = () => {
     else {
       addTrayToStaged({
         barcode: data.verify.tray,
-        collection: data.original.collection,
+        collection: data.original.collection === UNKNOWN ? null : data.original.size,
+        size: data.original.size === UNKNOWN ? null : data.original.size,
         items: originalItemsAsArray,
         full_count: fullStatus ? originalItemsAsArray.length : null,
       });
@@ -825,7 +846,7 @@ const NewTray = () => {
     if (navigator.onLine === true) {
       for (const tray of Object.keys(data.verified).map(key => data.verified[key])) {
         const response = await Load.newTray(tray);
-        if (response.barcode === tray.barcode) {
+        if (response?.barcode === tray.barcode) {
           success(`Tray ${tray.barcode} successfully added`);
           removeTrayFromStaged(tray.barcode);
         }
@@ -879,6 +900,7 @@ const NewTray = () => {
                 <TrayFormOriginal
                   handleEnter={handleEnter}
                   collections={data.collections}
+                  sizes={data.sizes}
                   trayLength={data.trayLength}
                   original={data.original}
                   handleOriginalOnChange={handleOriginalOnChange}
@@ -939,16 +961,34 @@ const TrayFormOriginal = props => (
   <div>
     <Form className="sticky-top" autoComplete="off">
       <FormGroup>
-        <Label for="collections">Collection</Label>
-        <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
-          <option>{ COLLECTION_PLACEHOLDER }</option>
-          { props.collections
-            ? Object.keys(props.collections).map((items, idx) => (
-                <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
-              ))
-            : <option></option>
-          }
-        </Input>
+        <Row>
+          <Col md="8">
+            <Label for="collection">Collection</Label>
+            <Input type="select" value={props.original.collection} onChange={(e) => props.handleOriginalOnChange(e)} name="collection" disabled={props.disabled}>
+              <option value="">{ COLLECTION_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
+              { props.collections
+                ? Object.keys(props.collections).map((items, idx) => (
+                    <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+          <Col md="4">
+            <Label for="size">Size</Label>
+            <Input type="select" value={props.original.size} onChange={(e) => props.handleOriginalOnChange(e)} name="size" disabled={props.disabled}>
+              <option value="">{ SIZE_PLACEHOLDER }</option>
+              <option value={UNKNOWN}>{ UNKNOWN }</option>
+              { props.sizes
+                ? Object.keys(props.sizes).map((items, idx) => (
+                    <option value={props.sizes[items].code} key={idx}>{props.sizes[items].code}</option>
+                  ))
+                : <option></option>
+              }
+            </Input>
+          </Col>
+        </Row>
       </FormGroup>
       <FormGroup>
         <Label for="tray">Tray{ ' ' }
@@ -1033,8 +1073,16 @@ const TrayFormOriginal = props => (
 const TrayFormVerify = props => (
   <Form autoComplete="off">
     <FormGroup>
-      <Label for="collections">Collection</Label>
-      <Input type="text" disabled name="collection" value={ props.original.collection === COLLECTION_PLACEHOLDER ? "" : props.original.collection } />
+      <Row>
+        <Col md="8">
+          <Label for="collection">Collection</Label>
+          <Input type="text" disabled name="collection" value={ props.original.collection } />
+        </Col>
+        <Col md="4">
+        <Label for="size">Size</Label>
+          <Input type="text" disabled name="size" value={ props.original.size } />
+        </Col>
+      </Row>
     </FormGroup>
     <FormGroup>
       <Label for="tray">Tray{ ' ' }
@@ -1133,7 +1181,11 @@ const Display = props => (
             </dd>
             <dt className="col-sm-3">Collection</dt>
             <dd className="col-sm-9">
-              {props.data[tray].collection}
+              {props.data[tray].collection ?? '-'}
+            </dd>
+            <dt className="col-sm-3">Size</dt>
+            <dd className="col-sm-9">
+              {props.data[tray].size ?? '-'}
             </dd>
           </dl>
           <Button color="danger" onClick={
