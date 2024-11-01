@@ -829,7 +829,7 @@ const NewTray = () => {
     else {
       addTrayToStaged({
         barcode: data.verify.tray,
-        collection: data.original.collection === UNKNOWN ? null : data.original.size,
+        collection: data.original.collection === UNKNOWN ? null : data.original.collection,
         size: data.original.size === UNKNOWN ? null : data.original.size,
         items: originalItemsAsArray,
         full_count: fullStatus ? originalItemsAsArray.length : null,
