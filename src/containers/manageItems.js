@@ -19,8 +19,9 @@ const reducer = (state, action) => {
     case 'UPDATE_RESULTS':
       return {
         ...state,
-        // fields: action.payload.data,
         search_results: action.payload.search_results,
+        folio_loaded: action.payload.folio_loaded,
+        // fields: action.payload.fields,
       };
     case 'UPDATE_SELECTION':
       return {
@@ -48,6 +49,7 @@ const reducer = (state, action) => {
       return {
         ...state,
         fields: {
+          folio_loaded: false,
           new_item: false,
           item_barcode: '',
           new_item_barcode: '',
@@ -72,6 +74,7 @@ const ManageItems = () => {
     query: '',
     search_results: [],
     fields: {
+      folio_loaded: false,
       new_item: false,
       item_barcode: '',
       new_item_barcode: '',
@@ -177,7 +180,27 @@ const ManageItems = () => {
       dispatch({
         type: 'UPDATE_RESULTS',
         payload: {
+          folio_loaded: false,
           search_results: results,
+          fields: fields,
+        }
+      });
+      // Now look up these items in FOLIO to fill in title and call number info
+      let updatedResults = await Promise.all(results.map(async item => {
+        // Get the info from FOLIO
+        let info = await Load.infoFromFolio(item.barcode);
+        // Add the info to the item
+        if (info) {
+          item.title = info.title;
+          item.callNumber = info.callNumber;
+        }
+        return item;
+      }));
+      dispatch({
+        type: 'UPDATE_RESULTS',
+        payload: {
+          folio_loaded: true,
+          search_results: updatedResults,
           fields: fields,
         }
       });
@@ -186,6 +209,7 @@ const ManageItems = () => {
       dispatch({
         type: 'UPDATE_RESULTS',
         payload: {
+          folio_loaded: false,
           search_results: [],
           fields: {
             new_item: false,
@@ -307,6 +331,7 @@ const ManageItems = () => {
               ? Object.keys(state.search_results).map((item, idx) => {
                   return (
                     <ResultDisplay
+                      folio_loaded={state.folio_loaded}
                       data={state.search_results[item]}
                       handleItemSelect={handleItemSelect}
                       index={idx}
@@ -371,7 +396,9 @@ const ResultDisplay = (props) => {
             </dd>
             <dt className="col-sm-3">Title</dt>
             <dd className="col-sm-9">
-              {props.data.title ? props.data.title : "(Title not available)"}
+              { props.data.title ? props.data.title :
+                (props.folio_loaded ? "(Title not available)" : "-")
+              }
             </dd>
             <dt className="col-sm-3">Status</dt>
             <dd className="col-sm-9">
