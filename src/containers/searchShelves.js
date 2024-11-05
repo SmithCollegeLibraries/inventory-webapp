@@ -267,7 +267,10 @@ const ResultDisplay = (props) => {
             <dl>
               <dt style={{display: "inline", marginRight: "1ex"}}>Barcode</dt>
               <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.barcode}</dd>
-              {/* TODO: Put size here */}
+              <dt style={{display: "inline", marginRight: "1ex"}}>Size</dt>
+              <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.size ?? '-'}</dd>
+              <dt style={{display: "inline", marginRight: "1ex"}}>Collection</dt>
+              <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.collection ?? '-'}</dd>
               <dt style={{display: "inline", marginRight: "1ex"}}>Trays</dt>
               <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.trays.length}</dd>
             </dl>
