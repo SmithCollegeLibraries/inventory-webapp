@@ -430,13 +430,13 @@ const ResultDisplay = (props) => {
               <dd className="col-sm-9">
                 {props.data.updated}
               </dd>
-              <dt className="col-sm-3">Size</dt>
-              <dd className="col-sm-9">
-                {props.data.size ?? '-'}
-              </dd>
               <dt className="col-sm-3">Collection</dt>
               <dd className="col-sm-9">
                 {props.data.collection ?? '-'}
+              </dd>
+              <dt className="col-sm-3">Size</dt>
+              <dd className="col-sm-9">
+                {props.data.size ?? '-'}
               </dd>
               <dt className="col-sm-3">Items</dt>
               <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ( props.data.items.length > props.data.full_count ? 'text-danger' : '')}` }>
