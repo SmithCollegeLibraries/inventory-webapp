@@ -239,8 +239,8 @@ const ManageTrays = () => {
     const data = {
       barcode: state.fields.tray_barcode,
       new_barcode: state.fields.new_tray_barcode || null,
-      size: state.fields.size || "",
-      collection: state.fields.collection || "",
+      size: state.fields.size === UNKNOWN ? "" : state.fields.size,
+      collection: state.fields.collection === UNKNOWN ? "" : state.fields.collection,
       shelf: state.fields.shelf || "",
       depth: state.fields.depth || "",
       position: state.fields.position || 0,
