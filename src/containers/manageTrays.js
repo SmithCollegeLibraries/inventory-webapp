@@ -5,8 +5,20 @@ import ContentSearch from '../util/search';
 import { displayItemList } from '../util/helpers';
 import { success, warning } from '../components/toastAlerts';
 
+const UNKNOWN = 'Unknown';
+
 const reducer = (state, action) => {
   switch (action.type) {
+    case 'UPDATE_COLLECTIONS':
+      return {
+        ...state,
+        collections: action.collections,
+      };
+    case 'UPDATE_SIZES':
+      return {
+        ...state,
+        sizes: action.sizes,
+      };
     case 'QUERY_CHANGE':
       return {
         ...state,
@@ -52,6 +64,8 @@ const reducer = (state, action) => {
           new_tray: false,
           tray_barcode: '',
           new_tray_barcode: '',
+          size: '',
+          collection: '',
           shelf: '',
           depth: '',
           position: null,
@@ -75,6 +89,8 @@ const ManageTrays = () => {
       new_tray: false,
       tray_barcode: '',
       new_tray_barcode: '',
+      size: '',
+      collection: '',
       shelf: '',
       depth: '',
       position: null,
@@ -84,6 +100,8 @@ const ManageTrays = () => {
       created: '',
       total: null,
     },
+    collections: [],
+    sizes: [],
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -118,6 +136,8 @@ const ManageTrays = () => {
         new_tray: false,
         tray_barcode: data.barcode,
         new_tray_barcode: '',
+        size: data.size,
+        collection: data.collection,
         shelf: data.shelf,
         depth: data.depth,
         position: data.position,
@@ -137,6 +157,8 @@ const ManageTrays = () => {
         new_tray: true,
         tray_barcode: '',
         new_tray_barcode: '',
+        size: '',
+        collection: '',
         shelf: '',
         depth: '',
         position: null,
@@ -159,6 +181,8 @@ const ManageTrays = () => {
         new_tray: false,
         tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
         new_tray_barcode: "",
+        size: results[0].size ? results[0].size : "",
+        collection: results[0].collection ? results[0].collection : "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : null,
@@ -183,6 +207,8 @@ const ManageTrays = () => {
           fields: {
             tray_barcode: '',
             new_tray_barcode: '',
+            size: '',
+            collection: '',
             shelf: '',
             depth: '',
             position: null,
@@ -213,6 +239,8 @@ const ManageTrays = () => {
     const data = {
       barcode: state.fields.tray_barcode,
       new_barcode: state.fields.new_tray_barcode || null,
+      size: state.fields.size === UNKNOWN ? "" : state.fields.size,
+      collection: state.fields.collection === UNKNOWN ? "" : state.fields.collection,
       shelf: state.fields.shelf || "",
       depth: state.fields.depth || "",
       position: state.fields.position || 0,
@@ -239,14 +267,13 @@ const ManageTrays = () => {
       }
     }
 
-    // TODO: Validate tray barcode structure against settings
-
     const data = {
       barcode: state.fields.new_tray_barcode,
+      size: state.fields.size || null,
+      collection: state.fields.collection || null,
       shelf: state.fields.shelf || null,
       depth: state.fields.depth || null,
       position: state.fields.position || null,
-      collection: null,
       items: [],
     };
     const load = await Load.newTray(data);
@@ -279,6 +306,24 @@ const ManageTrays = () => {
       dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
     };
     getSettings();
+  }, []);
+
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
+    };
+    getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      dispatch({ type: 'UPDATE_SIZES', sizes: sizes});
+    };
+    getSizes();
   }, []);
 
   // Get the total number of trays via the API on load
@@ -337,6 +382,8 @@ const ManageTrays = () => {
                       handleTrayDelete={handleTrayDelete}
                       handleCreateTray={handleCreateTray}
                       settings={state.settings}
+                      collections={state.collections}
+                      sizes={state.sizes}
                     />
                   </CardBody>
                 </Card>
@@ -417,6 +464,14 @@ const ResultDisplay = (props) => {
               <dd className="col-sm-9">
                 {props.data.updated}
               </dd>
+              <dt className="col-sm-3">Collection</dt>
+              <dd className="col-sm-9">
+                {props.data.collection ?? '-'}
+              </dd>
+              <dt className="col-sm-3">Size</dt>
+              <dd className="col-sm-9">
+                {props.data.size ?? '-'}
+              </dd>
               <dt className="col-sm-3">Items</dt>
               <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ( props.data.items.length > props.data.full_count ? 'text-danger' : '')}` }>
                 {props.data.items.length} ({props.data.full_count !== null
@@ -449,23 +504,61 @@ const TrayForm = (props) => {
             <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
             <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
           </FormGroup>
-          <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>Shelf</Label>
-            <Input type="text" value={props.fields.shelf || ''} onChange={(e) => props.handleTrayChange(e)} name="shelf" />
-          </FormGroup>
-          <FormGroup>
-            <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
-            <Input type="select" style={{"width":"12em"}} value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
-              <option value="">(none)</option>
-              <option value="Front">Front</option>
-              <option value="Middle">Middle</option>
-              <option value="Rear">Rear</option>
-            </Input>
-          </FormGroup>
-          <FormGroup>
-            <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
-            <Input type="number" style={{"width":"6em"}} name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
-          </FormGroup>
+          <Row>
+            <Col md="8">
+              <FormGroup>
+                <Label for="collection" style={{"fontWeight":"bold"}}>Collection</Label>
+                <Input type="select" value={props.fields.collection} onChange={(e) => props.handleTrayChange(e)} name="collection">
+                  <option value={UNKNOWN}>{ UNKNOWN }</option>
+                  { props.collections
+                    ? Object.keys(props.collections).map((items, idx) => (
+                        <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                      ))
+                    : <option></option>
+                  }
+                </Input>
+              </FormGroup>
+            </Col>
+            <Col md="4">
+              <FormGroup>
+                <Label for="size" style={{"fontWeight":"bold"}}>Size</Label>
+                <Input type="select" value={props.fields.size} onChange={(e) => props.handleTrayChange(e)} name="size">
+                  <option value={UNKNOWN}>{ UNKNOWN }</option>
+                  { props.sizes
+                    ? Object.keys(props.sizes).map((items, idx) => (
+                        <option value={props.sizes[items].name} key={idx}>{props.sizes[items].code}</option>
+                      ))
+                    : <option></option>
+                  }
+                </Input>
+              </FormGroup>
+            </Col>
+          </Row>
+          <Row>
+            <Col md="4">
+              <FormGroup>
+                <Label for="tray" style={{"fontWeight":"bold"}}>Shelf</Label>
+                <Input type="text" value={props.fields.shelf || ''} onChange={(e) => props.handleTrayChange(e)} name="shelf" />
+              </FormGroup>
+            </Col>
+            <Col md="4">
+              <FormGroup>
+                <Label for="depth" style={{"fontWeight":"bold"}}>Depth</Label>
+                <Input type="select" value={props.fields.depth || ''} onChange={(e) => props.handleTrayChange(e)} name="depth">
+                  <option value="">(none)</option>
+                  <option value="Front">Front</option>
+                  <option value="Middle">Middle</option>
+                  <option value="Rear">Rear</option>
+                </Input>
+              </FormGroup>
+            </Col>
+            <Col md="4">
+              <FormGroup>
+                <Label for="position" style={{"fontWeight":"bold"}}>Position</Label>
+                <Input type="number" name="position" value={props.fields.position || ''} max={props.settings.maxPosition} onChange={e => props.handleTrayChange(e)} />
+              </FormGroup>
+            </Col>
+          </Row>
           <FormGroup>
             <Label for="full_count" style={{"fontWeight":"bold"}}>Number of items when full</Label>
             <Input type="number" style={{"width":"6em"}} value={props.fields.full_count || ''} onChange={(e) => props.handleTrayChange(e)} name="full_count" />
