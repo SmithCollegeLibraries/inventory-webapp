@@ -244,9 +244,9 @@ const ManageItems = () => {
     const data = {
       barcode: state.fields.item_barcode,
       new_barcode: newBarcode || null,
-      collection: state.fields.collection || null,
-      status: state.fields.status || null,
-      tray: state.fields.tray || null,
+      collection: state.fields.collection,
+      status: state.fields.status,
+      tray: state.fields.tray,
     };
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
@@ -448,7 +448,7 @@ const ItemForm = (props) => {
             <FormGroup className="col-sm-6">
               <Label for="collection" style={{"fontWeight":"bold"}}>Collection</Label>
               <Input type="select" name="collection" value={props.fields.collection || ''} onChange={(e) => props.handleItemChange(e)}>
-                <option value={null}>(none)</option>
+                <option value="">(none)</option>
                 { props.collections
                   ? Object.keys(props.collections).map((items, idx) => (
                       <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
@@ -468,7 +468,7 @@ const ItemForm = (props) => {
             <FormGroup className="col-sm-6">
               <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
               <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
-                <option value={null}>(none)</option>
+                <option value="">(none)</option>
                 <option value="Trayed">Trayed</option>
                 <option value="Circulating">Circulating</option>
                 <option value="To return to campus">To return to campus</option>
