@@ -46,7 +46,7 @@ const SearchItems = (props) => {
 
   const handleSearch = async () => {
     const payload = {
-      barcodes: state.item_list_as_string.split('\n').filter(Boolean),
+      barcodes: state.item_list_as_string.trim().replaceAll(/\s*\n\s*/g, '\n').split('\n').filter(Boolean),
     };
     const results = (state.item_list_as_string) ? await Load.itemSearchLocations(payload) : [];
     if (results) {
