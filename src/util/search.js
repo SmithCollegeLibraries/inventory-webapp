@@ -26,9 +26,20 @@ class ContentSearch {
     return search;
   }
 
-  items = async (searchTerm) => {
-    let results = await this.search(`${itemAPI}browse/?query=${searchTerm ? searchTerm : ''}`);
-    return results;
+  items = async (itemBarcode) => {
+    // If a barcode was provided, do an exact search
+    if (itemBarcode) {
+      const data = {
+        "barcodes": [itemBarcode]
+      };
+      let results = await this.searchPost(`${itemAPI}search/`, data);
+      return results;
+    }
+    // Otherwise, show the most recent items
+    else {
+      let results = await this.search(`${itemAPI}browse/?query=`);
+      return results;
+    }
   }
 
   trayLogs = async (barcode, action, details) => {
