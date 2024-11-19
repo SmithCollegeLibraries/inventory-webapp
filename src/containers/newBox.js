@@ -190,7 +190,7 @@ const NewBox = () => {
           original: {
             // Make the user manually select "Unknown" each time if they want to use it
             collection: state.original.collection === UNKNOWN ? '' : state.original.collection,
-            size: state.original.size === UNKNOWN ? '' : state.original.size,
+            size: '',
             item: '',
             tray: '',
             shelf: '',
