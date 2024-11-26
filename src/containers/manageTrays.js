@@ -351,7 +351,7 @@ const ManageTrays = () => {
         />
         <Button color="warning" onClick={(e) => handleNewTraySelect(e)}>New tray</Button>
         { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} trays total`}</Button>
+          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} trays total`}</Button>
         }
       </Row>
       <div style={{marginTop: "20px"}}>

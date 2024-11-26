@@ -169,7 +169,7 @@ const SearchShelves = () => {
           handleClearSearch={handleClearSearch}
         />
         { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count} shelves total`}</Button>
+          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} shelves total`}</Button>
         }
       </Row>
       <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use <code>-</code> as a wildcard character for shelf barcodes. Up to 60 results will be shown.</div>
