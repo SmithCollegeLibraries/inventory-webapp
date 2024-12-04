@@ -475,6 +475,7 @@ const ItemForm = (props) => {
                 <option value="Returned to campus">Returned to campus</option>
                 <option value="Withdrawn">Withdrawn</option>
                 <option value="Missing">Missing</option>
+                <option value="Imported">Imported</option>
               </Input>
             </FormGroup>
             <FormGroup className="col-sm-6">
