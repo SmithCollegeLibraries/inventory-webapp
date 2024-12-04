@@ -84,7 +84,7 @@ export function displayItemList(items) {
     return items.map(item =>
         <span
             key={item.barcode}
-            className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed") ? "" : "text-info" }
+            className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed" || item.status === "Imported") ? "" : "text-info" }
           >
           {item.barcode}
           <br />
