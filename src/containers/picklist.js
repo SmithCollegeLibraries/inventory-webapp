@@ -164,11 +164,11 @@ const Picklist = () => {
     }
   };
 
-  const handleAddAllFromFolio = async (e) => {
+  const handleAddFromFolio = async (e) => {
     e.preventDefault();
     state.clearOldSystem();
     state.setFolioWaiting(true);
-    const results = await Load.addFromFolio();
+    const results = await Load.addFromFolio(e.target.value);
     state.updateOldSystem(results['notInSystem']);
     getPicklist();
     state.setFolioWaiting(false);
@@ -321,14 +321,27 @@ const Picklist = () => {
           handleAddToPicklist={handleAddToPicklist}
           handleBarcodeChange={handleBarcodeChange}
         />
-        <Button
-            color="primary"
-            disabled={state.folioWaiting}
-            style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
-            onClick={handleAddAllFromFolio}
-        >
-          Add all from FOLIO
-        </Button>
+        <div>
+          Add from FOLIO:
+          <Button
+              color="primary"
+              value="SC_ANNEX"
+              disabled={state.folioWaiting}
+              style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
+              onClick={handleAddFromFolio}
+          >
+            SC Annex
+          </Button>
+          <Button
+              color="primary"
+              value="FC_ANNEX"
+              disabled={state.folioWaiting}
+              style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
+              onClick={handleAddFromFolio}
+          >
+            FC Annex
+          </Button>
+        </div>
       </Row>
       <div style={{marginTop: "20px"}}>
         <Row>
@@ -490,6 +503,11 @@ const PicklistLeftPane = (props) => {
     {
       dataField: 'status',
       text: 'Status',
+      sort: true,
+    },
+    {
+      dataField: 'collection',
+      text: 'Collection',
       sort: true,
     },
     {
