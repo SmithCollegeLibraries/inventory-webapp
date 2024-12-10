@@ -203,8 +203,8 @@ class Load {
     return get;
   }
 
-  addFromFolio = async () => {
-    const add = await this.handleUpdate(`${picklistAPI}add-from-folio/`, 'POST');
+  addFromFolio = async (collection) => {
+    const add = await this.handleUpdate(`${picklistAPI}add-from-folio/?collection=${collection}`, 'POST');
     return add;
   }
 

@@ -149,26 +149,27 @@ const Picklist = () => {
     if (!state.newBarcode) {
       return;
     }
-    // Check if the barcode is already in the picklist. If show, give
-    // a warning.
-    else if (state.picklistComplete.find(i => i['barcode'] === state.newBarcode)) {
-      warning(`Item ${state.newBarcode} is already in picklist`);
-      state.resetNewBarcode();
+    // Check for barcodes that are already in the picklist. If so, give a warning.
+    var submittedBarcodes = [...new Set(state.newBarcode.trim().split(/[, \n]+/))];
+    var alreadyInPicklist = submittedBarcodes.filter(i => state.picklistComplete.find(j => j['barcode'] === i));
+    var newBarcodes = submittedBarcodes.filter(i => !state.picklistComplete.find(j => j['barcode'] === i));
+    if (alreadyInPicklist.length > 0) {
+      warning(`The following barcodes are already in the picklist: ${alreadyInPicklist.join(', ')}`);
     }
-    // Otherwise, make an API call. The API will give an error if the
-    // barcode is invalid.
-    else {
-      await Load.addItems({"barcodes": [state.newBarcode]});
-      state.resetNewBarcode();
-      getPicklist();
+    if (newBarcodes.length > 0) {
+      // The API will give an error if the barcode is invalid.
+      console.log(newBarcodes);
+      await Load.addItems({"barcodes": newBarcodes});
     }
+    state.resetNewBarcode();
+    getPicklist();
   };
 
-  const handleAddAllFromFolio = async (e) => {
+  const handleAddFromFolio = async (e) => {
     e.preventDefault();
     state.clearOldSystem();
     state.setFolioWaiting(true);
-    const results = await Load.addFromFolio();
+    const results = await Load.addFromFolio(e.target.value);
     state.updateOldSystem(results['notInSystem']);
     getPicklist();
     state.setFolioWaiting(false);
@@ -314,23 +315,38 @@ const Picklist = () => {
   };
 
   return (
-    <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+    <div style={{marginTop: "20px"}}>
+      <div style={{width: "100%", height: "4em"}}>
         <AddForm
           newBarcode={state.newBarcode}
           handleAddToPicklist={handleAddToPicklist}
           handleBarcodeChange={handleBarcodeChange}
         />
-        <Button
-            color="primary"
-            disabled={state.folioWaiting}
-            style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
-            onClick={handleAddAllFromFolio}
-        >
-          Add all from FOLIO
-        </Button>
-      </Row>
-      <div style={{marginTop: "20px"}}>
+        <Row style={{display: "flex", alignItems: "baseline"}}>
+            <p style={{marginLeft: "auto"}}>
+              Add from FOLIO:
+            </p>
+            <Button
+                color="info"
+                value="SC_ANNEX"
+                disabled={state.folioWaiting}
+                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
+                onClick={handleAddFromFolio}
+            >
+              SC Annex
+            </Button>
+            <Button
+                color="info"
+                value="FC_ANNEX"
+                disabled={state.folioWaiting}
+                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
+                onClick={handleAddFromFolio}
+            >
+              FC Annex
+            </Button>
+        </Row>
+      </div>
+      <div style={{display: "block", marginTop: "20px"}}>
         <Row>
           {/* If there were any items in FOLIO that aren't in the new system yet,
             * show them here. */
@@ -445,10 +461,10 @@ const AddForm = props => {
   return (
     <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input
-        type="text"
-        style={{"marginRight": "10px"}}
+        type="textarea"
+        style={{"marginRight": "10px", "width": "20em", "height": "4em"}}
         name="newBarcode"
-        placeholder="Item barcode"
+        placeholder="Item barcodes"
         value={props.newBarcode}
         onChange={(e) => props.handleBarcodeChange(e)}
       />
@@ -490,6 +506,11 @@ const PicklistLeftPane = (props) => {
     {
       dataField: 'status',
       text: 'Status',
+      sort: true,
+    },
+    {
+      dataField: 'collection',
+      text: 'Collection',
       sort: true,
     },
     {
