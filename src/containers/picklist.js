@@ -315,36 +315,38 @@ const Picklist = () => {
   };
 
   return (
-    <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+    <div style={{marginTop: "20px"}}>
+      <div style={{width: "100%", height: "4em"}}>
         <AddForm
           newBarcode={state.newBarcode}
           handleAddToPicklist={handleAddToPicklist}
           handleBarcodeChange={handleBarcodeChange}
         />
-        <div>
-          Add from FOLIO:
-          <Button
-              color="primary"
-              value="SC_ANNEX"
-              disabled={state.folioWaiting}
-              style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
-              onClick={handleAddFromFolio}
-          >
-            SC Annex
-          </Button>
-          <Button
-              color="primary"
-              value="FC_ANNEX"
-              disabled={state.folioWaiting}
-              style={{"marginLeft": "auto", "cursor": state.folioWaiting ? "wait" : "pointer"}}
-              onClick={handleAddFromFolio}
-          >
-            FC Annex
-          </Button>
-        </div>
-      </Row>
-      <div style={{marginTop: "20px"}}>
+        <Row style={{display: "flex", alignItems: "baseline"}}>
+            <p style={{marginLeft: "auto"}}>
+              Add from FOLIO:
+            </p>
+            <Button
+                color="info"
+                value="SC_ANNEX"
+                disabled={state.folioWaiting}
+                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
+                onClick={handleAddFromFolio}
+            >
+              SC Annex
+            </Button>
+            <Button
+                color="info"
+                value="FC_ANNEX"
+                disabled={state.folioWaiting}
+                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
+                onClick={handleAddFromFolio}
+            >
+              FC Annex
+            </Button>
+        </Row>
+      </div>
+      <div style={{display: "block", marginTop: "20px"}}>
         <Row>
           {/* If there were any items in FOLIO that aren't in the new system yet,
             * show them here. */
@@ -460,7 +462,7 @@ const AddForm = props => {
     <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input
         type="textarea"
-        style={{"marginRight": "10px", "width": "20em"}}
+        style={{"marginRight": "10px", "width": "20em", "height": "4em"}}
         name="newBarcode"
         placeholder="Item barcodes"
         value={props.newBarcode}
