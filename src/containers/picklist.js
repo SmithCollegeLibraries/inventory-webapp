@@ -149,19 +149,20 @@ const Picklist = () => {
     if (!state.newBarcode) {
       return;
     }
-    // Check if the barcode is already in the picklist. If show, give
-    // a warning.
-    else if (state.picklistComplete.find(i => i['barcode'] === state.newBarcode)) {
-      warning(`Item ${state.newBarcode} is already in picklist`);
-      state.resetNewBarcode();
+    // Check for barcodes that are already in the picklist. If so, give a warning.
+    var submittedBarcodes = [...new Set(state.newBarcode.trim().split(/[, \n]+/))];
+    var alreadyInPicklist = submittedBarcodes.filter(i => state.picklistComplete.find(j => j['barcode'] === i));
+    var newBarcodes = submittedBarcodes.filter(i => !state.picklistComplete.find(j => j['barcode'] === i));
+    if (alreadyInPicklist.length > 0) {
+      warning(`The following barcodes are already in the picklist: ${alreadyInPicklist.join(', ')}`);
     }
-    // Otherwise, make an API call. The API will give an error if the
-    // barcode is invalid.
-    else {
-      await Load.addItems({"barcodes": [state.newBarcode]});
-      state.resetNewBarcode();
-      getPicklist();
+    if (newBarcodes.length > 0) {
+      // The API will give an error if the barcode is invalid.
+      console.log(newBarcodes);
+      await Load.addItems({"barcodes": newBarcodes});
     }
+    state.resetNewBarcode();
+    getPicklist();
   };
 
   const handleAddFromFolio = async (e) => {
@@ -458,10 +459,10 @@ const AddForm = props => {
   return (
     <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input
-        type="text"
-        style={{"marginRight": "10px"}}
+        type="textarea"
+        style={{"marginRight": "10px", "width": "20em"}}
         name="newBarcode"
-        placeholder="Item barcode"
+        placeholder="Item barcodes"
         value={props.newBarcode}
         onChange={(e) => props.handleBarcodeChange(e)}
       />
