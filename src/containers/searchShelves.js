@@ -1,9 +1,15 @@
 import React, { useEffect, useReducer } from 'react';
-import { Button, Card, CardBody, Form, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Table, Label } from 'reactstrap';
+import { Button, Card, CardBody, Form, FormGroup, Input, Modal, ModalHeader, ModalBody, ModalFooter, Table, Label } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
 import { displayItemList, padShelfBarcode } from '../util/helpers';
-import { warning } from '../components/toastAlerts';
+import { success, warning } from '../components/toastAlerts';
+
+// Put default collection for each user separately
+const ANY_SIZE = '(Any)';
+const ANY_COLLECTION = '(Any)';
+const ANY_SHELF_FULNESS = '(Any)';
+
 
 const processTrayInformation = (trays, size=null) => {
   let trayGrid = {'Rear': [], 'Middle': [], 'Front': [], 'Other': []};
@@ -27,7 +33,7 @@ const processTrayInformation = (trays, size=null) => {
     if (depth === 'Front' || depth === 'Rear' || trayData.trayGrid[depth].length > 0) {
       for (let i = 0; i < trayData.maxPosition; i++) {
         if (!trayData.trayGrid[depth][i]) {
-          trayData.trayGrid[depth][i] = {barcode: '-', position: i + 1, depth: depth};
+          trayData.trayGrid[depth][i] = {barcode: "-", position: i + 1, depth: depth};
         }
       }
     }
@@ -86,12 +92,25 @@ const reducer = (state, action) => {
         ...state,
         settings: action.settings,
       };
+    case 'UPDATE_COLLECTIONS':
+      return {
+        ...state,
+        collections: action.collections,
+      };
+    case 'UPDATE_SIZES':
+      return {
+        ...state,
+        sizes: action.sizes,
+      };
     case 'RESET':
       return {
         ...state,
         query: {
-          shelf: '',
-          tray: '',
+          size: "",
+          collection: "",
+          positionsfree: "",
+          shelf: "",
+          tray: "",
         },
         shelves: [],
         currentTray: null,
@@ -105,13 +124,18 @@ const reducer = (state, action) => {
 const SearchShelves = () => {
   const initialState = {
     query: {
-      shelf: '',
-      tray: '',
+      size: "",
+      collection: "",
+      positionsfree: "",
+      shelf: "",
+      tray: "",
     },
     shelves: [],
     currentTray: null,
     currentShelf: null,
     settings: {},
+    collections: [],
+    sizes: [],
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -119,9 +143,11 @@ const SearchShelves = () => {
   const handleQueryChange = (e) => {
     e.preventDefault();
     dispatch({
-      type: 'QUERY_CHANGE',
+      type: "QUERY_CHANGE",
       field: e.target.name,
-      value: e.target.value.replace(/[^0-9A-Za-z?_-]/g, '').replace(/[?_]/g,'-').toUpperCase(),
+      value: (e.target.name === 'shelf' || e.target.name === 'tray')
+              ? e.target.value.replace(/[^0-9A-Za-z?_-]/g, '').replace(/[?_]/g,'-').toUpperCase()
+              : e.target.value,
     });
     // const index = Array.prototype.indexOf.call(e.target.form, e.target);
     // if (e.target.value.length === (e.target.name === "side" ? 1 : 2)) {
@@ -131,27 +157,36 @@ const SearchShelves = () => {
 
   const handleClearSearch = (e) => {
     e.preventDefault();
-    dispatch({ type: 'RESET' });
+    dispatch({ type: "RESET" });
   };
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
+    dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
 
-    const shelfQuery = (padShelfBarcode(state.query.shelf));
-    const trayQuery = (state.query.tray);
-
-    const results = await ContentSearch.shelves(shelfQuery, trayQuery);
-    if (results && results[0]) {
+    const response = await ContentSearch.shelves(
+        padShelfBarcode(state.query.shelf),
+        state.query.tray,
+        state.query.size,
+        state.query.collection,
+        state.query.positionsfree
+      );
+    if (response.resultCount > 0) {
       dispatch({
-        type: 'UPDATE_RESULTS',
+        type: "UPDATE_RESULTS",
         payload: {
-          shelves: results,
+          shelves: response.results,
         }
       });
+      if (response.resultCount > response.results.length) {
+        success(<>{response.resultCount} shelves found<br />(showing first {response.results.length})</>);
+      }
+      else {
+        success(<>{response.resultCount} {response.resultCount === 1 ? 'shelf' : 'shelves'} found</>);
+      }
     }
     else {
-      dispatch({ type: 'UPDATE_RESULTS', payload: { shelves: [] } });
+      dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
       warning('No results found.');
     }
   };
@@ -160,9 +195,27 @@ const SearchShelves = () => {
   useEffect(() => {
     const getSettings = async () => {
       const settings = await Load.getAllSettings();
-      dispatch({ type: 'UPDATE_SETTINGS', settings: settings});
+      dispatch({ type: "UPDATE_SETTINGS", settings: settings});
     };
     getSettings();
+  }, []);
+
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      dispatch({ type: 'UPDATE_COLLECTIONS', collections: collections});
+    };
+    getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      dispatch({ type: 'UPDATE_SIZES', sizes: sizes});
+    };
+    getSizes();
   }, []);
 
   // Get the total number of shelves via the API on load
@@ -171,7 +224,7 @@ const SearchShelves = () => {
       const totalShelfCount = await Load.shelfCount();
       if (totalShelfCount) {
         dispatch({
-          type: 'UPDATE_COUNT',
+          type: "UPDATE_COUNT",
           payload: totalShelfCount,
         });
       }
@@ -181,17 +234,14 @@ const SearchShelves = () => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
-        <SearchForm
-          query={state.query}
-          handleSearch={handleSearch}
-          handleQueryChange={handleQueryChange}
-          handleClearSearch={handleClearSearch}
-        />
-        { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} shelves total`}</Button>
-        }
-      </Row>
+      <SearchForm
+        query={state.query}
+        collections={state.collections}
+        sizes={state.sizes}
+        handleSearch={handleSearch}
+        handleQueryChange={handleQueryChange}
+        handleClearSearch={handleClearSearch}
+      />
       <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use <code>-</code> as a wildcard character for shelf barcodes. Up to 60 results will be shown.</div>
       <div style={{marginTop: "20px"}}>
         { state.shelves
@@ -207,9 +257,9 @@ const SearchShelves = () => {
                   handleTraySelect={
                     (tray) => {
                       if (!tray || tray.barcode === '-')
-                        dispatch({ type: 'UPDATE_SELECTION', tray: null, shelf: null });
+                        dispatch({ type: "UPDATE_SELECTION", tray: null, shelf: null });
                       else {
-                        dispatch({ type: 'UPDATE_SELECTION', tray: tray, shelf: shelf });
+                        dispatch({ type: "UPDATE_SELECTION", tray: tray, shelf: shelf });
                       }
                     }
                   }
@@ -225,32 +275,90 @@ const SearchShelves = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
-      <Label for="shelf" style={{marginRight:'10px'}}>
-        Shelf
-      </Label>
-      <Input
-        type="text"
-        name="shelf"
-        placeholder="09R--1-"
-        value={props.query.shelf}
-        maxLength={7}
-        style={{marginRight:'20px'}}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Label for="tray" style={{marginRight:'10px'}}>
-        Tray
-      </Label>
-      <Input
-        type="text"
-        name="tray"
-        placeholder="10001234"
-        value={props.query.tray}
-        style={{marginRight:'20px'}}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Button color="primary" type="submit" style={{"marginRight": "10px"}}>Search</Button>
-      <Button color="warning" style={{"marginRight": "10px"}} onClick={(e) => props.handleClearSearch(e)}>Clear</Button>
+    <Form autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <FormGroup style={{display: "flex", alignItems: "baseline", paddingTop: "20px"}}>
+        <Label for="size" style={{marginRight: "10px", marginBottom: "0px"}}>
+          Size
+        </Label>
+        <Input
+          type="select"
+          name="size"
+          value={props.query.size || ""}
+          style={{width: "8em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_SIZE}</option>
+          { props.sizes
+            ? Object.keys(props.sizes).map((objects, idx) => (
+                <option value={props.sizes[objects].code} key={idx}>{props.sizes[objects].code}</option>
+              ))
+            : null
+          }
+        </Input>
+        <Label for="collection" style={{marginRight: "10px"}}>
+          Collection
+        </Label>
+        <Input
+          type="select"
+          name="collection"
+          value={props.query.collection || ""}
+          style={{width: "20em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_COLLECTION}</option>
+          { props.collections
+            ? Object.keys(props.collections).map((objects, idx) => (
+                <option value={props.collections[objects].name} key={idx}>{props.collections[objects].name}</option>
+              ))
+            : null
+          }
+        </Input>
+        <Label for="positionsfree" style={{marginRight: "10px"}}>
+          Free space
+        </Label>
+        <Input
+          type="select"
+          name="positionsfree"
+          value={props.query.positionsfree || ""}
+          style={{width: "12em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_SHELF_FULNESS}</option>
+          <option value="0">Shelf full</option>
+          <option value="-1">Shelf empty</option>
+          { Array.from({length: 15}, (_, i) => (
+              <option value={i+1} key={i+1}>Room for {i+1}+ trays</option>
+            ))
+          }
+        </Input>
+      </FormGroup>
+      <FormGroup style={{display: "flex", alignItems: "baseline"}}>
+        <Label for="shelf" style={{marginRight: "10px", marginBottom: "0px"}}>
+          Shelf
+        </Label>
+        <Input
+          type="text"
+          name="shelf"
+          placeholder="09R--1-"
+          value={props.query.shelf}
+          maxLength={7}
+          style={{width: "8em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        />
+        <Label for="tray" style={{marginRight: "10px"}}>
+          Tray
+        </Label>
+        <Input
+          type="text"
+          name="tray"
+          placeholder="10001234"
+          value={props.query.tray}
+          style={{width: "10em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        />
+        <Button color="primary" type="submit" style={{"marginRight": "10px"}}>Search</Button>
+        <Button color="warning" style={{"marginRight": "10px"}} onClick={(e) => props.handleClearSearch(e)}>Clear</Button>
+      </FormGroup>
     </Form>
   );
 };
@@ -270,9 +378,9 @@ const ResultDisplay = (props) => {
               <dd>{`${props.data.barcode} • ${props.currentTray.depth} • ${props.currentTray.position}`}</dd>
               <dt>Trayer</dt>
               <dd>{props.currentTray.trayer ?? '-'}</dd>
-              <dt>Items { props?.currentTray?.items?.length ? `(${props?.currentTray?.items?.length}/${props?.currentTray?.freeSpace !== null ? props?.currentTray.items.length + props.currentTray.freeSpace : '?' })` : "" }</dt>
+              <dt>Items { props?.currentTray?.items?.length ? `(${props?.currentTray?.items?.length}/${props?.currentTray?.freeSpace !== null ? props?.currentTray.items.length + props.currentTray.freeSpace : "?" })` : "" }</dt>
               <dd>
-                {props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : '-'}
+                {props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : "-"}
               </dd>
             </dl>
           : null}
@@ -321,10 +429,10 @@ const ResultDisplay = (props) => {
                             { tray.barcode === '-' ? '-' :
                               <>
                                 {tray.barcode}<br />
-                                {`${tray.items.length} ${tray.items.length === 1 ? 'item' : 'items'}`}
+                                {`${tray.items.length} ${tray.items.length === 1 ? 'item' : "items"}`}
                               </>
                             }<br />
-                            { tray.freeSpace === null ? '? free' : (tray.freeSpace > 0 ? `~${tray.freeSpace} free` : '') }
+                            { tray.freeSpace === null ? '? free' : (tray.freeSpace > 0 ? `~${tray.freeSpace} free` : "") }
                           </td>
                         );
                       })}
