@@ -41,19 +41,12 @@ const processTrayInformation = (trays, size=null) => {
   // Truncate barcodes for a shelf/depth that has > 14 positions,
   // Always replace barcode with just numeric portion
   for (let depth of ["Front", "Middle", "Rear", "Other"]) {
-    if (trayData.trayGrid[depth].length > trayData.maxPosition) {
-      for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
-        if (trayData.trayGrid[depth][i].barcode !== '-') {
-          console.log(trayData.trayGrid[depth][i].barcode);
-          trayData.trayGrid[depth][i].barcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
-        }
+    for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
+      if (trayData.trayGrid[depth].length > trayData.maxPosition) {
+        trayData.trayGrid[depth][i].shortBarcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
       }
-    }
-    else {
-      for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
-        if (trayData.trayGrid[depth][i].barcode !== '-') {
-          trayData.trayGrid[depth][i].barcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
-        }
+      else {
+        trayData.trayGrid[depth][i].shortBarcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
       }
     }
   }
@@ -448,7 +441,7 @@ const ResultDisplay = (props) => {
                             >
                             { tray.barcode === '-' ? '-' :
                               <>
-                                {tray.barcode}<br />
+                                {tray.shortBarcode}<br />
                                 {`${tray.items.length} ${tray.items.length === 1 ? 'item' : "items"}`}
                               </>
                             }<br />
