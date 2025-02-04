@@ -116,6 +116,17 @@ const reducer = (state, action) => {
         currentTray: null,
         currentShelf: null,
       }
+    case 'CLEAR_EXCEPT_TRAY':
+      return {
+        ...state,
+        query: {
+          size: "",
+          collection: "",
+          positionsfree: "",
+          shelf: "",
+          tray: state.query.tray,
+        },
+      }
     default:
       throw new Error();
   }
@@ -164,6 +175,10 @@ const SearchShelves = () => {
     e.preventDefault();
     dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
 
+    if (state.query.tray) {
+      dispatch({ type: "CLEAR_EXCEPT_TRAY" });
+    }
+
     const response = await ContentSearch.shelves(
         padShelfBarcode(state.query.shelf),
         state.query.tray,
@@ -181,13 +196,18 @@ const SearchShelves = () => {
       if (response.resultCount > response.results.length) {
         success(<>{response.resultCount} shelves found<br />(showing first {response.results.length})</>);
       }
-      else {
+      else if (!state.query.tray) {
         success(<>{response.resultCount} {response.resultCount === 1 ? 'shelf' : 'shelves'} found</>);
       }
     }
     else {
       dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
-      warning('No results found.');
+      if (state.query.tray) {
+        warning(`Tray ${state.query.tray} not found on shelves.`);
+      }
+      else {
+        warning('No results found.');
+      }
     }
   };
 
