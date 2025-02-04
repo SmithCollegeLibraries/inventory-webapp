@@ -407,7 +407,7 @@ const ResultDisplay = (props) => {
           <div style={{marginBottom: "2ex"}}>
             <dl>
               <dt style={{display: "inline", marginRight: "1ex"}}>Barcode</dt>
-              <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.barcode}</dd>
+              <dd className={props.data.flag ? "text-danger" : ""} style={{display: "inline", marginRight: "3ex"}}>{props.data.barcode}</dd>
               <dt style={{display: "inline", marginRight: "1ex"}}>Size</dt>
               <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.size ?? '-'}</dd>
               <dt style={{display: "inline", marginRight: "1ex"}}>Collection</dt>
