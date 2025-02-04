@@ -9,11 +9,12 @@ import { success, warning } from '../components/toastAlerts';
 const ANY_SIZE = '(Any)';
 const ANY_COLLECTION = '(Any)';
 const ANY_SHELF_FULNESS = '(Any)';
+const TOO_MANY_POSITIONS = 14;
 
 
-const processTrayInformation = (trays, size=null) => {
+const processTrayInformation = (data) => {
   let trayGrid = {'Rear': [], 'Middle': [], 'Front': [], 'Other': []};
-  trays.forEach(tray => {
+  data.trays.forEach(tray => {
     if (tray.depth && tray.position) {
       trayGrid[tray.depth][tray.position - 1] = tray;
     }
@@ -22,15 +23,17 @@ const processTrayInformation = (trays, size=null) => {
     }
   });
   let trayData = {
-    // TODO: Get this from settings based on shelf size
-    maxPosition: size ? size.maxPosition : 14,
-    depths: size ? size.depth : 3,
+    maxPosition: data.positions,
+    depths: data.depths,
     trayGrid: trayGrid,
   };
   // Go through each depth, and fill in any missing positions with empty trays
   for (let depth of ["Front", "Middle", "Rear", "Other"]) {
-    // Depths other than Front and Rear shouldn't display if they're empty
-    if (depth === 'Front' || depth === 'Rear' || trayData.trayGrid[depth].length > 0) {
+    // Depths shouldn't display if they're empty (except
+    if ((data.depths >= 2 && (depth === 'Front' || depth === 'Rear'))
+        || (data.depths === 3 && depth === 'Middle')
+        || trayData.trayGrid[depth].length > 0
+    ) {
       for (let i = 0; i < trayData.maxPosition; i++) {
         if (!trayData.trayGrid[depth][i]) {
           trayData.trayGrid[depth][i] = {barcode: "-", position: i + 1, depth: depth};
@@ -42,11 +45,13 @@ const processTrayInformation = (trays, size=null) => {
   // Always replace barcode with just numeric portion
   for (let depth of ["Front", "Middle", "Rear", "Other"]) {
     for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
-      if (trayData.trayGrid[depth].length > trayData.maxPosition) {
-        trayData.trayGrid[depth][i].shortBarcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
-      }
-      else {
-        trayData.trayGrid[depth][i].shortBarcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
+      if (trayData.trayGrid[depth][i]) {
+        if (trayData.trayGrid[depth].length > TOO_MANY_POSITIONS) {
+          trayData.trayGrid[depth][i].shortBarcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
+        }
+        else {
+          trayData.trayGrid[depth][i].shortBarcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
+        }
       }
     }
   }
@@ -418,17 +423,20 @@ const ResultDisplay = (props) => {
           </div>
           <Table style={{tableLayout: "fixed"}}>
             <tbody>
-              { Object.keys(processTrayInformation(props.data.trays).trayGrid).map(
+              { Object.keys(processTrayInformation(props.data).trayGrid).map(
                 (depth, idx) => {
                   return (
                     <tr key={idx}>
-                      { processTrayInformation(props.data.trays).trayGrid[depth].length > 0 ? <th>{depth}</th> : null }
-                      { processTrayInformation(props.data.trays).trayGrid[depth].map((tray, idx) => {
+                      { processTrayInformation(props.data).trayGrid[depth].length > 0
+                        ? <th style={{width: "6em", borderRight: "1px solid #dee2e6"}}>{depth}</th>
+                        : null
+                      }
+                      { processTrayInformation(props.data).trayGrid[depth].map((tray, idx) => {
                         return (
                           <td
                               idx={idx}
                               key={idx}
-                              title={`${props.data.barcode} • ${tray.depth} • ${tray.position}`}
+                              title={`${props.data.shortBarcode} • ${tray.depth} • ${tray.position}`}
                               className={tray.flag ? "text-danger" : (tray.freeSpace === null || tray.freeSpace > 0 ? "text-info" : null)}
                               style={{
                                 cursor: tray.barcode === "-" ? "default" : "pointer",
@@ -436,6 +444,7 @@ const ResultDisplay = (props) => {
                                 backgroundColor: tray.barcode === "-" ? "lightgray" : "white",
                                 color: tray.barcode === "-" ? "gray" : "black",
                                 whiteSpace: "nowrap",
+                                borderRight: "1px solid #dee2e6",
                               }}
                               onClick={(e) => props.handleTraySelect(tray, e)}
                             >
