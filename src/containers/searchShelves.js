@@ -428,7 +428,7 @@ const ResultDisplay = (props) => {
                   return (
                     <tr key={idx}>
                       { processTrayInformation(props.data).trayGrid[depth].length > 0
-                        ? <th style={{width: "6em", borderRight: "1px solid #dee2e6"}}>{depth}</th>
+                        ? <th style={{width: "6em", borderBottom: "1px solid #dee2e6", borderRight: "1px solid #dee2e6"}}>{depth}</th>
                         : null
                       }
                       { processTrayInformation(props.data).trayGrid[depth].map((tray, idx) => {
@@ -444,7 +444,7 @@ const ResultDisplay = (props) => {
                                 backgroundColor: tray.barcode === "-" ? "lightgray" : "white",
                                 color: tray.barcode === "-" ? "gray" : "black",
                                 whiteSpace: "nowrap",
-                                borderRight: "1px solid #dee2e6",
+                                border: "1px solid #dee2e6",
                               }}
                               onClick={(e) => props.handleTraySelect(tray, e)}
                             >
