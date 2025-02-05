@@ -450,8 +450,8 @@ const ItemForm = (props) => {
               <Input type="select" name="collection" value={props.fields.collection || ''} onChange={(e) => props.handleItemChange(e)}>
                 <option value="">(none)</option>
                 { props.collections
-                  ? Object.keys(props.collections).map((items, idx) => (
-                      <option value={props.collections[items].name} key={idx}>{props.collections[items].name}</option>
+                  ? Object.keys(props.collections).map((objects, idx) => (
+                      <option value={props.collections[objects].name} key={idx}>{props.collections[objects].name}</option>
                     ))
                   : null
                 }

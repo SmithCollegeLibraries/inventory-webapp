@@ -1,5 +1,4 @@
 import Alerts from '../components/alerts';
-import Load from './load';
 
 const itemAPI = `${process.env.REACT_APP_DATABASE_URL}/item-api/`
 const trayAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-api/`
@@ -21,8 +20,8 @@ class ContentSearch {
     return search;
   }
 
-  shelves = async (shelfBarcode, trayBarcode) => {
-    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode}&tray=${trayBarcode}`);
+  shelves = async (shelfBarcode, trayBarcode, size, collection, positionsfree) => {
+    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode}&tray=${trayBarcode}&size=${size}&collection=${collection}&positionsfree=${positionsfree}`);
     return search;
   }
 
