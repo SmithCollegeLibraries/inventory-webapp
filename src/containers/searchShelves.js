@@ -436,7 +436,7 @@ const ResultDisplay = (props) => {
                           <td
                               idx={idx}
                               key={idx}
-                              title={`${props.data.shortBarcode} • ${tray.depth} • ${tray.position}`}
+                              title={`${props.data.barcode} • ${tray.depth} • ${tray.position}`}
                               className={tray.flag ? "text-danger" : (tray.freeSpace === null || tray.freeSpace > 0 ? "text-info" : null)}
                               style={{
                                 cursor: tray.barcode === "-" ? "default" : "pointer",
