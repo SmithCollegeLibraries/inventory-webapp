@@ -260,7 +260,7 @@ const SearchShelves = () => {
         handleQueryChange={handleQueryChange}
         handleClearSearch={handleClearSearch}
       />
-      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use <code>-</code> as a wildcard character for shelf barcodes. Up to 60 results will be shown.</div>
+      <div style={{marginTop: "10px", fontStyle: "italic"}}>You can use <code>-</code> as a wildcard character for shelf barcodes. Up to 60 shelves will be shown at one time.</div>
       <div style={{marginTop: "20px"}}>
         { state.shelves
           ? Object.keys(state.shelves).map((shelf, idx) => {
@@ -421,7 +421,7 @@ const ResultDisplay = (props) => {
               <dd style={{display: "inline", marginRight: "3ex"}}>{props.data.trays.length}</dd>
             </dl>
           </div>
-          <Table style={{tableLayout: "fixed"}}>
+          <Table style={{tableLayout: "fixed", marginBottom: "0"}}>
             <tbody>
               { Object.keys(processTrayInformation(props.data).trayGrid).map(
                 (depth, idx) => {
@@ -444,6 +444,8 @@ const ResultDisplay = (props) => {
                                 backgroundColor: tray.barcode === "-" ? "lightgray" : "white",
                                 color: tray.barcode === "-" ? "gray" : "black",
                                 whiteSpace: "nowrap",
+                                paddingLeft: 0,
+                                paddingRight: 0,
                                 border: "1px solid #dee2e6",
                               }}
                               onClick={(e) => props.handleTraySelect(tray, e)}
