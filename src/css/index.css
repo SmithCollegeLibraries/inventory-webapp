@@ -19,7 +19,6 @@ body {
     padding: 10px;
     border-bottom: 1px solid white;
     max-height: 190px;
-
   }
 
   .comment:nth-child(odd) {
@@ -34,7 +33,6 @@ body {
     min-width: 16.5%;
     max-height: 190px;
   }
-
 
   .form-wrapper {
     position: fixed;
@@ -175,14 +173,6 @@ body {
     margin-left: 10px;
   }
 
-  .requires-truck {
-    color: red;
-  }
-
-  .no-truck {
-    color: blue;
-  }
-
   .option-button {
     margin-right: 10px;
     padding: 10px;
@@ -213,32 +203,36 @@ body {
       font-size: 1.4em;
   }
 
-  .sidebar .nav-link.active {
-    color: #007bff;
+  .navbar-nav > .nav-item > .nav-link {
+    color: #e9ecef;
   }
 
-  .sidebar .nav-link {
-    font-weight: 500;
+  .navbar-nav .dropdown-menu .dropdown-item .nav-link {
+    color: #212529;
   }
 
-  .sidebar .nav-link .feather {
-    margin-right: 4px;
-    color: #999;
+  .navbar-nav .dropdown-menu .dropdown-item:active {
+    background-color: #e9ecef;
   }
 
-  .sidebar .nav-link:hover{
-    color: #007bff;
+  .navbar-nav > .nav-item > .nav-link.active:not(.auth-level), .navbar-nav > .active-child > .nav-link, .navbar-nav > .active-child > .nav-link:hover {
+    color: #70a7f8 !important;
   }
 
-  .dropdownList {
-    position: relative;
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-wrap: wrap;
-    flex-wrap: wrap;
-    -ms-flex-align: stretch;
-    align-items: stretch;
-    width: 100%;
+  .navbar-nav .dropdown-menu .dropdown-item .nav-link.active {
+    color: #0d6efd;
+  }
+
+  .navbar-nav .admin-level {
+    color: #ffc107 !important;
+  }
+
+  .navbar-nav .admin-level:hover {
+    color: #fadc80 !important;
+  }
+
+  .navbar-nav .auth-level:hover {
+    color: #dc4f5d !important;
   }
 
   @media print {

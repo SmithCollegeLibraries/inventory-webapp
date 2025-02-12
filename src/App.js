@@ -168,16 +168,16 @@ export default class Main extends Component {
                 <Route path="/users" render={() => (
                   <ManageUsers />
                 )}/>
-                <Route path="/item-logs" render={() => (
+                <Route path="/logs/items" render={() => (
                   <ItemLogs />
                 )}/>
-                <Route path="/tray-logs" render={() => (
+                <Route path="/logs/trays" render={() => (
                   <TrayLogs />
                 )}/>
-                <Route path="/shelf-logs" render={() => (
+                <Route path="/logs/shelves" render={() => (
                   <ShelfLogs />
                 )}/>
-                <Route path="/collection-logs" render={() => (
+                <Route path="/logs/collections" render={() => (
                   <CollectionLogs />
                 )}/>
               </Switch>
