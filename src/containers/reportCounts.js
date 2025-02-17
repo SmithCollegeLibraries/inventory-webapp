@@ -117,6 +117,43 @@ const ReportCounts = () => {
 };
 
 const ShelfCounts = (props) => {
+  // Get list of active collections from database on load
+  useEffect(() => {
+    const getCollections = async () => {
+      const collections = await Load.getAllCollections();
+      useCounts.setState({ allCollections: collections });
+    };
+    getCollections();
+  }, []);
+
+  // Get list of sizes from database on load
+  useEffect(() => {
+    const getSizes = async () => {
+      const sizes = await Load.getAllSizes();
+      useCounts.setState({ allSizes: sizes });
+    };
+    getSizes();
+  }, []);
+
+  // Get the total number of shelves, trays, items via the API on load
+  useEffect(() => {
+    async function fetchTrayCount() {
+      const shelfTotal = await Load.shelfCount();
+      if (shelfTotal) {
+        useCounts.setState({ shelfTotal });
+      }
+      const trayTotal = await Load.trayCount();
+      if (trayTotal) {
+        useCounts.setState({ trayTotal });
+      }
+      const itemTotal = await Load.itemCount();
+      if (itemTotal) {
+        useCounts.setState({ itemTotal });
+    }
+  }
+    fetchTrayCount();
+  }, []);
+
   return (
     <Table>
       <thead>
