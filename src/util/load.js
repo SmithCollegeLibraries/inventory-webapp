@@ -93,6 +93,11 @@ class Load {
     return count;
   }
 
+  shelfCountsCollectionSize = async () => {
+    const count = await this.handleUpdate(`${shelfAPI}counts-collection-size/`, 'GET');
+    return count;
+  }
+
   /**
     * @desc Tray
   */

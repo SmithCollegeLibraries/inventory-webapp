@@ -8,6 +8,7 @@ const LADDERS = 'Ladders';
 const SHELVES = 'Shelves';
 const TRAYS = 'Trays';
 const ITEMS = 'Items';
+const TOTAL = 'Total';
 
 
 const useCounts = create((set) => {
@@ -127,24 +128,6 @@ const ShelfCounts = (props) => {
   //   getSettings();
   // }, []);
 
-  // Get list of active collections from database on load
-  useEffect(() => {
-    const getCollections = async () => {
-      const collections = await Load.getAllCollections();
-      useCounts.setState({ allCollections: collections });
-    };
-    getCollections();
-  }, []);
-
-  // Get list of sizes from database on load
-  useEffect(() => {
-    const getSizes = async () => {
-      const sizes = await Load.getAllSizes();
-      useCounts.setState({ allSizes: sizes });
-    };
-    getSizes();
-  }, []);
-
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
@@ -169,27 +152,69 @@ const ShelfCounts = (props) => {
     fetchTrayCount();
   }, []);
 
+  // Get the count of each size in each collection on load
+  // The results of the call to Load.shelfCountCollectionSize() will look like this:
+  // {
+  //   "collection_id": 1,
+  //   "size_id": null,
+  //   "collection_code": "Smith GC",
+  //   "collection_name": "Smith General Collection",
+  //   "size": null,
+  //   "count": 31
+  // },
+  // {
+  //     "collection_id": 1,
+  //     "size_id": 1,
+  //     "collection_code": "Smith GC",
+  //     "collection_name": "Smith General Collection",
+  //     "size": "AL",
+  //     "count": 19
+  // },
+  // We want to store the count of each size in each collection in a 2D array
+  useEffect(() => {
+    async function fetchShelfSubtotals() {
+      const allCollections = await Load.getAllCollections();
+      const allSizes = await Load.getAllSizes();
+      useCounts.setState({ allCollections: [{ code: TOTAL }, ...allCollections] });
+      useCounts.setState({ allSizes: [{ code: TOTAL }, ...allSizes] });
+
+      const subtotalsFromApi = await Load.shelfCountsCollectionSize();
+      // Initialize an empty 2D array of shelf subtotals by collection and size
+      let shelfSubtotals = {};
+      // Add a row for each collection
+      for (let i = 0; i < allCollections.length; i++) {
+        shelfSubtotals[allCollections[i].code] = {};
+        // Add a column for each size
+        for (let j = 0; j < allSizes.length; j++) {
+          shelfSubtotals[allCollections[i].code][allSizes[j].code] = 0;
+        }
+      }
+      // Go through each subtotal and set it in the state
+      for (let i = 0; i < subtotalsFromApi.length; i++) {
+        shelfSubtotals[subtotalsFromApi[i].collection_code][subtotalsFromApi[i].size] = subtotalsFromApi[i].count;
+      }
+      useCounts.setState({ shelfSubtotals });
+    }
+    fetchShelfSubtotals();
+  }, []);
+
   return (
-    <Table>
+    <Table style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
-          <th></th>
-          <th>Total</th>
-          {Object.keys(props.shelfSubtotals).map((allSizes) => (
-            <th>{allSizes}</th>
+          <th style={{width: "8em", textAlign: "center"}}></th>
+          {Object.keys(props.allSizes).map((sizeIndex) => (
+            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 2}%`, textAlign: "center"}}>{props.allSizes[sizeIndex].code}</th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {Object.entries(props.shelfSubtotals).map(([collection, sizes]) =>
-          Object.entries(sizes).map(([size, count]) => (
-            <tr key={`${collection}-${size}`}>
-              <td>{collection}</td>
-              <td>{size}</td>
-              <td>{count}</td>
-            </tr>
-          ))
-        )}
+        {Object.keys(props.allCollections).map((collectionIndex) =>
+          <tr key={`row-collection-${collectionIndex}`}>
+            <th key={`row-collection-${collectionIndex}`}>{props.allCollections[collectionIndex].code}</th>
+          </tr>
+          )
+        }
       </tbody>
     </Table>
   );
