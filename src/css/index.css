@@ -207,6 +207,15 @@ body {
     color: #e9ecef;
   }
 
+  .navbar-nav > .nav-item > .nav-link.admin-level {
+    color: #ffc107;
+  }
+
+  .navbar-nav > .nav-item > .nav-link.admin-level:hover,
+  .navbar-nav > .nav-item.active-child > .nav-link.admin-level:hover {
+    color: #fadc80;
+  }
+
   .navbar-nav .dropdown-menu .dropdown-item .nav-link {
     color: #212529;
   }
@@ -215,24 +224,19 @@ body {
     background-color: #e9ecef;
   }
 
-  .navbar-nav > .nav-item > .nav-link.active:not(.auth-level), .navbar-nav > .active-child > .nav-link, .navbar-nav > .active-child > .nav-link:hover {
-    color: #70a7f8 !important;
+  .navbar-nav > .nav-item > .nav-link.active:not(.auth-level),
+  .navbar-nav > .nav-item.active-child > .nav-link,
+  .navbar-nav > .nav-item.active-child > .nav-link.admin-level,
+  .navbar-nav > .nav-item.active-child > .nav-link:hover {
+    color: #70a7f8;
   }
 
   .navbar-nav .dropdown-menu .dropdown-item .nav-link.active {
     color: #0d6efd;
   }
 
-  .navbar-nav .admin-level {
-    color: #ffc107 !important;
-  }
-
-  .navbar-nav .admin-level:hover {
-    color: #fadc80 !important;
-  }
-
-  .navbar-nav .auth-level:hover {
-    color: #dc4f5d !important;
+  .navbar-nav > .nav-item > .nav-link.auth-level:hover {
+    color: #dc4f5d;
   }
 
   @media print {

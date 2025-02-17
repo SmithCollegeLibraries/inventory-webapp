@@ -126,7 +126,7 @@ class Header extends Component {
                   </UncontrolledDropdown>
                 }
                 { level >= 60 &&
-                  <UncontrolledDropdown nav inNavbar>
+                  <UncontrolledDropdown nav inNavbar className={/\/logs\//.test(window.location.pathname) ? "active-child" : ""}>
                     <DropdownToggle nav caret className='admin-level'>
                       Logs
                     </DropdownToggle>
@@ -147,7 +147,7 @@ class Header extends Component {
                   </UncontrolledDropdown>
                 }
                 { level >= 60 &&
-                  <UncontrolledDropdown nav inNavbar>
+                  <UncontrolledDropdown nav inNavbar className={/\/reports\//.test(window.location.pathname) ? "active-child" : ""}>
                     <DropdownToggle nav caret className='admin-level'>
                       Reports
                     </DropdownToggle>
