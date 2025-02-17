@@ -8,11 +8,12 @@ const LADDERS = 'Ladders';
 const SHELVES = 'Shelves';
 const TRAYS = 'Trays';
 const ITEMS = 'Items';
-const SHELVES_PER_LADDER = 19;
 
 
 const useCounts = create((set) => {
   return {
+    // settings: {},
+    shelvesPerLadder: null,
     allSizes: {},
     allCollections: {},
     shelfTotal: 100000, // TODO: fix this
@@ -52,7 +53,7 @@ const useCounts = create((set) => {
     }),
     totalCountText: (state, view) => {
       if (view === LADDERS) {
-        return `${Math.floor(state.shelfTotal / SHELVES_PER_LADDER)} ladders`;
+        return `${Math.floor(state.shelfTotal / state.shelvesPerLadder)} ladders`;
       }
       else if (view === SHELVES) {
         return `${state.shelfTotal} shelves`;
@@ -117,6 +118,15 @@ const ReportCounts = () => {
 };
 
 const ShelfCounts = (props) => {
+  // Get settings from database on load
+  // useEffect(() => {
+  //   const getSettings = async () => {
+  //     const settings = await Load.getAllSettings();
+  //     useCounts.setState({ settings });
+  //   };
+  //   getSettings();
+  // }, []);
+
   // Get list of active collections from database on load
   useEffect(() => {
     const getCollections = async () => {
@@ -138,9 +148,14 @@ const ShelfCounts = (props) => {
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
+      // Get the ladder of count in order to set shelves per latter
       const shelfTotal = await Load.shelfCount();
       if (shelfTotal) {
         useCounts.setState({ shelfTotal });
+      }
+      const ladder = await Load.ladderCount();
+      if (ladder) {
+        useCounts.setState({ shelvesPerLadder: shelfTotal / ladder });
       }
       const trayTotal = await Load.trayCount();
       if (trayTotal) {

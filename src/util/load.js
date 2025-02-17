@@ -88,6 +88,11 @@ class Load {
     return count;
   }
 
+  ladderCount = async () => {
+    const count = await this.handleUpdate(`${shelfAPI}ladder-count/`, 'GET');
+    return count;
+  }
+
   /**
     * @desc Tray
   */
