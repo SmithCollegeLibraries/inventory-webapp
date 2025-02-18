@@ -13,6 +13,21 @@ const ALL_SIZES = 'Total';
 const UNASSIGNED_COLLECTION = 'Unassigned';
 const UNASSIGNED_SIZE = 'No size';
 
+const inLadders = (shelfCount, shelvesPerLadder, asLadders=true) => {
+  if (!asLadders || shelfCount === 0) {
+    return shelfCount;
+  }
+  else {
+    // Round down to a whole number, but if that would give 0 for
+    // a non-zero shelf count, show "< 1 instead"
+    return (
+      Math.floor(shelfCount / shelvesPerLadder) >= 1
+      ? Math.floor(shelfCount / shelvesPerLadder)
+      : "< 1"
+    );
+  }
+}
+
 
 const useCounts = create((set) => {
   return {
@@ -56,7 +71,7 @@ const useCounts = create((set) => {
     }),
     totalCountText: (state, view) => {
       if (view === LADDERS) {
-        return `${Math.floor(state.shelfTotal / state.shelvesPerLadder).toLocaleString()} ladders`;
+        return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString()} ladders`;
       }
       else if (view === SHELVES) {
         return `${state.shelfTotal.toLocaleString()} shelves`;
@@ -204,6 +219,8 @@ const ReportCounts = () => {
         shelfSubtotals={state.shelfSubtotals}
         allCollections={allCollections}
         allSizes={allSizes}
+        shelvesPerLadder={state.shelvesPerLadder}
+        inLadders={currentView === LADDERS}
       />
     </div>
   );
@@ -216,7 +233,7 @@ const ShelfCounts = (props) => {
         <tr>
           <th style={{width: "8em", textAlign: "right"}}></th>
           {Object.keys(props.allSizes).map((sizeIndex) => (
-            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 1}%`, textAlign: "right"}}>{props.allSizes[sizeIndex].code ?? UNASSIGNED_SIZE }</th>
+            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length}%`, textAlign: "right"}}>{props.allSizes[sizeIndex].code ?? UNASSIGNED_SIZE }</th>
           ))}
         </tr>
       </thead>
@@ -231,17 +248,21 @@ const ShelfCounts = (props) => {
                     color: props.allCollections[collectionIndex].code === ALL_COLLECTIONS || props.allSizes[sizeIndex].code === ALL_SIZES
                       ? "#0d6efd"
                       : (
-                        props.shelfSubtotals[props.allCollections[collectionIndex].code] && props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] === 0
-                        ? "#dee2e6"
-                        : "black"
+                        !props.shelfSubtotals[props.allCollections[collectionIndex].code] || props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] === 0
+                        ? "#e9ecef"
+                        : (
+                          props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] < props.shelvesPerLadder
+                          ? "#ced4da"
+                          : "black"
+                        )
                       )
                   }}
               >
                 { props.allCollections[collectionIndex].code === ALL_COLLECTIONS && props.allSizes[sizeIndex].code === ALL_SIZES
-                  ? props.shelfTotal
+                  ? inLadders(props.shelfTotal, props.shelvesPerLadder, props.inLadders)
                   : (
                     props.shelfSubtotals[props.allCollections[collectionIndex].code] && props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
-                      ? props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
+                      ? inLadders(props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code], props.shelvesPerLadder, props.inLadders)
                       : 0
                   )
                 }</td>
