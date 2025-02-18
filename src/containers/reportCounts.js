@@ -11,7 +11,7 @@ const ITEMS = 'Items';
 const ALL_COLLECTIONS = 'Total';
 const ALL_SIZES = 'Total';
 const UNASSIGNED_COLLECTION = 'Unassigned';
-const UNASSIGNED_SIZE = '-';
+const UNASSIGNED_SIZE = 'No size';
 
 
 const useCounts = create((set) => {
@@ -56,16 +56,16 @@ const useCounts = create((set) => {
     }),
     totalCountText: (state, view) => {
       if (view === LADDERS) {
-        return `${Math.floor(state.shelfTotal / state.shelvesPerLadder)} ladders`;
+        return `${Math.floor(state.shelfTotal / state.shelvesPerLadder).toLocaleString()} ladders`;
       }
       else if (view === SHELVES) {
-        return `${state.shelfTotal} shelves`;
+        return `${state.shelfTotal.toLocaleString()} shelves`;
       }
       else if (view === TRAYS) {
-        return `${state.trayTotal} trays`;
+        return `${state.trayTotal.toLocaleString()} trays`;
       }
       else if (view === ITEMS) {
-        return `${state.itemTotal} items`;
+        return `${state.itemTotal.toLocaleString()} items`;
       }
     },
   };
@@ -94,34 +94,6 @@ const ReportCounts = () => {
   const changeView = useViews((state) => state.changeView);
   const currentView = useViews((state) => state.currentView ? state.currentView : state.defaultView);
 
-  return (
-    // Top bar of buttons that allow user to switch between views,
-    // with the count of the current view in the upper right
-    <div>
-      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
-        {allViews.map((view) => (
-          <Button
-            key={view}
-            onClick={() => changeView(view)}
-            color={view === currentView ? 'primary' : 'secondary'}
-            style={{marginRight: '8px'}}
-          >
-            {view}
-          </Button>
-        ))}
-        <Button color="info" onClick={() => {navigator.clipboard.writeText(state.totalCountText(state, currentView))}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.totalCountText(state, currentView)} total`}</Button>
-      </Row>
-      <ShelfCounts
-        shelfTotal={state.shelfTotal}
-        shelfSubtotals={state.shelfSubtotals}
-        allCollections={allCollections}
-        allSizes={allSizes}
-      />
-    </div>
-  );
-};
-
-const ShelfCounts = (props) => {
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
@@ -211,12 +183,40 @@ const ShelfCounts = (props) => {
   }, []);
 
   return (
+    // Top bar of buttons that allow user to switch between views,
+    // with the count of the current view in the upper right
+    <div>
+      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
+        {allViews.map((view) => (
+          <Button
+            key={view}
+            onClick={() => changeView(view)}
+            color={view === currentView ? 'primary' : 'secondary'}
+            style={{marginRight: '8px'}}
+          >
+            {view}
+          </Button>
+        ))}
+        <Button color="info" onClick={() => {navigator.clipboard.writeText(state.totalCountText(state, currentView))}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.totalCountText(state, currentView)} total`}</Button>
+      </Row>
+      <ShelfCounts
+        shelfTotal={state.shelfTotal}
+        shelfSubtotals={state.shelfSubtotals}
+        allCollections={allCollections}
+        allSizes={allSizes}
+      />
+    </div>
+  );
+};
+
+const ShelfCounts = (props) => {
+  return (
     <Table style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
-          <th style={{width: "8em", textAlign: "center"}}></th>
+          <th style={{width: "8em", textAlign: "right"}}></th>
           {Object.keys(props.allSizes).map((sizeIndex) => (
-            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 1}%`, textAlign: "center"}}>{props.allSizes[sizeIndex].code ?? UNASSIGNED_SIZE }</th>
+            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 1}%`, textAlign: "right"}}>{props.allSizes[sizeIndex].code ?? UNASSIGNED_SIZE }</th>
           ))}
         </tr>
       </thead>
@@ -227,7 +227,7 @@ const ShelfCounts = (props) => {
             {Object.keys(props.allSizes).map((sizeIndex) => (
               <td key={`cell-${collectionIndex}-${sizeIndex}`}
                   style={{
-                    textAlign: "center",
+                    textAlign: "right",
                     color: props.allCollections[collectionIndex].code === ALL_COLLECTIONS || props.allSizes[sizeIndex].code === ALL_SIZES
                       ? "#0d6efd"
                       : (
