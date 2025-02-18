@@ -8,18 +8,20 @@ const LADDERS = 'Ladders';
 const SHELVES = 'Shelves';
 const TRAYS = 'Trays';
 const ITEMS = 'Items';
-const TOTAL = 'Total';
+const ALL_COLLECTIONS = 'Total';
+const ALL_SIZES = 'Total';
+const UNASSIGNED_COLLECTION = 'Unassigned';
+const UNASSIGNED_SIZE = '-';
 
 
 const useCounts = create((set) => {
   return {
-    // settings: {},
     shelvesPerLadder: null,
     allSizes: {},
     allCollections: {},
-    shelfTotal: 100000, // TODO: fix this
-    trayTotal: null,
-    itemTotal: null,
+    shelfTotal: 0,
+    trayTotal: 0,
+    itemTotal: 0,
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
@@ -110,6 +112,7 @@ const ReportCounts = () => {
         <Button color="info" onClick={() => {navigator.clipboard.writeText(state.totalCountText(state, currentView))}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.totalCountText(state, currentView)} total`}</Button>
       </Row>
       <ShelfCounts
+        shelfTotal={state.shelfTotal}
         shelfSubtotals={state.shelfSubtotals}
         allCollections={allCollections}
         allSizes={allSizes}
@@ -119,15 +122,6 @@ const ReportCounts = () => {
 };
 
 const ShelfCounts = (props) => {
-  // Get settings from database on load
-  // useEffect(() => {
-  //   const getSettings = async () => {
-  //     const settings = await Load.getAllSettings();
-  //     useCounts.setState({ settings });
-  //   };
-  //   getSettings();
-  // }, []);
-
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
@@ -173,10 +167,15 @@ const ShelfCounts = (props) => {
   // We want to store the count of each size in each collection in a 2D array
   useEffect(() => {
     async function fetchShelfSubtotals() {
-      const allCollections = await Load.getAllCollections();
-      const allSizes = await Load.getAllSizes();
-      useCounts.setState({ allCollections: [{ code: TOTAL }, ...allCollections] });
-      useCounts.setState({ allSizes: [{ code: TOTAL }, ...allSizes] });
+      let allCollections = await Load.getAllCollections();
+      let allSizes = await Load.getAllSizes();
+      // Add null and total collection and size
+      allCollections.push({ code: null });
+      allCollections.unshift({ code: ALL_COLLECTIONS });
+      allSizes.push({ code: null });
+      allSizes.unshift({ code: ALL_SIZES });
+      useCounts.setState({ allCollections });
+      useCounts.setState({ allSizes });
 
       const subtotalsFromApi = await Load.shelfCountsCollectionSize();
       // Initialize an empty 2D array of shelf subtotals by collection and size
@@ -189,9 +188,22 @@ const ShelfCounts = (props) => {
           shelfSubtotals[allCollections[i].code][allSizes[j].code] = 0;
         }
       }
-      // Go through each subtotal and set it in the state
+      // Go through each subtotal and set it in the state. In addition,
+      // have the "total" size and collection be the sum of all the other
+      // sizes and collections, including any nulls that don't exist in
+      // any of the subtotals
       for (let i = 0; i < subtotalsFromApi.length; i++) {
-        shelfSubtotals[subtotalsFromApi[i].collection_code][subtotalsFromApi[i].size] = subtotalsFromApi[i].count;
+        // If the collection is active, assign it to the relevant collection
+        if (shelfSubtotals[subtotalsFromApi[i].collection_code]) {
+          shelfSubtotals[subtotalsFromApi[i].collection_code][subtotalsFromApi[i].size] = subtotalsFromApi[i].count;
+          shelfSubtotals[subtotalsFromApi[i].collection_code][ALL_SIZES] += subtotalsFromApi[i].count;
+        }
+        // Otherwise, add it to the null/unassigned collection
+        else {
+          shelfSubtotals[null][subtotalsFromApi[i].size] = subtotalsFromApi[i].count;
+          shelfSubtotals[null][ALL_SIZES] += subtotalsFromApi[i].count;
+        }
+        shelfSubtotals[ALL_COLLECTIONS][subtotalsFromApi[i].size] += subtotalsFromApi[i].count;
       }
       useCounts.setState({ shelfSubtotals });
     }
@@ -204,14 +216,36 @@ const ShelfCounts = (props) => {
         <tr>
           <th style={{width: "8em", textAlign: "center"}}></th>
           {Object.keys(props.allSizes).map((sizeIndex) => (
-            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 2}%`, textAlign: "center"}}>{props.allSizes[sizeIndex].code}</th>
+            <th key={`header-size-${sizeIndex}`} style={{width: `${100/props.allSizes.length + 1}%`, textAlign: "center"}}>{props.allSizes[sizeIndex].code ?? UNASSIGNED_SIZE }</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {Object.keys(props.allCollections).map((collectionIndex) =>
           <tr key={`row-collection-${collectionIndex}`}>
-            <th key={`row-collection-${collectionIndex}`}>{props.allCollections[collectionIndex].code}</th>
+            <th key={`row-collection-${collectionIndex}`}>{props.allCollections[collectionIndex].code ?? UNASSIGNED_COLLECTION }</th>
+            {Object.keys(props.allSizes).map((sizeIndex) => (
+              <td key={`cell-${collectionIndex}-${sizeIndex}`}
+                  style={{
+                    textAlign: "center",
+                    color: props.allCollections[collectionIndex].code === ALL_COLLECTIONS || props.allSizes[sizeIndex].code === ALL_SIZES
+                      ? "#0d6efd"
+                      : (
+                        props.shelfSubtotals[props.allCollections[collectionIndex].code] && props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] === 0
+                        ? "#dee2e6"
+                        : "black"
+                      )
+                  }}
+              >
+                { props.allCollections[collectionIndex].code === ALL_COLLECTIONS && props.allSizes[sizeIndex].code === ALL_SIZES
+                  ? props.shelfTotal
+                  : (
+                    props.shelfSubtotals[props.allCollections[collectionIndex].code] && props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
+                      ? props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
+                      : 0
+                  )
+                }</td>
+            ))}
           </tr>
           )
         }
