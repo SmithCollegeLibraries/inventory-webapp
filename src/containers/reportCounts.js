@@ -43,16 +43,16 @@ const useCounts = create((set, get) => {
     totalCountText: (view) => {
       const state = get();
       if (view === LADDERS) {
-        return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString('en-US')} ladders`;
+        return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString()} ladders`;
       }
       else if (view === SHELVES) {
-        return `${state.shelfTotal.toLocaleString('en-US')} shelves`;
+        return `${state.shelfTotal.toLocaleString()} shelves`;
       }
       else if (view === TRAYS) {
-        return `${state.trayTotal.toLocaleString('en-US')} trays`;
+        return `${state.trayTotal.toLocaleString()} trays`;
       }
       else if (view === ITEMS) {
-        return `${state.itemTotal.toLocaleString('en-US')} items`;
+        return `${state.itemTotal.toLocaleString()} items`;
       }
     },
   };
@@ -136,15 +136,15 @@ const ReportCounts = () => {
       for (let i = 0; i < shelfApiBreakdown.length; i++) {
         // If the collection is active, assign it to the relevant collection
         if (shelfSubtotals[shelfApiBreakdown[i].collection_code]) {
-          shelfSubtotals[shelfApiBreakdown[i].collection_code][shelfApiBreakdown[i].size] = shelfApiBreakdown[i].count;
-          shelfSubtotals[shelfApiBreakdown[i].collection_code][ALL_SIZES] += shelfApiBreakdown[i].count;
+          shelfSubtotals[shelfApiBreakdown[i].collection_code][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
+          shelfSubtotals[shelfApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
         }
         // Otherwise, add it to the null/unassigned collection
         else {
-          shelfSubtotals[null][shelfApiBreakdown[i].size] = shelfApiBreakdown[i].count;
-          shelfSubtotals[null][ALL_SIZES] += shelfApiBreakdown[i].count;
+          shelfSubtotals[null][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
+          shelfSubtotals[null][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
         }
-        shelfSubtotals[ALL_COLLECTIONS][shelfApiBreakdown[i].size] += shelfApiBreakdown[i].count;
+        shelfSubtotals[ALL_COLLECTIONS][shelfApiBreakdown[i].size] += parseInt(shelfApiBreakdown[i].count);
       }
       useCounts.setState({ shelfSubtotals });
 
@@ -152,15 +152,15 @@ const ReportCounts = () => {
       for (let i = 0; i < trayApiBreakdown.length; i++) {
         // If the collection is active, assign it to the relevant collection
         if (traySubtotals[trayApiBreakdown[i].collection_code]) {
-          traySubtotals[trayApiBreakdown[i].collection_code][trayApiBreakdown[i].size] = trayApiBreakdown[i].count;
-          traySubtotals[trayApiBreakdown[i].collection_code][ALL_SIZES] += trayApiBreakdown[i].count;
+          traySubtotals[trayApiBreakdown[i].collection_code][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
+          traySubtotals[trayApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
         }
         // Otherwise, add it to the null/unassigned collection
         else {
-          traySubtotals[null][trayApiBreakdown[i].size] = trayApiBreakdown[i].count;
-          traySubtotals[null][ALL_SIZES] += trayApiBreakdown[i].count;
+          traySubtotals[null][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
+          traySubtotals[null][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
         }
-        traySubtotals[ALL_COLLECTIONS][trayApiBreakdown[i].size] += trayApiBreakdown[i].count;
+        traySubtotals[ALL_COLLECTIONS][trayApiBreakdown[i].size] += parseInt(trayApiBreakdown[i].count);
       }
       useCounts.setState({ traySubtotals });
 
@@ -168,15 +168,15 @@ const ReportCounts = () => {
       for (let i = 0; i < itemApiBreakdown.length; i++) {
         // If the collection is active, assign it to the relevant collection
         if (itemSubtotals[itemApiBreakdown[i].collection_code]) {
-          itemSubtotals[itemApiBreakdown[i].collection_code][itemApiBreakdown[i].size] = itemApiBreakdown[i].count;
-          itemSubtotals[itemApiBreakdown[i].collection_code][ALL_SIZES] += itemApiBreakdown[i].count;
+          itemSubtotals[itemApiBreakdown[i].collection_code][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
+          itemSubtotals[itemApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
         }
         // Otherwise, add it to the null/unassigned collection
         else {
-          itemSubtotals[null][itemApiBreakdown[i].size] = itemApiBreakdown[i].count;
-          itemSubtotals[null][ALL_SIZES] += itemApiBreakdown[i].count;
+          itemSubtotals[null][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
+          itemSubtotals[null][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
         }
-        itemSubtotals[ALL_COLLECTIONS][itemApiBreakdown[i].size] += itemApiBreakdown[i].count;
+        itemSubtotals[ALL_COLLECTIONS][itemApiBreakdown[i].size] += parseInt(itemApiBreakdown[i].count);
       }
       useCounts.setState({ itemSubtotals });
     }
@@ -259,10 +259,10 @@ const ItemCounts = (props) => {
                   }}
               >
                 { props.allCollections[collectionIndex].code === ALL_COLLECTIONS && props.allSizes[sizeIndex].code === ALL_SIZES
-                  ? props.itemTotal.toLocaleString('en-US')
+                  ? props.itemTotal.toLocaleString()
                   : (
                     props.itemSubtotals[props.allCollections[collectionIndex].code] && props.itemSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
-                      ? props.itemSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code].toLocaleString('en-US')
+                      ? props.itemSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code].toLocaleString()
                       : 0
                   )
                 }
@@ -305,10 +305,10 @@ const TrayCounts = (props) => {
                   }}
               >
                 { props.allCollections[collectionIndex].code === ALL_COLLECTIONS && props.allSizes[sizeIndex].code === ALL_SIZES
-                  ? props.trayTotal.toLocaleString('en-US')
+                  ? props.trayTotal.toLocaleString()
                   : (
                     props.traySubtotals[props.allCollections[collectionIndex].code] && props.traySubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code]
-                      ? props.traySubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code].toLocaleString('en-US')
+                      ? props.traySubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code].toLocaleString()
                       : 0
                   )
                 }

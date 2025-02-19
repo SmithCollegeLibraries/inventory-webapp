@@ -85,17 +85,17 @@ class Load {
 
   shelfCount = async () => {
     const count = await this.handleUpdate(`${shelfAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
   }
 
   ladderCount = async () => {
     const count = await this.handleUpdate(`${shelfAPI}ladder-count/`, 'GET');
-    return count;
+    return parseInt(count);
   }
 
   shelfCountsCollectionSize = async () => {
-    const count = await this.handleUpdate(`${shelfAPI}counts-collection-size/`, 'GET');
-    return count;
+    const counts = await this.handleUpdate(`${shelfAPI}counts-collection-size/`, 'GET');
+    return counts;
   }
 
   /**
@@ -139,12 +139,12 @@ class Load {
 
   trayCount = async () => {
     const count = await this.handleUpdate(`${trayAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
   }
 
   trayCountsCollectionSize = async () => {
-    const count = await this.handleUpdate(`${trayAPI}counts-collection-size/`, 'GET');
-    return count;
+    const counts = await this.handleUpdate(`${trayAPI}counts-collection-size/`, 'GET');
+    return counts;
   }
 
   /**
@@ -201,7 +201,7 @@ class Load {
 
   itemCount = async () => {
     const count = await this.handleUpdate(`${itemAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
   };
 
   bulkUpdate = async (data) => {
@@ -210,8 +210,8 @@ class Load {
   };
 
   itemCountsCollectionSize = async () => {
-    const count = await this.handleUpdate(`${itemAPI}counts-collection-size/`, 'GET');
-    return count;
+    const counts = await this.handleUpdate(`${itemAPI}counts-collection-size/`, 'GET');
+    return counts;
   }
 
   /**
