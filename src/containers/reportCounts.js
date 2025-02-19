@@ -29,7 +29,7 @@ const inLadders = (shelfCount, shelvesPerLadder, asLadders=true) => {
 }
 
 
-const useCounts = create((set) => {
+const useCounts = create((set, get) => {
   return {
     shelvesPerLadder: null,
     allSizes: {},
@@ -40,36 +40,8 @@ const useCounts = create((set) => {
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
-    setSizes: (allSizes) => set({ allSizes }),
-    setCollections: (allCollections) => set({ allCollections }),
-    setShelfTotal: (total) => set({ total }),
-    setShelfSubtotal: (collection, size, count) => set((state) => {
-      let shelfSubtotals = { ...state.shelfSubtotals };
-      if (!shelfSubtotals[collection]) {
-        shelfSubtotals[collection] = {};
-      }
-      shelfSubtotals[collection][size] = count;
-      return { shelfSubtotals };
-    }),
-    setTrayTotal: (total) => set({ total }),
-    setTraySubtotal: (collection, size, count) => set((state) => {
-      let traySubtotals = { ...state.traySubtotals };
-      if (!traySubtotals[collection]) {
-        traySubtotals[collection] = {};
-      }
-      traySubtotals[collection][size] = count;
-      return { traySubtotals };
-    }),
-    setItemTotal: (total) => set({ total }),
-    setItemSubtotal: (collection, size, count) => set((state) => {
-      let itemSubtotals = { ...state.itemSubtotals };
-      if (!itemSubtotals[collection]) {
-        itemSubtotals[collection] = {};
-      }
-      itemSubtotals[collection][size] = count;
-      return { itemSubtotals };
-    }),
-    totalCountText: (state, view) => {
+    totalCountText: (view) => {
+      const state = get();
       if (view === LADDERS) {
         return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString()} ladders`;
       }
@@ -112,7 +84,7 @@ const ReportCounts = () => {
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
-      // Get the ladder of count in order to set shelves per latter
+      // Get the ladder of count in order to set shelves per ladder
       const shelfTotal = await Load.shelfCount();
       if (shelfTotal) {
         useCounts.setState({ shelfTotal });
