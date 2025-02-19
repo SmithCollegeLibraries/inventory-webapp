@@ -43,16 +43,16 @@ const useCounts = create((set, get) => {
     totalCountText: (view) => {
       const state = get();
       if (view === LADDERS) {
-        return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString()} ladders`;
+        return `${inLadders(state.shelfTotal, state.shelvesPerLadder).toLocaleString('en-US')} ladders`;
       }
       else if (view === SHELVES) {
-        return `${state.shelfTotal.toLocaleString()} shelves`;
+        return `${state.shelfTotal.toLocaleString('en-US')} shelves`;
       }
       else if (view === TRAYS) {
-        return `${state.trayTotal.toLocaleString()} trays`;
+        return `${state.trayTotal.toLocaleString('en-US')} trays`;
       }
       else if (view === ITEMS) {
-        return `${state.itemTotal.toLocaleString()} items`;
+        return `${state.itemTotal.toLocaleString('en-US')} items`;
       }
     },
   };

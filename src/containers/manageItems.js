@@ -321,7 +321,7 @@ const ManageItems = () => {
         />
         <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
         { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} items total`}</Button>
+          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString('en-US')} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString('en-US')} items total`}</Button>
         }
       </Row>
       <div style={{marginTop: "20px"}}>
