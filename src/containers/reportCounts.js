@@ -86,44 +86,15 @@ const ReportCounts = () => {
     async function fetchTrayCount() {
       // Get the ladder of count in order to set shelves per ladder
       const shelfTotal = await Load.shelfCount();
-      if (shelfTotal) {
-        useCounts.setState({ shelfTotal });
-      }
-      const ladder = await Load.ladderCount();
-      if (ladder) {
-        useCounts.setState({ shelvesPerLadder: shelfTotal / ladder });
-      }
       const trayTotal = await Load.trayCount();
-      if (trayTotal) {
-        useCounts.setState({ trayTotal });
-      }
       const itemTotal = await Load.itemCount();
-      if (itemTotal) {
-        useCounts.setState({ itemTotal });
+      useCounts.setState({ shelfTotal, trayTotal, itemTotal });
     }
-  }
     fetchTrayCount();
   }, []);
 
-  // Get the count of each size in each collection on load
-  // The results of the call to Load.shelfCountCollectionSize() will look like this:
-  // {
-  //   "collection_id": 1,
-  //   "size_id": null,
-  //   "collection_code": "Smith GC",
-  //   "collection_name": "Smith General Collection",
-  //   "size": null,
-  //   "count": 31
-  // },
-  // {
-  //     "collection_id": 1,
-  //     "size_id": 1,
-  //     "collection_code": "Smith GC",
-  //     "collection_name": "Smith General Collection",
-  //     "size": "AL",
-  //     "count": 19
-  // },
-  // We want to store the count of each size in each collection in a 2D array
+  // Get the count of each size in each collection on load and store the
+  // count of each size in each collection in a 2D array
   useEffect(() => {
     async function fetchShelfSubtotals() {
       let allCollections = await Load.getAllCollections();
@@ -237,7 +208,8 @@ const ShelfCounts = (props) => {
                       ? inLadders(props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code], props.shelvesPerLadder, props.inLadders)
                       : 0
                   )
-                }</td>
+                }
+              </td>
             ))}
           </tr>
           )
