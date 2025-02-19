@@ -85,10 +85,17 @@ const ReportCounts = () => {
   useEffect(() => {
     async function fetchTrayCount() {
       // Get the ladder of count in order to set shelves per ladder
+      const ladderTotal = await Load.ladderCount();
       const shelfTotal = await Load.shelfCount();
       const trayTotal = await Load.trayCount();
       const itemTotal = await Load.itemCount();
-      useCounts.setState({ shelfTotal, trayTotal, itemTotal });
+      useCounts.setState((prevState) => ({
+        ...prevState,
+        shelfTotal: shelfTotal,
+        trayTotal: trayTotal,
+        itemTotal: itemTotal,
+        shelvesPerLadder: shelfTotal / ladderTotal,
+      }));
     }
     fetchTrayCount();
   }, []);
