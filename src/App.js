@@ -20,6 +20,10 @@ import {
     TrayLogs,
     ShelfLogs,
     CollectionLogs,
+    ReportCounts,
+    // ReportFreeSpace,
+    // ReportFillRate,
+    // ReportRequests,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -168,18 +172,30 @@ export default class Main extends Component {
                 <Route path="/users" render={() => (
                   <ManageUsers />
                 )}/>
-                <Route path="/item-logs" render={() => (
+                <Route path="/logs/items" render={() => (
                   <ItemLogs />
                 )}/>
-                <Route path="/tray-logs" render={() => (
+                <Route path="/logs/trays" render={() => (
                   <TrayLogs />
                 )}/>
-                <Route path="/shelf-logs" render={() => (
+                <Route path="/logs/shelves" render={() => (
                   <ShelfLogs />
                 )}/>
-                <Route path="/collection-logs" render={() => (
+                <Route path="/logs/collections" render={() => (
                   <CollectionLogs />
                 )}/>
+                <Route path="/reports/counts" render={() => (
+                  <ReportCounts />
+                )}/>
+                {/* <Route path="/reports/free-space" render={() => (
+                  <ReportFreeSpace />
+                )}/>
+                <Route path="/reports/fill-rate" render={() => (
+                  <ReportFillRate />
+                )}/>
+                <Route path="/reports/requests" render={() => (
+                  <ReportRequests />
+                )}/> */}
               </Switch>
             </div>
             :

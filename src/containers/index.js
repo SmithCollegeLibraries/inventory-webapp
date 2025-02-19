@@ -13,6 +13,11 @@ import ItemLogs from './logItems';
 import TrayLogs from './logTrays';
 import ShelfLogs from './logShelves';
 import CollectionLogs from './logCollections';
+import ReportCounts from './reportCounts';
+// import ReportsFreeSpace from './reportsFreeSpace';
+// import ReportsFillRate from './reportsFillRate';
+// import ReportsRequests from './reportsRequests';
+// import Reports
 
 export {
   NewTray,
@@ -29,5 +34,9 @@ export {
   ItemLogs,
   TrayLogs,
   ShelfLogs,
-  CollectionLogs
+  CollectionLogs,
+  ReportCounts,
+  // ReportsFreeSpace,
+  // ReportsFillRate,
+  // ReportsRequests,
 };

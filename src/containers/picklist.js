@@ -356,10 +356,10 @@ const Picklist = () => {
                 <CardBody>
                   <Row style={{"display": "flex", "paddingTop": "10px", "paddingBottom": "20px", "paddingLeft": "15px", "paddingRight": "15px"}}>
                     <h1 style={{"fontSize": "150%", "lineHeight": "1", "paddingTop": "6px", "paddingBotton": "6px", "marginRight": "15px" }}>
-                      Old system
+                      Not in system
                     </h1>
                   </Row>
-                  <p>The following items are not in the new system yet. You can copy these barcodes and paste them into the search form.</p>
+                  <p>The following items are not in SIS. You can copy these barcodes for troubleshooting.</p>
                   {/* Don't show this option if there are no items in the list */}
                   <Input type="textarea" disabled rows={state.notInNewSystem ? state.notInNewSystem.length : 1} style={{"width":"15em"}} value={state.notInNewSystem.join('\n')}></Input>
                   <Button color={state.oldSystemCopied ? "info" : "secondary"} style={{"cursor": "grab", "marginTop": "10px", "marginRight": "10px"}} onClick={copyOldSystemBarcodes}>{state.oldSystemCopied ? "Copied" : "Copy"}</Button>
@@ -457,7 +457,7 @@ const Picklist = () => {
   );
 };
 
-const AddForm = props => {
+const AddForm = (props) => {
   return (
     <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input

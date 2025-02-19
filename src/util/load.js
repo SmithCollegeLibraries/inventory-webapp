@@ -85,7 +85,17 @@ class Load {
 
   shelfCount = async () => {
     const count = await this.handleUpdate(`${shelfAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
+  }
+
+  ladderCount = async () => {
+    const count = await this.handleUpdate(`${shelfAPI}ladder-count/`, 'GET');
+    return parseInt(count);
+  }
+
+  shelfCountsCollectionSize = async () => {
+    const counts = await this.handleUpdate(`${shelfAPI}counts-collection-size/`, 'GET');
+    return counts;
   }
 
   /**
@@ -129,7 +139,12 @@ class Load {
 
   trayCount = async () => {
     const count = await this.handleUpdate(`${trayAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
+  }
+
+  trayCountsCollectionSize = async () => {
+    const counts = await this.handleUpdate(`${trayAPI}counts-collection-size/`, 'GET');
+    return counts;
   }
 
   /**
@@ -186,13 +201,18 @@ class Load {
 
   itemCount = async () => {
     const count = await this.handleUpdate(`${itemAPI}total-count/`, 'GET');
-    return count;
+    return parseInt(count);
   };
 
   bulkUpdate = async (data) => {
     const update = await this.handleUpdate(`${itemAPI}bulk-update/`, 'POST', data);
     return update;
   };
+
+  itemCountsCollectionSize = async () => {
+    const counts = await this.handleUpdate(`${itemAPI}counts-collection-size/`, 'GET');
+    return counts;
+  }
 
   /**
    * @desc Picklist management
