@@ -142,6 +142,11 @@ class Load {
     return count;
   }
 
+  trayCountsCollectionSize = async () => {
+    const count = await this.handleUpdate(`${trayAPI}counts-collection-size/`, 'GET');
+    return count;
+  }
+
   /**
     * @desc Item
   */
@@ -203,6 +208,11 @@ class Load {
     const update = await this.handleUpdate(`${itemAPI}bulk-update/`, 'POST', data);
     return update;
   };
+
+  itemCountsCollectionSize = async () => {
+    const count = await this.handleUpdate(`${itemAPI}counts-collection-size/`, 'GET');
+    return count;
+  }
 
   /**
    * @desc Picklist management
