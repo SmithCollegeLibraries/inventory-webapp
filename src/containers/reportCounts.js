@@ -349,7 +349,7 @@ const ShelfCounts = (props) => {
                         !props.shelfSubtotals[props.allCollections[collectionIndex].code] || props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] === 0
                         ? "#e9ecef"
                         : (
-                          props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] < props.shelvesPerLadder
+                          props.inLadders && (props.shelfSubtotals[props.allCollections[collectionIndex].code][props.allSizes[sizeIndex].code] < props.shelvesPerLadder)
                           ? "#ced4da"
                           : "black"
                         )
