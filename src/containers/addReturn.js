@@ -379,9 +379,10 @@ const AddReturn = () => {
       return !brokenBarcode;
     };
 
-    // When checking live, don't check if the item isn't at least 15
-    // characters long, because it's probably not a complete barcode
-    if (debouncedLeftPaneItem && debouncedLeftPaneItem.length === 15) {
+    // Don't do all the live checks until at least the barcode
+    // matches the item structure -- otherwise the user will get a
+    // lot of errors when the barcode is incompletely entered
+    if (debouncedLeftPaneItem && itemRegex.test(debouncedLeftPaneItem)) {
       verifyItemLive(debouncedLeftPaneItem);
     }
   }, [debouncedLeftPaneItem]); // eslint-disable-line react-hooks/exhaustive-deps

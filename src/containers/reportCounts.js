@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Load from '../util/load';
 import { Row, Table, Button } from 'reactstrap';
 import { create } from 'zustand';
