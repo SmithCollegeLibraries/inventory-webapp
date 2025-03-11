@@ -84,7 +84,6 @@ const ReportCounts = () => {
   // Get the total number of shelves, trays, items via the API on load
   useEffect(() => {
     async function fetchTrayCount() {
-      // Get the ladder of count in order to set shelves per ladder
       const shelfTotal = await Load.shelfCount();
       useCounts.setState({ shelfTotal });
       const ladderTotal = await Load.ladderCount();

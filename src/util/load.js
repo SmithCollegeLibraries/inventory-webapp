@@ -98,6 +98,11 @@ class Load {
     return counts;
   }
 
+  shelfFillRates = async (months=null) => {
+    const results = await this.handleUpdate(`${shelfLogAPI}fill-rates/?months=${months}`, 'GET');
+    return results;
+  }
+
   /**
     * @desc Tray
   */
@@ -145,6 +150,11 @@ class Load {
   trayCountsCollectionSize = async () => {
     const counts = await this.handleUpdate(`${trayAPI}counts-collection-size/`, 'GET');
     return counts;
+  }
+
+  trayFillRates = async (months=null) => {
+    const results = await this.handleUpdate(`${trayLogAPI}fill-rates?months=${months}/`, 'GET');
+    return results;
   }
 
   /**
@@ -212,6 +222,11 @@ class Load {
   itemCountsCollectionSize = async () => {
     const counts = await this.handleUpdate(`${itemAPI}counts-collection-size/`, 'GET');
     return counts;
+  }
+
+  itemFillRates = async (months=null) => {
+    const results = await this.handleUpdate(`${itemLogAPI}fill-rates/?months=${months}`, 'GET');
+    return results;
   }
 
   /**
