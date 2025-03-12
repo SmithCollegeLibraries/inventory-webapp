@@ -448,7 +448,7 @@ const NewBox = () => {
     }
     // If the item or tray barcode is of the right length but doesn't match
     // the expected structure, alert the user
-    if (itemBarcodeToVerify.length === data.settings.itemBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
+    if (itemBarcodeToVerify.length >= data.settings.itemMinBarcodeLength && itemBarcodeToVerify.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
       failureItemIfNew(itemBarcodeToVerify, itemError(itemBarcodeToVerify));
     }
     if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
@@ -905,7 +905,7 @@ const OriginalShelvingForm = (props) =>  (
         <Label for="item">Item{ ' ' }
           { props.itemRegex.test(props.original.item)
             ? <><Badge color="success">{props.original.item.length}</Badge> ✓</>
-            : <Badge color={props.original.item.length === 0 ? "secondary" : props.settings.itemBarcodeLength === props.original.item.length ? "warning" : "danger"}>{props.original.item.length}</Badge>
+            : <Badge color={props.original.item.length === 0 ? "secondary" : props.settings.itemMinBarcodeLength <= props.original.item.length && props.settings.itemMaxBarcodeLength >= props.original.item.length ? "warning" : "danger"}>{props.original.item.length}</Badge>
           }
         </Label>
         <Input
@@ -1034,7 +1034,7 @@ const VerifyShelvingForm = (props) =>  (
         <Label for="item">Item{ ' ' }
           { props.itemRegex.test(props.verify.item) && props.original.item === props.verify.item
             ? <><Badge color="success">{props.verify.item.length}</Badge> ✓</>
-            : <Badge color={props.verify.item.length === 0 ? "secondary" : (props.settings.itemBarcodeLength === props.verify.item.length ? "warning" : "danger")}>{props.verify.item.length}</Badge>
+            : <Badge color={props.verify.item.length === 0 ? "secondary" : (props.settings.itemMinBarcodeLength <= props.verify.item.length && props.settings.itemMaxBarcodeLength >= props.verify.item.length ? "warning" : "danger")}>{props.verify.item.length}</Badge>
           }
         </Label>
         <Input

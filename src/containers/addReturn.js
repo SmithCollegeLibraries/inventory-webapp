@@ -786,7 +786,8 @@ const AddReturn = () => {
                   trayRegex={trayRegex}
                   itemRegex={itemRegex}
                   trayBarcodeLength={data.settings.trayBarcodeLength}
-                  itemBarcodeLength={data.settings.itemBarcodeLength}
+                  itemMinBarcodeLength={data.settings.itemMinBarcodeLength}
+                  itemMaxBarcodeLength={data.settings.itemMaxBarcodeLength}
                 />
               </CardBody>
             </Card>
@@ -807,7 +808,8 @@ const AddReturn = () => {
                 trayRegex={trayRegex}
                 itemRegex={itemRegex}
                 trayBarcodeLength={data.settings.trayBarcodeLength}
-                itemBarcodeLength={data.settings.itemBarcodeLength}
+                itemMinBarcodeLength={data.settings.itemMinBarcodeLength}
+                itemMaxBarcodeLength={data.settings.itemMaxBarcodeLength}
                 itemTraysInSystem={data.itemTraysInSystem}
                 trayIsFull={trayIsFull(data.original.tray)}
                 trayCirculatingItemCount={trayCirculatingItemCount(data.original.tray)}
@@ -884,7 +886,9 @@ const AddReturnFormOriginal = props => (
             ? <Badge color="success">{props.original.item.length}</Badge>
             : props.original.item.length === 0
               ? <Badge>{props.original.item.length}</Badge>
-              : (<><Badge color={props.itemBarcodeLength === props.original.item.length ? "warning" : "danger"}>{props.original.item.length}</Badge> <span className='text-danger'>✘</span></>
+              : (<><Badge color={
+                  props.itemMinBarcodeLength <= props.original.item.length &&  props.itemMaxBarcodeLength >= props.original.item.length ? "warning" : "danger"
+                }>{props.original.item.length}</Badge> <span className='text-danger'>✘</span></>
               )
           }
         </Label>
@@ -965,7 +969,7 @@ const AddReturnFormVerify = props => (
           ? <Badge color="success">{props.verify.item.length}</Badge>
           : props.verify.item.length === 0
             ? <Badge>{props.verify.item.length}</Badge>
-            : (<><Badge color={props.itemBarcodeLength === props.verify.item.length ? "warning" : "danger"}>{props.verify.item.length}</Badge> <span className='text-danger'>✘</span></>
+            : (<><Badge color={props.itemMinBarcodeLength <= props.verify.item.length && props.itemMaxBarcodeLength >= props.verify.item.length ? "warning" : "danger"}>{props.verify.item.length}</Badge> <span className='text-danger'>✘</span></>
             )
         }
       </Label>
