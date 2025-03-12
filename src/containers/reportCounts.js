@@ -100,10 +100,69 @@ const ReportCounts = () => {
   // count of each size in each collection in a 2D array
   useEffect(() => {
     async function fetchSubtotals() {
+      async function ingestItemCounts(itemApiPromise, itemSubtotals) {
+        // Go through each subtotal and set it in the state. In addition,
+        // have the "total" size and collection be the sum of all the other
+        // sizes and collections, including any nulls that don't exist in
+        // any of the subtotals
+        const itemApiBreakdown = await itemApiPromise;
+        for (let i = 0; i < itemApiBreakdown.length; i++) {
+          // If the collection is active, assign it to the relevant collection
+          if (itemSubtotals[itemApiBreakdown[i].collection_code]) {
+            itemSubtotals[itemApiBreakdown[i].collection_code][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
+            itemSubtotals[itemApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
+          }
+          // Otherwise, add it to the null/unassigned collection
+          else {
+            itemSubtotals[null][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
+            itemSubtotals[null][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
+          }
+          itemSubtotals[ALL_COLLECTIONS][itemApiBreakdown[i].size] += parseInt(itemApiBreakdown[i].count);
+        }
+        useCounts.setState({ itemSubtotals });
+      }
+
+      async function ingestTrayCounts(trayApiPromise, traySubtotals) {
+        const trayApiBreakdown = await trayApiPromise;
+        for (let i = 0; i < trayApiBreakdown.length; i++) {
+          // If the collection is active, assign it to the relevant collection
+          if (traySubtotals[trayApiBreakdown[i].collection_code]) {
+            traySubtotals[trayApiBreakdown[i].collection_code][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
+            traySubtotals[trayApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
+          }
+          // Otherwise, add it to the null/unassigned collection
+          else {
+            traySubtotals[null][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
+            traySubtotals[null][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
+          }
+          traySubtotals[ALL_COLLECTIONS][trayApiBreakdown[i].size] += parseInt(trayApiBreakdown[i].count);
+        }
+        useCounts.setState({ traySubtotals });
+      }
+
+      async function ingestShelfCounts(shelfApiPromise, shelfSubtotals) {
+        const shelfApiBreakdown = await shelfApiPromise;
+        for (let i = 0; i < shelfApiBreakdown.length; i++) {
+          // If the collection is active, assign it to the relevant collection
+          if (shelfSubtotals[shelfApiBreakdown[i].collection_code]) {
+            shelfSubtotals[shelfApiBreakdown[i].collection_code][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
+            shelfSubtotals[shelfApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
+          }
+          // Otherwise, add it to the null/unassigned collection
+          else {
+            shelfSubtotals[null][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
+            shelfSubtotals[null][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
+          }
+          shelfSubtotals[ALL_COLLECTIONS][shelfApiBreakdown[i].size] += parseInt(shelfApiBreakdown[i].count);
+        }
+        useCounts.setState({ shelfSubtotals });
+      }
+
       let allCollections = await Load.getAllCollections();
       let allSizes = await Load.getAllSizes();
-
-      const shelfApiBreakdown = await Load.shelfCountsCollectionSize();
+      let shelfApiPromise = Load.shelfCountsCollectionSize();
+      let trayApiPromise = Load.trayCountsCollectionSize();
+      let itemApiPromise = Load.itemCountsCollectionSize();
 
       // Add null and total collection and size
       allCollections.push({ code: null });
@@ -128,56 +187,10 @@ const ReportCounts = () => {
           itemSubtotals[allCollections[i].code][allSizes[j].code] = 0;
         }
       }
-      // Go through each subtotal and set it in the state. In addition,
-      // have the "total" size and collection be the sum of all the other
-      // sizes and collections, including any nulls that don't exist in
-      // any of the subtotals
-      for (let i = 0; i < shelfApiBreakdown.length; i++) {
-        // If the collection is active, assign it to the relevant collection
-        if (shelfSubtotals[shelfApiBreakdown[i].collection_code]) {
-          shelfSubtotals[shelfApiBreakdown[i].collection_code][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
-          shelfSubtotals[shelfApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
-        }
-        // Otherwise, add it to the null/unassigned collection
-        else {
-          shelfSubtotals[null][shelfApiBreakdown[i].size] = parseInt(shelfApiBreakdown[i].count);
-          shelfSubtotals[null][ALL_SIZES] += parseInt(shelfApiBreakdown[i].count);
-        }
-        shelfSubtotals[ALL_COLLECTIONS][shelfApiBreakdown[i].size] += parseInt(shelfApiBreakdown[i].count);
-      }
-      useCounts.setState({ shelfSubtotals });
 
-      const trayApiBreakdown = await Load.trayCountsCollectionSize();
-      for (let i = 0; i < trayApiBreakdown.length; i++) {
-        // If the collection is active, assign it to the relevant collection
-        if (traySubtotals[trayApiBreakdown[i].collection_code]) {
-          traySubtotals[trayApiBreakdown[i].collection_code][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
-          traySubtotals[trayApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
-        }
-        // Otherwise, add it to the null/unassigned collection
-        else {
-          traySubtotals[null][trayApiBreakdown[i].size] = parseInt(trayApiBreakdown[i].count);
-          traySubtotals[null][ALL_SIZES] += parseInt(trayApiBreakdown[i].count);
-        }
-        traySubtotals[ALL_COLLECTIONS][trayApiBreakdown[i].size] += parseInt(trayApiBreakdown[i].count);
-      }
-      useCounts.setState({ traySubtotals });
-
-      const itemApiBreakdown = await Load.itemCountsCollectionSize();
-      for (let i = 0; i < itemApiBreakdown.length; i++) {
-        // If the collection is active, assign it to the relevant collection
-        if (itemSubtotals[itemApiBreakdown[i].collection_code]) {
-          itemSubtotals[itemApiBreakdown[i].collection_code][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
-          itemSubtotals[itemApiBreakdown[i].collection_code][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
-        }
-        // Otherwise, add it to the null/unassigned collection
-        else {
-          itemSubtotals[null][itemApiBreakdown[i].size] = parseInt(itemApiBreakdown[i].count);
-          itemSubtotals[null][ALL_SIZES] += parseInt(itemApiBreakdown[i].count);
-        }
-        itemSubtotals[ALL_COLLECTIONS][itemApiBreakdown[i].size] += parseInt(itemApiBreakdown[i].count);
-      }
-      useCounts.setState({ itemSubtotals });
+      ingestItemCounts(itemApiPromise, itemSubtotals);
+      ingestTrayCounts(trayApiPromise, traySubtotals);
+      ingestShelfCounts(shelfApiPromise, shelfSubtotals);
     }
 
     fetchSubtotals();
@@ -231,6 +244,11 @@ const ReportCounts = () => {
 
 const ItemCounts = (props) => {
   return (
+    JSON.stringify(props.itemSubtotals) === "{}"
+    ?
+      // TODO: try to get <Spinner> to work here
+      <p>Loading…</p>
+    :
     <Table style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
@@ -277,6 +295,11 @@ const ItemCounts = (props) => {
 
 const TrayCounts = (props) => {
   return (
+    JSON.stringify(props.traySubtotals) === "{}"
+    ?
+      // TODO: try to get <Spinner> to work here
+      <p>Loading…</p>
+    :
     <Table style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
@@ -325,6 +348,11 @@ const TrayCounts = (props) => {
 // conversion ratio
 const ShelfCounts = (props) => {
   return (
+    JSON.stringify(props.traySubtotals) === "{}"
+    ?
+      // TODO: try to get <Spinner> to work here
+      <p>Loading…</p>
+    :
     <Table style={{tableLayout: "fixed"}}>
       <thead>
         <tr>

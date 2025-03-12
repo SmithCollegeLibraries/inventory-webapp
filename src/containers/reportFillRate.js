@@ -25,14 +25,14 @@ const useFillRates = create((set, get) => {
     traySubtotals: {},
     itemSubtotals: {},
     allViews: [SHELVES, TRAYS, ITEMS],
-    currentView: TRAYS,
-    changeView: (view) => set({ currentView: view }),
   };
 });
 
-const useCollections = create(
+const useView = create(
   persist(
     (set, get) => ({
+      currentView: TRAYS,
+      changeView: (view) => set({ currentView: view }),
       selectedCollections: {},
       setCollection: (collection, toggle) => set((state) => {
         return {
@@ -78,15 +78,15 @@ const ReportFillRate = () => {
   const allSizes = useFillRates((state) => state.allSizes);
   const allCollections = useFillRates((state) => state.allCollections);
   const allViews = useFillRates((state) => state.allViews);
-  const changeView = useFillRates((state) => state.changeView);
+  const currentView = useView((state) => state.currentView);
+  const changeView = useView((state) => state.changeView);
   // This is for toggling collections on and off, adjusting the totals
-  const selectedCollections = useCollections((state) => state.selectedCollections);
-  const setCollection = useCollections((state) => state.setCollection);
-  const currentView = useFillRates((state) => state.currentView);
+  const selectedCollections = useView((state) => state.selectedCollections);
+  const setCollection = useView((state) => state.setCollection);
 
   useEffect(() => {
     async function fetchSubtotals() {
-      async function ingestItems(itemApiPromise) {
+      async function ingestItems(itemApiPromise, itemSubtotals) {
         const itemApiBreakdown = await itemApiPromise;
         for (let i = 0; i < itemApiBreakdown.length; i++) {
           const month = formatMonth(itemApiBreakdown[i].year, itemApiBreakdown[i].month);
@@ -107,7 +107,7 @@ const ReportFillRate = () => {
         useFillRates.setState({ itemSubtotals });
       }
 
-      async function ingestTrays(trayApiPromise) {
+      async function ingestTrays(trayApiPromise, traySubtotals) {
         const trayApiBreakdown = await trayApiPromise;
         for (let i = 0; i < trayApiBreakdown.length; i++) {
           const month = formatMonth(trayApiBreakdown[i].year, trayApiBreakdown[i].month);
@@ -128,7 +128,7 @@ const ReportFillRate = () => {
         useFillRates.setState({ traySubtotals });
       }
 
-      async function ingestShelves(shelfApiPromise) {
+      async function ingestShelves(shelfApiPromise, shelfSubtotals) {
         const shelfApiBreakdown = await shelfApiPromise;
         for (let i = 0; i < shelfApiBreakdown.length; i++) {
           const month = formatMonth(shelfApiBreakdown[i].year, shelfApiBreakdown[i].month);
@@ -151,6 +151,9 @@ const ReportFillRate = () => {
 
       let allCollections = await Load.getAllCollections();
       let allSizes = await Load.getAllSizes();
+      let trayApiPromise = Load.trayFillRates(NUMBER_OF_MONTHS);
+      let itemApiPromise = Load.itemFillRates(NUMBER_OF_MONTHS);
+      let shelfApiPromise = Load.shelfFillRates(NUMBER_OF_MONTHS);
 
       // Add null and total size, as well as null collection
       allCollections.push({ code: UNASSIGNED_COLLECTION });
@@ -175,7 +178,7 @@ const ReportFillRate = () => {
           delete selectedCollections[collection];
         }
       }
-      useCollections.setState({ selectedCollections });
+      useView.setState({ selectedCollections });
 
       // Create a list of the past X months, including the current month,
       // using the format YYYY-MM
@@ -187,31 +190,31 @@ const ReportFillRate = () => {
       }
 
       // Initialize empty 3D arrays by collection, month, size
-      let shelfSubtotals = {};
-      let traySubtotals = {};
       let itemSubtotals = {};
+      let traySubtotals = {};
+      let shelfSubtotals = {};
       // Add a bin for each month
       for (let i = 0; i < allMonths.length; i++) {
-        shelfSubtotals[allMonths[i]] = {};
-        traySubtotals[allMonths[i]] = {};
         itemSubtotals[allMonths[i]] = {};
+        traySubtotals[allMonths[i]] = {};
+        shelfSubtotals[allMonths[i]] = {};
         // Add a row for each size
         for (let j = 0; j < allSizes.length; j++) {
-          shelfSubtotals[allMonths[i]][allSizes[j].code] = {};
-          traySubtotals[allMonths[i]][allSizes[j].code] = {};
           itemSubtotals[allMonths[i]][allSizes[j].code] = {};
+          traySubtotals[allMonths[i]][allSizes[j].code] = {};
+          shelfSubtotals[allMonths[i]][allSizes[j].code] = {};
           // Add a column for each collection
           for (let k = 0; k < allCollections.length; k++) {
-            shelfSubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
-            traySubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
             itemSubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
+            traySubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
+            shelfSubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
           }
         }
       }
 
-      ingestItems(Load.itemFillRates(NUMBER_OF_MONTHS));
-      ingestTrays(Load.trayFillRates(NUMBER_OF_MONTHS));
-      ingestShelves(Load.shelfFillRates(NUMBER_OF_MONTHS));
+      ingestItems(itemApiPromise, itemSubtotals);
+      ingestTrays(trayApiPromise, traySubtotals);
+      ingestShelves(shelfApiPromise, shelfSubtotals);
     }
 
     fetchSubtotals();
@@ -235,19 +238,24 @@ const ReportFillRate = () => {
       </Row>
       <Row>
         <Col md="10">
-          <FillRates
-            subtotals={currentView === ITEMS ? state.itemSubtotals : (currentView === TRAYS ? state.traySubtotals : state.shelfSubtotals)}
-            allCollections={allCollections}
-            allSizes={allSizes}
-            selectedCollections={selectedCollections}
-          />
+          {(currentView === SHELVES && JSON.stringify(state.shelfSubtotals) === "{}")
+            || (currentView === TRAYS && JSON.stringify(state.traySubtotals) === "{}")
+            || (currentView === ITEMS && JSON.stringify(state.itemSubtotals) === "{}")
+          ? "Loading..."
+          : <FillRates
+              subtotals={currentView === ITEMS ? state.itemSubtotals : (currentView === TRAYS ? state.traySubtotals : state.shelfSubtotals)}
+              allCollections={allCollections}
+              allSizes={allSizes}
+              selectedCollections={selectedCollections}
+            />
+          }
         </Col>
         <Col md="2">
           <CollectionSelector
-            selectedCollections={useCollections((state) => state.selectedCollections)}
+            selectedCollections={useView((state) => state.selectedCollections)}
             setCollection={setCollection}
-            selectAllCollections={useCollections((state) => state.selectAllCollections)}
-            clearSelectedCollections={useCollections((state) => state.clearSelectedCollections)}
+            selectAllCollections={useView((state) => state.selectAllCollections)}
+            clearSelectedCollections={useView((state) => state.clearSelectedCollections)}
           />
         </Col>
       </Row>
