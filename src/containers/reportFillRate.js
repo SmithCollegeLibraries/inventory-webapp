@@ -25,16 +25,15 @@ const useFillRates = create((set, get) => {
     traySubtotals: {},
     itemSubtotals: {},
     allViews: [SHELVES, TRAYS, ITEMS],
+    currentView: TRAYS,
+    changeView: (view) => set({ currentView: view }),
   };
 });
 
-const useViews = create(
+const useCollections = create(
   persist(
     (set, get) => ({
       selectedCollections: {},
-      defaultView: SHELVES,
-      currentView: null,
-      changeView: (view) => set({ currentView: view }),
       setCollection: (collection, toggle) => set((state) => {
         return {
           ...state,
@@ -79,14 +78,77 @@ const ReportFillRate = () => {
   const allSizes = useFillRates((state) => state.allSizes);
   const allCollections = useFillRates((state) => state.allCollections);
   const allViews = useFillRates((state) => state.allViews);
-  const changeView = useViews((state) => state.changeView);
+  const changeView = useFillRates((state) => state.changeView);
   // This is for toggling collections on and off, adjusting the totals
-  const selectedCollections = useViews((state) => state.selectedCollections);
-  const setCollection = useViews((state) => state.setCollection);
-  const currentView = useViews((state) => state.currentView ? state.currentView : state.defaultView);
+  const selectedCollections = useCollections((state) => state.selectedCollections);
+  const setCollection = useCollections((state) => state.setCollection);
+  const currentView = useFillRates((state) => state.currentView);
 
   useEffect(() => {
     async function fetchSubtotals() {
+      async function ingestItems(itemApiPromise) {
+        const itemApiBreakdown = await itemApiPromise;
+        for (let i = 0; i < itemApiBreakdown.length; i++) {
+          const month = formatMonth(itemApiBreakdown[i].year, itemApiBreakdown[i].month);
+          const size = itemApiBreakdown[i].size;
+          const collection = itemApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
+          const count = parseInt(itemApiBreakdown[i].count);
+
+          if (!itemSubtotals[month][size][collection]) {
+            itemSubtotals[month][size][collection] = 0;
+          }
+          itemSubtotals[month][size][collection] += count;
+
+          if (!itemSubtotals[month][ALL_SIZES][collection]) {
+            itemSubtotals[month][ALL_SIZES][collection] = 0;
+          }
+          itemSubtotals[month][ALL_SIZES][collection] += count;
+        }
+        useFillRates.setState({ itemSubtotals });
+      }
+
+      async function ingestTrays(trayApiPromise) {
+        const trayApiBreakdown = await trayApiPromise;
+        for (let i = 0; i < trayApiBreakdown.length; i++) {
+          const month = formatMonth(trayApiBreakdown[i].year, trayApiBreakdown[i].month);
+          const size = trayApiBreakdown[i].size;
+          const collection = trayApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
+          const count = parseInt(trayApiBreakdown[i].count);
+
+          if (!traySubtotals[month][size][collection]) {
+            traySubtotals[month][size][collection] = 0;
+          }
+          traySubtotals[month][size][collection] += count;
+
+          if (!traySubtotals[month][ALL_SIZES][collection]) {
+            traySubtotals[month][ALL_SIZES][collection] = 0;
+          }
+          traySubtotals[month][ALL_SIZES][collection] += count;
+        }
+        useFillRates.setState({ traySubtotals });
+      }
+
+      async function ingestShelves(shelfApiPromise) {
+        const shelfApiBreakdown = await shelfApiPromise;
+        for (let i = 0; i < shelfApiBreakdown.length; i++) {
+          const month = formatMonth(shelfApiBreakdown[i].year, shelfApiBreakdown[i].month);
+          const size = shelfApiBreakdown[i].size;
+          const collection = shelfApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
+          const count = parseInt(shelfApiBreakdown[i].count);
+
+          if (!shelfSubtotals[month][size][collection]) {
+            shelfSubtotals[month][size][collection] = 0;
+          }
+          shelfSubtotals[month][size][collection] += count;
+
+          if (!shelfSubtotals[month][ALL_SIZES][collection]) {
+            shelfSubtotals[month][ALL_SIZES][collection] = 0;
+          }
+          shelfSubtotals[month][ALL_SIZES][collection] += count;
+        }
+        useFillRates.setState({ shelfSubtotals });
+      }
+
       let allCollections = await Load.getAllCollections();
       let allSizes = await Load.getAllSizes();
 
@@ -113,7 +175,7 @@ const ReportFillRate = () => {
           delete selectedCollections[collection];
         }
       }
-      useViews.setState({ selectedCollections });
+      useCollections.setState({ selectedCollections });
 
       // Create a list of the past X months, including the current month,
       // using the format YYYY-MM
@@ -147,63 +209,9 @@ const ReportFillRate = () => {
         }
       }
 
-      const trayApiBreakdown = await Load.trayFillRates(NUMBER_OF_MONTHS);
-      const itemApiBreakdown = await Load.itemFillRates(NUMBER_OF_MONTHS);
-      const shelfApiBreakdown = await Load.shelfFillRates(NUMBER_OF_MONTHS);
-
-      for (let i = 0; i < trayApiBreakdown.length; i++) {
-        const month = formatMonth(trayApiBreakdown[i].year, trayApiBreakdown[i].month);
-        const size = trayApiBreakdown[i].size;
-        const collection = trayApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-        const count = parseInt(trayApiBreakdown[i].count);
-
-        if (!traySubtotals[month][size][collection]) {
-          traySubtotals[month][size][collection] = 0;
-        }
-        traySubtotals[month][size][collection] += count;
-
-        if (!traySubtotals[month][ALL_SIZES][collection]) {
-          traySubtotals[month][ALL_SIZES][collection] = 0;
-        }
-        traySubtotals[month][ALL_SIZES][collection] += count;
-      }
-      useFillRates.setState({ traySubtotals });
-
-      for (let i = 0; i < itemApiBreakdown.length; i++) {
-        const month = formatMonth(itemApiBreakdown[i].year, itemApiBreakdown[i].month);
-        const size = itemApiBreakdown[i].size;
-        const collection = itemApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-        const count = parseInt(itemApiBreakdown[i].count);
-
-        if (!itemSubtotals[month][size][collection]) {
-          itemSubtotals[month][size][collection] = 0;
-        }
-        itemSubtotals[month][size][collection] += count;
-
-        if (!itemSubtotals[month][ALL_SIZES][collection]) {
-          itemSubtotals[month][ALL_SIZES][collection] = 0;
-        }
-        itemSubtotals[month][ALL_SIZES][collection] += count;
-      }
-      useFillRates.setState({ itemSubtotals });
-
-      for (let i = 0; i < shelfApiBreakdown.length; i++) {
-        const month = formatMonth(shelfApiBreakdown[i].year, shelfApiBreakdown[i].month);
-        const size = shelfApiBreakdown[i].size;
-        const collection = shelfApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-        const count = parseInt(shelfApiBreakdown[i].count);
-
-        if (!shelfSubtotals[month][size][collection]) {
-          shelfSubtotals[month][size][collection] = 0;
-        }
-        shelfSubtotals[month][size][collection] += count;
-
-        if (!shelfSubtotals[month][ALL_SIZES][collection]) {
-          shelfSubtotals[month][ALL_SIZES][collection] = 0;
-        }
-        shelfSubtotals[month][ALL_SIZES][collection] += count;
-      }
-      useFillRates.setState({ shelfSubtotals });
+      ingestItems(Load.itemFillRates(NUMBER_OF_MONTHS));
+      ingestTrays(Load.trayFillRates(NUMBER_OF_MONTHS));
+      ingestShelves(Load.shelfFillRates(NUMBER_OF_MONTHS));
     }
 
     fetchSubtotals();
@@ -236,10 +244,10 @@ const ReportFillRate = () => {
         </Col>
         <Col md="2">
           <CollectionSelector
-            selectedCollections={useViews((state) => state.selectedCollections)}
+            selectedCollections={useCollections((state) => state.selectedCollections)}
             setCollection={setCollection}
-            selectAllCollections={useViews((state) => state.selectAllCollections)}
-            clearSelectedCollections={useViews((state) => state.clearSelectedCollections)}
+            selectAllCollections={useCollections((state) => state.selectAllCollections)}
+            clearSelectedCollections={useCollections((state) => state.clearSelectedCollections)}
           />
         </Col>
       </Row>
