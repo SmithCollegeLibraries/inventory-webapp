@@ -40,6 +40,7 @@ const useCounts = create((set, get) => {
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
+    allViews: [LADDERS, SHELVES, TRAYS, ITEMS],
     totalCountText: (view) => {
       const state = get();
       if (view === LADDERS) {
@@ -61,7 +62,6 @@ const useCounts = create((set, get) => {
 const useViews = create(
   persist(
     (set, get) => ({
-      allViews: [LADDERS, SHELVES, TRAYS, ITEMS],
       defaultView: SHELVES,
       currentView: null,
       changeView: (view) => set({ currentView: view }),
@@ -77,7 +77,7 @@ const ReportCounts = () => {
   const state = useCounts();
   const allSizes = useCounts((state) => state.allSizes);
   const allCollections = useCounts((state) => state.allCollections);
-  const allViews = useViews((state) => state.allViews);
+  const allViews = useCounts((state) => state.allViews);
   const changeView = useViews((state) => state.changeView);
   const currentView = useViews((state) => state.currentView ? state.currentView : state.defaultView);
 

@@ -4,7 +4,6 @@ import { Row, Col, Table, Button } from 'reactstrap';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-const LADDERS = 'Ladders';
 const SHELVES = 'Shelves';
 const TRAYS = 'Trays';
 const ITEMS = 'Items';
@@ -13,41 +12,25 @@ const UNASSIGNED_COLLECTION = 'Unassigned';
 const UNASSIGNED_SIZE = 'No size';
 const NUMBER_OF_MONTHS = 18  // TODO: Get from settings
 
-const inLadders = (shelfCount, shelvesPerLadder, asLadders=true) => {
-  if (!asLadders || shelfCount === 0) {
-    return shelfCount;
-  }
-  else {
-    // Round down to a whole number, but if that would give 0 for
-    // a non-zero shelf count, show "< 1 instead"
-    return (
-      Math.floor(shelfCount / shelvesPerLadder) >= 1
-      ? Math.floor(shelfCount / shelvesPerLadder)
-      : "< 1"
-    );
-  }
-}
-
 const formatMonth = (year, month) => {
   return `${year}-${month.toString().padStart(2, '0')}`;
 }
 
 
-const useCounts = create((set, get) => {
+const useFillRates = create((set, get) => {
   return {
-    shelvesPerLadder: null,
     allSizes: {},
     allCollections: {},
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
+    allViews: [SHELVES, TRAYS, ITEMS],
   };
 });
 
 const useViews = create(
   persist(
     (set, get) => ({
-      allViews: [LADDERS, SHELVES, TRAYS, ITEMS],
       selectedCollections: {},
       defaultView: SHELVES,
       currentView: null,
@@ -92,10 +75,10 @@ const useViews = create(
 );
 
 const ReportFillRate = () => {
-  const state = useCounts();
-  const allSizes = useCounts((state) => state.allSizes);
-  const allCollections = useCounts((state) => state.allCollections);
-  const allViews = useViews((state) => state.allViews);
+  const state = useFillRates();
+  const allSizes = useFillRates((state) => state.allSizes);
+  const allCollections = useFillRates((state) => state.allCollections);
+  const allViews = useFillRates((state) => state.allViews);
   const changeView = useViews((state) => state.changeView);
   // This is for toggling collections on and off, adjusting the totals
   const selectedCollections = useViews((state) => state.selectedCollections);
@@ -111,7 +94,7 @@ const ReportFillRate = () => {
       allCollections.push({ code: UNASSIGNED_COLLECTION });
       allSizes.push({ code: null });
       allSizes.unshift({ code: ALL_SIZES });
-      useCounts.setState({ allCollections, allSizes });
+      useFillRates.setState({ allCollections, allSizes });
 
       // If selectedCollections is not empty, check that any collections
       // that are not in selectedCollections are added to it, so that the
@@ -164,11 +147,31 @@ const ReportFillRate = () => {
         }
       }
 
+      const trayApiBreakdown = await Load.trayFillRates(NUMBER_OF_MONTHS);
       const itemApiBreakdown = await Load.itemFillRates(NUMBER_OF_MONTHS);
+      const shelfApiBreakdown = await Load.shelfFillRates(NUMBER_OF_MONTHS);
+
+      for (let i = 0; i < trayApiBreakdown.length; i++) {
+        const month = formatMonth(trayApiBreakdown[i].year, trayApiBreakdown[i].month);
+        const size = trayApiBreakdown[i].size;
+        const collection = trayApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
+        const count = parseInt(trayApiBreakdown[i].count);
+
+        if (!traySubtotals[month][size][collection]) {
+          traySubtotals[month][size][collection] = 0;
+        }
+        traySubtotals[month][size][collection] += count;
+
+        if (!traySubtotals[month][ALL_SIZES][collection]) {
+          traySubtotals[month][ALL_SIZES][collection] = 0;
+        }
+        traySubtotals[month][ALL_SIZES][collection] += count;
+      }
+      useFillRates.setState({ traySubtotals });
+
       for (let i = 0; i < itemApiBreakdown.length; i++) {
         const month = formatMonth(itemApiBreakdown[i].year, itemApiBreakdown[i].month);
         const size = itemApiBreakdown[i].size;
-        console.log(itemApiBreakdown[i]);
         const collection = itemApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
         const count = parseInt(itemApiBreakdown[i].count);
 
@@ -182,7 +185,25 @@ const ReportFillRate = () => {
         }
         itemSubtotals[month][ALL_SIZES][collection] += count;
       }
-      useCounts.setState({ itemSubtotals });
+      useFillRates.setState({ itemSubtotals });
+
+      for (let i = 0; i < shelfApiBreakdown.length; i++) {
+        const month = formatMonth(shelfApiBreakdown[i].year, shelfApiBreakdown[i].month);
+        const size = shelfApiBreakdown[i].size;
+        const collection = shelfApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
+        const count = parseInt(shelfApiBreakdown[i].count);
+
+        if (!shelfSubtotals[month][size][collection]) {
+          shelfSubtotals[month][size][collection] = 0;
+        }
+        shelfSubtotals[month][size][collection] += count;
+
+        if (!shelfSubtotals[month][ALL_SIZES][collection]) {
+          shelfSubtotals[month][ALL_SIZES][collection] = 0;
+        }
+        shelfSubtotals[month][ALL_SIZES][collection] += count;
+      }
+      useFillRates.setState({ shelfSubtotals });
     }
 
     fetchSubtotals();
@@ -206,30 +227,12 @@ const ReportFillRate = () => {
       </Row>
       <Row>
         <Col md="10">
-          { currentView === ITEMS
-            ? <ItemFillRates
-              itemSubtotals={state.itemSubtotals}
-              allCollections={allCollections}
-              allSizes={allSizes}
-              selectedCollections={selectedCollections}
-            />
-            : (
-              <div>Not implemented</div>
-              // currentView === TRAYS
-              // ? <TrayFillRates
-              //   traySubtotals={state.traySubtotals}
-              //   allCollections={allCollections}
-              //   allSizes={allSizes}
-              // />
-              // : <ShelfFillRates
-              //     shelfSubtotals={state.shelfSubtotals}
-              //     allCollections={allCollections}
-              //     allSizes={allSizes}
-              //     shelvesPerLadder={state.shelvesPerLadder}
-              //     inLadders={currentView === LADDERS}
-              //   />
-            )
-          }
+          <FillRates
+            subtotals={currentView === ITEMS ? state.itemSubtotals : (currentView === TRAYS ? state.traySubtotals : state.shelfSubtotals)}
+            allCollections={allCollections}
+            allSizes={allSizes}
+            selectedCollections={selectedCollections}
+          />
         </Col>
         <Col md="2">
           <CollectionSelector
@@ -244,7 +247,7 @@ const ReportFillRate = () => {
   );
 };
 
-const ItemFillRates = (props) => {
+const FillRates = (props) => {
   return (
     <Table style={{tableLayout: "fixed"}}>
       <thead>
@@ -258,14 +261,14 @@ const ItemFillRates = (props) => {
         </tr>
       </thead>
       <tbody>
-        { Object.keys(props.itemSubtotals).map((monthIndex) =>
+        { Object.keys(props.subtotals).map((monthIndex) =>
           <tr key={`row-month-${monthIndex}`}>
             <th key={`row-month-${monthIndex}`}>{monthIndex}</th>
             { Object.keys(props.allSizes).map((sizeIndex) => {
               let total = 0;
               Object.keys(props.selectedCollections).forEach((collection) => {
                 if (props.selectedCollections[collection]) {
-                  total += props.itemSubtotals[monthIndex][props.allSizes[sizeIndex].code][collection] || 0;
+                  total += props.subtotals[monthIndex][props.allSizes[sizeIndex].code][collection] || 0;
                 }
               });
               return (
