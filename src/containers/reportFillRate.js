@@ -86,74 +86,53 @@ const ReportFillRate = () => {
 
   useEffect(() => {
     async function fetchSubtotals() {
-      async function ingestItems(itemApiPromise, itemSubtotals) {
-        const itemApiBreakdown = await itemApiPromise;
-        for (let i = 0; i < itemApiBreakdown.length; i++) {
-          const month = formatMonth(itemApiBreakdown[i].year, itemApiBreakdown[i].month);
-          const size = itemApiBreakdown[i].size;
-          const collection = itemApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-          const count = parseInt(itemApiBreakdown[i].count);
+      async function ingestCounts(fillRatesPromise, itemSubtotals, traySubtotals, shelfSubtotals) {
+        const fillRateBreakdown = await fillRatesPromise;
+        for (let i = 0; i < fillRateBreakdown.length; i++) {
+          const yearMonth = formatMonth(fillRateBreakdown[i].year, fillRateBreakdown[i].month);
+          const size = fillRateBreakdown[i].size_code;  // Null size is allowed
+          const collection = fillRateBreakdown[i].collection_code || UNASSIGNED_COLLECTION;
+          const itemCount = parseInt(fillRateBreakdown[i].item_count);
+          const trayCount = parseInt(fillRateBreakdown[i].tray_count);
+          const shelfCount = parseInt(fillRateBreakdown[i].shelf_count);
 
-          if (!itemSubtotals[month][size][collection]) {
-            itemSubtotals[month][size][collection] = 0;
+          // Add counts to the item subtotals
+          if (!itemSubtotals[yearMonth][size][collection]) {
+            itemSubtotals[yearMonth][size][collection] = 0;
           }
-          itemSubtotals[month][size][collection] += count;
+          itemSubtotals[yearMonth][size][collection] += itemCount ?? 0;
+          if (!itemSubtotals[yearMonth][ALL_SIZES][collection]) {
+            itemSubtotals[yearMonth][ALL_SIZES][collection] = 0;
+          }
+          itemSubtotals[yearMonth][ALL_SIZES][collection] += itemCount ?? 0;
 
-          if (!itemSubtotals[month][ALL_SIZES][collection]) {
-            itemSubtotals[month][ALL_SIZES][collection] = 0;
+          // Add counts to the tray subtotals
+          if (!traySubtotals[yearMonth][size][collection]) {
+            traySubtotals[yearMonth][size][collection] = 0;
           }
-          itemSubtotals[month][ALL_SIZES][collection] += count;
+          traySubtotals[yearMonth][size][collection] += trayCount ?? 0;
+          if (!traySubtotals[yearMonth][ALL_SIZES][collection]) {
+            traySubtotals[yearMonth][ALL_SIZES][collection] = 0;
+          }
+          traySubtotals[yearMonth][ALL_SIZES][collection] += trayCount ?? 0;
+
+          // Add counts to the shelf subtotals
+          if (!shelfSubtotals[yearMonth][size][collection]) {
+            shelfSubtotals[yearMonth][size][collection] = 0;
+          }
+          shelfSubtotals[yearMonth][size][collection] += shelfCount ?? 0;
+          if (!shelfSubtotals[yearMonth][ALL_SIZES][collection]) {
+            shelfSubtotals[yearMonth][ALL_SIZES][collection] = 0;
+          }
+          shelfSubtotals[yearMonth][ALL_SIZES][collection] += shelfCount ?? 0;
         }
-        useFillRates.setState({ itemSubtotals });
-      }
-
-      async function ingestTrays(trayApiPromise, traySubtotals) {
-        const trayApiBreakdown = await trayApiPromise;
-        for (let i = 0; i < trayApiBreakdown.length; i++) {
-          const month = formatMonth(trayApiBreakdown[i].year, trayApiBreakdown[i].month);
-          const size = trayApiBreakdown[i].size;
-          const collection = trayApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-          const count = parseInt(trayApiBreakdown[i].count);
-
-          if (!traySubtotals[month][size][collection]) {
-            traySubtotals[month][size][collection] = 0;
-          }
-          traySubtotals[month][size][collection] += count;
-
-          if (!traySubtotals[month][ALL_SIZES][collection]) {
-            traySubtotals[month][ALL_SIZES][collection] = 0;
-          }
-          traySubtotals[month][ALL_SIZES][collection] += count;
-        }
-        useFillRates.setState({ traySubtotals });
-      }
-
-      async function ingestShelves(shelfApiPromise, shelfSubtotals) {
-        const shelfApiBreakdown = await shelfApiPromise;
-        for (let i = 0; i < shelfApiBreakdown.length; i++) {
-          const month = formatMonth(shelfApiBreakdown[i].year, shelfApiBreakdown[i].month);
-          const size = shelfApiBreakdown[i].size;
-          const collection = shelfApiBreakdown[i].collection || UNASSIGNED_COLLECTION;
-          const count = parseInt(shelfApiBreakdown[i].count);
-
-          if (!shelfSubtotals[month][size][collection]) {
-            shelfSubtotals[month][size][collection] = 0;
-          }
-          shelfSubtotals[month][size][collection] += count;
-
-          if (!shelfSubtotals[month][ALL_SIZES][collection]) {
-            shelfSubtotals[month][ALL_SIZES][collection] = 0;
-          }
-          shelfSubtotals[month][ALL_SIZES][collection] += count;
-        }
-        useFillRates.setState({ shelfSubtotals });
+        console.log(itemSubtotals);
+        useFillRates.setState({ itemSubtotals, traySubtotals, shelfSubtotals });
       }
 
       let allCollections = await Load.getAllCollections();
       let allSizes = await Load.getAllSizes();
-      let trayApiPromise = Load.trayFillRates(NUMBER_OF_MONTHS);
-      let itemApiPromise = Load.itemFillRates(NUMBER_OF_MONTHS);
-      let shelfApiPromise = Load.shelfFillRates(NUMBER_OF_MONTHS);
+      let fillRatesPromise = Load.getFillRates(NUMBER_OF_MONTHS);
 
       // Add null and total size, as well as null collection
       allCollections.push({ code: UNASSIGNED_COLLECTION });
@@ -212,9 +191,7 @@ const ReportFillRate = () => {
         }
       }
 
-      ingestItems(itemApiPromise, itemSubtotals);
-      ingestTrays(trayApiPromise, traySubtotals);
-      ingestShelves(shelfApiPromise, shelfSubtotals);
+      ingestCounts(fillRatesPromise, itemSubtotals, traySubtotals, shelfSubtotals);
     }
 
     fetchSubtotals();
