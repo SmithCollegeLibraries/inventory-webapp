@@ -51,25 +51,25 @@ export default class Reports extends Component {
 
     handleInitialDisplaySearch = () => {
         switch(this.state.display){
-            case 'daily': 
+            case 'daily':
                 return (this.search('daily-statistics', ''))
             break
             case 'trays':
                 this.setState({ reportName: 'Items linked to trays'})
                 return (this.search('find-all-items', ''))
             break
-            case 'shelf': 
+            case 'shelf':
                 this.setState({ reportName: 'Trays linked to shelves'})
                 return(this.search('find-all-shelf', ''))
-            break 
+            break
             case 'collections':
                 this.setState({ reportName: 'Items in each collection'})
-                return(this.search('find-all-collections', ''))   
-            break  
+                return(this.search('find-all-collections', ''))
+            break
             case 'missing':
                 this.setState({ reportName: 'Missing Report'})
-                return(this.search('missing-report', ''))   
-             break     
+                return(this.search('missing-report', ''))
+             break
         }
     }
 
@@ -79,14 +79,14 @@ export default class Reports extends Component {
             case 'month':
                 this.setState({month: value})
             break
-            case 'year': 
-                this.setState({year: value}) 
+            case 'year':
+                this.setState({year: value})
             break
             case 'collection':
                 this.setState({collection: value})
-            break  
+            break
             default:
-            break        
+            break
         }
     }
 
@@ -94,23 +94,23 @@ export default class Reports extends Component {
     handleDisplay = () => {
         switch(this.state.display){
             case 'daily':
-                return ( 
-                    <DailyDisplay 
+                return (
+                    <DailyDisplay
                         data={this.state.data}
-                    /> 
-                )    
+                    />
+                )
             break
             case 'trays':
             case 'shelf':
                 return(
-                    <Tray 
+                    <Tray
                         data={this.state.data}
                         state={this.state}
                         filterItems={this.filterItems}
                         reportName={this.state.reportName}
-                    />    
+                    />
                 )
-            break; 
+            break;
             case 'collections':
             return(
                 <Collections
@@ -118,8 +118,8 @@ export default class Reports extends Component {
                     state={this.state}
                     filterItems={this.filterItems}
                     reportName={this.state.reportName}
-                />    
-            ) 
+                />
+            )
             case 'missing':
             return (
                 <Missing
@@ -127,15 +127,15 @@ export default class Reports extends Component {
                     state={this.state}
                     filterItems={this.filterItems}
                     reportName={this.state.reportName}
-            />     
+            />
             )
             default:
                 return (
-                    <DailyDisplay 
+                    <DailyDisplay
                         data={this.state.data}
-                    /> 
-                )    
-            break    
+                    />
+                )
+            break
         }
     }
 
@@ -152,10 +152,10 @@ export default class Reports extends Component {
                                 <option value="missing">Missing</option>
                             </select>
                     </Col>
-                </Row>    
+                </Row>
                 <div>
                     {this.handleDisplay()}
-                </div>      
+                </div>
             </div>
         )
     }
@@ -179,11 +179,11 @@ const DailyDisplayTableBody = ({ data }) => (
         <tr>
             <td>Trays added to shelves</td>
             <td>{data.shelf ? data.shelf : 0}</td>
-        </tr>  
+        </tr>
         <tr>
             <td>Missing Items</td>
             <td>{data.missing ? data.missing : 0}</td>
-        </tr>    
+        </tr>
     </tbody>
 )
 
@@ -192,13 +192,13 @@ const DailyDisplayTableCheckedOut = ({ }) => (
         <tr>
             <th>Location</th>
             <th>Count</th>
-        </tr>       
-    </thead> 
+        </tr>
+    </thead>
 )
 
 const DailyDisplayTableCheckedOutBody = ({ data }) => (
     <tbody>
-    {data.offcampus 
+    {data.offcampus
         ? Object.keys(data.offcampus).map(key => {
             return <tr key={key}>
                 <td>{data.offcampus[key].collection}</td>
@@ -207,11 +207,11 @@ const DailyDisplayTableCheckedOutBody = ({ data }) => (
         })
         : ''
     }
-    </tbody>  
+    </tbody>
 )
 
 const DailyDisplay = ({ data }) => (
-    <div>   
+    <div>
     <h1 className="display-4">Daily report for {moment().format('MMMM Do YYYY')}</h1>
     <Table striped responsive>
         <DailyDisplayTableHead />
@@ -222,7 +222,7 @@ const DailyDisplay = ({ data }) => (
     <Table striped responsive>
         <DailyDisplayTableCheckedOut />
         <DailyDisplayTableCheckedOutBody data={data} />
-    </Table>   
+    </Table>
 </div>
 )
 
@@ -236,7 +236,7 @@ class Tray extends Component {
             return this.props.data[key].year
         })
         const year = remove_duplicates_es6(yearAll);
-        
+
         ["month", "year"].forEach(filterBy => {
             let filterValue = state[filterBy]
             if(filterValue) {
@@ -258,15 +258,15 @@ class Tray extends Component {
                     {Object.keys(month).map(key => {
                         return <option value={key} key={key}>{month[key]}</option>
                     })}
-                </select>    
+                </select>
                 <select className="custom-select"  onChange={(e) => this.props.filterItems(e, 'year')}>
                     <option value="">Year</option>
                     <option value="">All</option>
                     {year.map((date,index) => {
                         return  <option value={date} key={index}>{date}</option>
                     })}
-                </select>  
-            </form>         
+                </select>
+            </form>
             <table className="table table-hover tray-table">
                 <thead>
                     <tr>
@@ -283,12 +283,12 @@ class Tray extends Component {
                                 <td>{filteredItems[key].year}</td>
                                 <td>{filteredItems[key].count}</td>
                             </tr>
-                        )          
+                        )
                     })
                     }
                 </tbody>
-            </table> 
-            </div>       
+            </table>
+            </div>
         )
     }
 }
@@ -298,7 +298,7 @@ class Collections extends Component {
     render(){
         let filteredItems = this.props.data;
         const state = this.props.state;
-        
+
         ["collection"].forEach(filterBy => {
             let filterValue = state[filterBy]
             if(filterValue) {
@@ -320,8 +320,8 @@ class Collections extends Component {
                     {Object.keys(this.props.data).map(key => {
                         return <option value={this.props.data[key].collection} key={key}>{this.props.data[key].collection}</option>
                     })}
-                </select>    
-            </form>         
+                </select>
+            </form>
             <table className="table table-hover tray-table">
                 <thead>
                     <tr>
@@ -336,18 +336,18 @@ class Collections extends Component {
                                 <td>{filteredItems[key].collection}</td>
                                 <td>{filteredItems[key].count}</td>
                             </tr>
-                        )          
+                        )
                     })
                     }
                 </tbody>
-            </table> 
-            </div>       
+            </table>
+            </div>
         )
     }
 }
 
 class Missing extends Component {
-    
+
 
     render(){
 
@@ -359,7 +359,7 @@ class Missing extends Component {
         })
         const collections = remove_duplicates_es6(collectionAll);
 
-        
+
         ["collection"].forEach(filterBy => {
             let filterValue = state[filterBy]
             if(filterValue) {
@@ -370,7 +370,7 @@ class Missing extends Component {
         });
         return(
             <div className="container-fluid">
-            <h1 className="display-4">{this.props.reportName}</h1>    
+            <h1 className="display-4">{this.props.reportName}</h1>
             <form className="form-inline">
                 <div className="input-group-prepend">
                     <span className="input-group-text">Filter options</span>
@@ -381,8 +381,8 @@ class Missing extends Component {
                     {collections.map((collection, index) => {
                         return <option value={collection} key={index}>{collection}</option>
                     })}
-                </select>    
-            </form>       
+                </select>
+            </form>
             <table className="table table-hover tray-table">
                 <thead>
                     <tr>
@@ -407,12 +407,12 @@ class Missing extends Component {
                                 <td>{filteredItems[key].added}</td>
                                 <td>{filteredItems[key].timestamp}</td>
                             </tr>
-                        )          
+                        )
                     })
                     }
                 </tbody>
-            </table> 
-            </div>        
+            </table>
+            </div>
         )
     }
 }
