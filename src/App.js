@@ -22,7 +22,7 @@ import {
     CollectionLogs,
     ReportCounts,
     // ReportFreeSpace,
-    // ReportFillRate,
+    ReportFillRate,
     // ReportRequests,
   } from './containers';
 import Header from './components/header';
@@ -189,11 +189,11 @@ export default class Main extends Component {
                 )}/>
                 {/* <Route path="/reports/free-space" render={() => (
                   <ReportFreeSpace />
-                )}/>
+                )}/> */}
                 <Route path="/reports/fill-rate" render={() => (
                   <ReportFillRate />
                 )}/>
-                <Route path="/reports/requests" render={() => (
+                {/* <Route path="/reports/requests" render={() => (
                   <ReportRequests />
                 )}/> */}
               </Switch>

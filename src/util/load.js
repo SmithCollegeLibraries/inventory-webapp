@@ -12,6 +12,7 @@ const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
 const shelfLogAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-log-api/`
 const collectionLogAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-log-api/`
 const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
+const fillRateAPI = `${process.env.REACT_APP_DATABASE_URL}/fill-rate-api/`
 
 
 class Load {
@@ -351,8 +352,18 @@ class Load {
     return get;
   }
 
+  /**
+   * @desc Fill rates
+   */
 
+  getFillRates = async (months) => {
+    const get = await this.handleUpdate(`${fillRateAPI}get-fill-rates/?months=${months}`, 'GET');
+    return get;
+  }
 
+  /**
+   * @desc Response handling
+   */
 
   handleAccount = async (string, method, data) => {
     let response =  await fetch(string, {
