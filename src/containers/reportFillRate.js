@@ -88,7 +88,7 @@ const ReportFillRate = () => {
     async function fetchSubtotals() {
       async function ingestCounts(fillRatesPromise, itemSubtotals, traySubtotals, shelfSubtotals) {
         const fillRateBreakdown = await fillRatesPromise;
-        for (let i = 0; i < fillRateBreakdown.length; i++) {
+        for (let i = 0; i < fillRateBreakdown?.length; i++) {
           const yearMonth = formatMonth(fillRateBreakdown[i].year, fillRateBreakdown[i].month);
           const size = fillRateBreakdown[i].size_code;  // Null size is allowed
           const collection = fillRateBreakdown[i].collection_code || UNASSIGNED_COLLECTION;
