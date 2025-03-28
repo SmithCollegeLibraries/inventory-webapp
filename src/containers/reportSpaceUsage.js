@@ -235,17 +235,27 @@ const SpaceUsage = (props) => {
                 return null;
               }
               else if (subtotal === CAPACITY_SUBTOTAL) {
-                Object.keys(props.selectedCollections).forEach((collection) => {
-                  if (props.selectedCollections[collection]) {
-                    tray_total += props.subtotals[TOTAL_TRAYS_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                  }
-                });
-                Object.keys(props.selectedCollections).forEach((collection) => {
-                  if (props.selectedCollections[collection]) {
-                    capacity_total += props.subtotals[CAPACITY_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                  }
-                });
-                total = capacity_total && tray_total / capacity_total < 1.15 ? Math.round((tray_total / capacity_total) * 100) : null;
+                // If it's for "all sizes", return null because that can't
+                // be calculated for oversize, etc.
+                if (props.allSizes[sizeIndex].code === ALL_SIZES) {
+                  total = null;
+                }
+                else {
+                  // Otherwise, calculate from total trays and capacity
+                  Object.keys(props.selectedCollections).forEach((collection) => {
+                    if (props.selectedCollections[collection]) {
+                      tray_total += props.subtotals[TOTAL_TRAYS_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                    }
+                  });
+                  Object.keys(props.selectedCollections).forEach((collection) => {
+                    if (props.selectedCollections[collection]) {
+                      capacity_total += props.subtotals[CAPACITY_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                    }
+                  });
+                  // Assume it's unreliable if capacity is undefined, or
+                  // if the total trays significantly exceeds the capacity
+                  total = capacity_total && tray_total / capacity_total < 1.15 ? Math.round((tray_total / capacity_total) * 100) : null;
+                }
               }
               else {
                 Object.keys(props.selectedCollections).forEach((collection) => {
@@ -273,9 +283,7 @@ const SpaceUsage = (props) => {
                   <span style={{
                     position: "absolute",
                     right: "-0.5ex",
-                    color: props.allSizes[sizeIndex].code === ALL_SIZES
-                      ? "#0d6efd"
-                      : "black"
+                    color: "black"
                   }}>%</span>
                   )}
                   { total ?? "N/A" }
