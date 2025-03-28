@@ -21,7 +21,7 @@ import {
     ShelfLogs,
     CollectionLogs,
     ReportCounts,
-    // ReportFreeSpace,
+    ReportSpaceUsage,
     ReportFillRate,
     // ReportRequests,
   } from './containers';
@@ -187,9 +187,9 @@ export default class Main extends Component {
                 <Route path="/reports/counts" render={() => (
                   <ReportCounts />
                 )}/>
-                {/* <Route path="/reports/free-space" render={() => (
-                  <ReportFreeSpace />
-                )}/> */}
+                <Route path="/reports/space-usage" render={() => (
+                  <ReportSpaceUsage />
+                )}/>
                 <Route path="/reports/fill-rate" render={() => (
                   <ReportFillRate />
                 )}/>

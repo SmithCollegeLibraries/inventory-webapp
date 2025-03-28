@@ -10,28 +10,33 @@ const ITEMS = 'Items';
 const ALL_SIZES = 'Total';
 const UNASSIGNED_COLLECTION = 'Unassigned';
 const UNASSIGNED_SIZE = 'No size';
-const NUMBER_OF_MONTHS = 18  // TODO: Get from settings
 
-const formatMonth = (year, month) => {
-  return `${year}-${month.toString().padStart(2, '0')}`;
-}
+// The following constants represent the subtotal types from
+// the API. It's possible the API will change; however, we need
+// to calculate the percentage full on the fly, since percentages
+// can't be added at the point of the API: collections can be
+// selected by the user
+const TOTAL_TRAYS_SUBTOTAL = "Total trays";
+const CAPACITY_SUBTOTAL = "Capacity";
+// This one is calculated on the fly
+const SPACE_USED = "Space used";
 
 
-const useFillRates = create((set, get) => {
+const useSpaceUsage = create((set, get) => {
   return {
     allSizes: {},
     allCollections: {},
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
-    allViews: [SHELVES, TRAYS, ITEMS],
+    allViews: [SHELVES]  // TODO: [SHELVES, TRAYS, ITEMS],
   };
 });
 
 const useView = create(
   persist(
     (set, get) => ({
-      currentView: TRAYS,
+      currentView: SHELVES,
       changeView: (view) => set({ currentView: view }),
       selectedCollections: {},
       setCollection: (collection, toggle) => set((state) => {
@@ -67,17 +72,17 @@ const useView = create(
       }),
     }),
     {
-      name: 'report-fillrates-view',
+      name: 'report-spaceusage-view',
       storage: createJSONStorage(() => localStorage),
     }
   )
 );
 
-const ReportFillRate = () => {
-  const state = useFillRates();
-  const allSizes = useFillRates((state) => state.allSizes);
-  const allCollections = useFillRates((state) => state.allCollections);
-  const allViews = useFillRates((state) => state.allViews);
+const ReportSpaceUsage = () => {
+  const state = useSpaceUsage();
+  const allSizes = useSpaceUsage((state) => state.allSizes);
+  const allCollections = useSpaceUsage((state) => state.allCollections);
+  const allViews = useSpaceUsage((state) => state.allViews);
   const currentView = useView((state) => state.currentView);
   const changeView = useView((state) => state.changeView);
   // This is for toggling collections on and off, adjusting the totals
@@ -86,58 +91,49 @@ const ReportFillRate = () => {
 
   useEffect(() => {
     async function fetchSubtotals() {
-      async function ingestCounts(fillRatesPromise, itemSubtotals, traySubtotals, shelfSubtotals) {
-        const fillRateBreakdown = await fillRatesPromise;
-        for (let i = 0; i < fillRateBreakdown?.length; i++) {
-          const yearMonth = formatMonth(fillRateBreakdown[i].year, fillRateBreakdown[i].month);
-          const size = fillRateBreakdown[i].size_code;  // Null size is allowed
-          const collection = fillRateBreakdown[i].collection_code || UNASSIGNED_COLLECTION;
-          const itemCount = parseInt(fillRateBreakdown[i].item_count);
-          const trayCount = parseInt(fillRateBreakdown[i].tray_count);
-          const shelfCount = parseInt(fillRateBreakdown[i].shelf_count);
+      async function ingestCounts(spaceUsagePromise) {
+        const spaceUsageBreakdown = await spaceUsagePromise;
+        // Iterate through the space usage breakdown, which is nested:
+        // { "ExampleCollection": { "ExampleSizeA": {"total_shelves": 2, "empty": 1, "full": 0, "partial": 1}, "ExampleSizeB": {"total_shelves": 1, "empty": 0, "full": 1, "partial": 0} } }
+        // The outer key is the collection code, the inner key is the size code
+        let shelfSubtotals = {};
 
-          // Add counts to the item subtotals
-          if (!itemSubtotals[yearMonth][size][collection]) {
-            itemSubtotals[yearMonth][size][collection] = 0;
+        for (let collection in spaceUsageBreakdown) {
+          const normalizedCollection = collection && collection !== "" ? collection : UNASSIGNED_COLLECTION;
+          for (let size in spaceUsageBreakdown[collection]) {
+            const normalizedSize = size && size !== "" ? size : UNASSIGNED_SIZE;
+            for (let subtotal in spaceUsageBreakdown[collection][size]) {
+              if (!shelfSubtotals[subtotal]) {
+                shelfSubtotals[subtotal] = {};
+              }
+              if (!shelfSubtotals[subtotal][normalizedSize]) {
+                shelfSubtotals[subtotal][normalizedSize] = {};
+              }
+              if (!shelfSubtotals[subtotal][ALL_SIZES]) {
+                shelfSubtotals[subtotal][ALL_SIZES] = {};
+              }
+              if (!shelfSubtotals[subtotal][ALL_SIZES][normalizedCollection]) {
+                shelfSubtotals[subtotal][ALL_SIZES][normalizedCollection] = 0;
+              }
+              const countToAdd = spaceUsageBreakdown[collection][size][subtotal];
+              shelfSubtotals[subtotal][normalizedSize][normalizedCollection] = countToAdd;
+              shelfSubtotals[subtotal][ALL_SIZES][normalizedCollection] += countToAdd;
+            }
           }
-          itemSubtotals[yearMonth][size][collection] += itemCount ?? 0;
-          if (!itemSubtotals[yearMonth][ALL_SIZES][collection]) {
-            itemSubtotals[yearMonth][ALL_SIZES][collection] = 0;
-          }
-          itemSubtotals[yearMonth][ALL_SIZES][collection] += itemCount ?? 0;
-
-          // Add counts to the tray subtotals
-          if (!traySubtotals[yearMonth][size][collection]) {
-            traySubtotals[yearMonth][size][collection] = 0;
-          }
-          traySubtotals[yearMonth][size][collection] += trayCount ?? 0;
-          if (!traySubtotals[yearMonth][ALL_SIZES][collection]) {
-            traySubtotals[yearMonth][ALL_SIZES][collection] = 0;
-          }
-          traySubtotals[yearMonth][ALL_SIZES][collection] += trayCount ?? 0;
-
-          // Add counts to the shelf subtotals
-          if (!shelfSubtotals[yearMonth][size][collection]) {
-            shelfSubtotals[yearMonth][size][collection] = 0;
-          }
-          shelfSubtotals[yearMonth][size][collection] += shelfCount ?? 0;
-          if (!shelfSubtotals[yearMonth][ALL_SIZES][collection]) {
-            shelfSubtotals[yearMonth][ALL_SIZES][collection] = 0;
-          }
-          shelfSubtotals[yearMonth][ALL_SIZES][collection] += shelfCount ?? 0;
         }
-        useFillRates.setState({ itemSubtotals, traySubtotals, shelfSubtotals });
+
+        useSpaceUsage.setState({ shelfSubtotals });
       }
 
       let allCollections = await Load.getAllCollections();
       let allSizes = await Load.getAllSizes();
-      let fillRatesPromise = Load.getFillRates(NUMBER_OF_MONTHS);
+      let spaceUsagePromise = Load.shelfSpaceUsage();
 
       // Add null and total size, as well as null collection
       allCollections.push({ code: UNASSIGNED_COLLECTION });
-      allSizes.push({ code: null });
+      allSizes.push({ code: UNASSIGNED_SIZE });
       allSizes.unshift({ code: ALL_SIZES });
-      useFillRates.setState({ allCollections, allSizes });
+      useSpaceUsage.setState({ allCollections, allSizes });
 
       // If selectedCollections is not empty, check that any collections
       // that are not in selectedCollections are added to it, so that the
@@ -158,39 +154,7 @@ const ReportFillRate = () => {
       }
       useView.setState({ selectedCollections });
 
-      // Create a list of the past X months, including the current month,
-      // using the format YYYY-MM
-      let allMonths = [];
-      let today = new Date();
-      for (let i = 0; i <= NUMBER_OF_MONTHS; i++) {
-        let month = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        allMonths.push(month.toISOString().slice(0, 7));
-      }
-
-      // Initialize empty 3D arrays by collection, month, size
-      let itemSubtotals = {};
-      let traySubtotals = {};
-      let shelfSubtotals = {};
-      // Add a bin for each month
-      for (let i = 0; i < allMonths.length; i++) {
-        itemSubtotals[allMonths[i]] = {};
-        traySubtotals[allMonths[i]] = {};
-        shelfSubtotals[allMonths[i]] = {};
-        // Add a row for each size
-        for (let j = 0; j < allSizes.length; j++) {
-          itemSubtotals[allMonths[i]][allSizes[j].code] = {};
-          traySubtotals[allMonths[i]][allSizes[j].code] = {};
-          shelfSubtotals[allMonths[i]][allSizes[j].code] = {};
-          // Add a column for each collection
-          for (let k = 0; k < allCollections.length; k++) {
-            itemSubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
-            traySubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
-            shelfSubtotals[allMonths[i]][allSizes[j].code][allCollections[k].code] = 0;
-          }
-        }
-      }
-
-      ingestCounts(fillRatesPromise, itemSubtotals, traySubtotals, shelfSubtotals);
+      ingestCounts(spaceUsagePromise);
     }
 
     fetchSubtotals();
@@ -218,7 +182,7 @@ const ReportFillRate = () => {
             || (currentView === TRAYS && JSON.stringify(state.traySubtotals) === "{}")
             || (currentView === ITEMS && JSON.stringify(state.itemSubtotals) === "{}")
           ? "Loading..."
-          : <FillRates
+          : <SpaceUsage
               subtotals={currentView === ITEMS ? state.itemSubtotals : (currentView === TRAYS ? state.traySubtotals : state.shelfSubtotals)}
               allCollections={allCollections}
               allSizes={allSizes}
@@ -239,7 +203,7 @@ const ReportFillRate = () => {
   );
 };
 
-const FillRates = (props) => {
+const SpaceUsage = (props) => {
   return (
     <Table style={{tableLayout: "fixed"}}>
       <thead>
@@ -253,32 +217,70 @@ const FillRates = (props) => {
         </tr>
       </thead>
       <tbody>
-        { Object.keys(props.subtotals).map((monthIndex) =>
-          <tr key={`row-month-${monthIndex}`}>
-            <th key={`row-month-${monthIndex}`}>{monthIndex}</th>
+        { Object.keys(props.subtotals).map((subtotal) =>
+          <tr key={`row-month-${subtotal}`}>
+            {/* If it's "Total trays", omit; if "Capacity", calculate */}
+            { subtotal === TOTAL_TRAYS_SUBTOTAL
+              ? null
+              : subtotal === CAPACITY_SUBTOTAL
+                ? <th key={`row-month-${SPACE_USED}`}>{SPACE_USED}</th>
+                : <th key={`row-month-${subtotal}`}>{subtotal}</th>
+            }
+
             { Object.keys(props.allSizes).map((sizeIndex) => {
               let total = 0;
-              Object.keys(props.selectedCollections).forEach((collection) => {
-                if (props.selectedCollections[collection]) {
-                  total += props.subtotals[monthIndex][props.allSizes[sizeIndex].code][collection] || 0;
-                }
-              });
-              return (
-                <td key={`cell-${monthIndex}-${sizeIndex}`}
-                    style={{
-                      textAlign: "right",
-                      color: props.allSizes[sizeIndex].code === ALL_SIZES
-                        ? "#0d6efd"
-                        : (
-                          !total || total === 0
-                          ? "#e9ecef"
-                          : "black"
-                        )
-                    }}
+              let tray_total = 0;
+              let capacity_total = 0;
+              if (subtotal === TOTAL_TRAYS_SUBTOTAL) {
+                return null;
+              }
+              else if (subtotal === CAPACITY_SUBTOTAL) {
+                Object.keys(props.selectedCollections).forEach((collection) => {
+                  if (props.selectedCollections[collection]) {
+                    tray_total += props.subtotals[TOTAL_TRAYS_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                  }
+                });
+                Object.keys(props.selectedCollections).forEach((collection) => {
+                  if (props.selectedCollections[collection]) {
+                    capacity_total += props.subtotals[CAPACITY_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                  }
+                });
+                total = capacity_total && tray_total / capacity_total < 1.15 ? Math.round((tray_total / capacity_total) * 100) : null;
+              }
+              else {
+                Object.keys(props.selectedCollections).forEach((collection) => {
+                  if (props.selectedCollections[collection]) {
+                    total += props.subtotals[subtotal]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                  }
+                });
+              }
+                return (
+                <td key={`cell-${subtotal}-${sizeIndex}`}
+                  style={{
+                  textAlign: "right",
+                  position: "relative",
+                  color: props.allSizes[sizeIndex].code === ALL_SIZES
+                      ? "#0d6efd"
+                      : (
+                      !total || total === 0
+                      ? "#e9ecef"
+                      : "black"
+                      )
+                    }
+                  }
                 >
-                  { total }
+                  {subtotal === CAPACITY_SUBTOTAL && total !== null && (
+                  <span style={{
+                    position: "absolute",
+                    right: "-0.5ex",
+                    color: props.allSizes[sizeIndex].code === ALL_SIZES
+                      ? "#0d6efd"
+                      : "black"
+                  }}>%</span>
+                  )}
+                  { total ?? "N/A" }
                 </td>
-              );
+                );
             })}
           </tr>
           )
@@ -311,4 +313,4 @@ const CollectionSelector = (props) => {
   );
 }
 
-export default ReportFillRate;
+export default ReportSpaceUsage;

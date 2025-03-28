@@ -156,7 +156,7 @@ class Header extends Component {
                         <NavLink className="nav-link" to="/reports/counts">Counts</NavLink>
                       </DropdownItem>
                       <DropdownItem>
-                        <NavLink className="nav-link" to="/reports/free-space">Free space</NavLink>
+                        <NavLink className="nav-link" to="/reports/space-usage">Space usage</NavLink>
                       </DropdownItem>
                       <DropdownItem>
                         <NavLink className="nav-link" to="/reports/fill-rate">Fill rate</NavLink>
