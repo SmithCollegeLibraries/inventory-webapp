@@ -99,6 +99,11 @@ class Load {
     return counts;
   }
 
+  shelfSpaceUsage = async () => {
+    const usage = await this.handleUpdate(`${shelfAPI}space-usage/`, 'GET');
+    return usage;
+  }
+
   /**
     * @desc Tray
   */

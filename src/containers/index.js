@@ -14,7 +14,7 @@ import TrayLogs from './logTrays';
 import ShelfLogs from './logShelves';
 import CollectionLogs from './logCollections';
 import ReportCounts from './reportCounts';
-// import ReportFreeSpace from './reportFreeSpace';
+import ReportSpaceUsage from './reportSpaceUsage';
 import ReportFillRate from './reportFillRate';
 // import ReportRequests from './reportRequests';
 
@@ -35,7 +35,7 @@ export {
   ShelfLogs,
   CollectionLogs,
   ReportCounts,
-  // ReportFreeSpace,
+  ReportSpaceUsage,
   ReportFillRate,
   // ReportRequests,
 };
