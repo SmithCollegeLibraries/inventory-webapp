@@ -195,16 +195,16 @@ const SearchShelves = () => {
         success(<>{response.resultCount} shelves found<br />(showing first {response.results.length})</>);
       }
       else if (!state.query.tray) {
-        success(<>{response.resultCount} {response.resultCount === 1 ? 'shelf' : 'shelves'} found</>);
+        success("Tray found");
       }
     }
     else {
       dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
       if (state.query.tray) {
-        warning(`Tray ${state.query.tray} not found on shelves. Check Manage Trays to see if this tray is in the system but unshelved.`);
+        warning(`Tray ${state.query.tray} not found`);
       }
       else {
-        warning('No results found.');
+        warning('No results found');
       }
     }
   };
