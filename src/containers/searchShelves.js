@@ -201,7 +201,7 @@ const SearchShelves = () => {
     else {
       dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
       if (state.query.tray) {
-        warning(`Tray ${state.query.tray} not found on shelves.`);
+        warning(`Tray ${state.query.tray} not found on shelves. Check Manage Trays to see if this tray is in the system but unshelved.`);
       }
       else {
         warning('No results found.');
