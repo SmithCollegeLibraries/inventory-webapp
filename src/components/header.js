@@ -162,7 +162,7 @@ class Header extends Component {
                         <NavLink className="nav-link" to="/reports/fill-rate">Fill rate</NavLink>
                       </DropdownItem>
                       <DropdownItem>
-                        <NavLink className="nav-link" to="/reports/requests">Requests</NavLink>
+                        <NavLink className="nav-link" to="/reports/request-history">Request history</NavLink>
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>

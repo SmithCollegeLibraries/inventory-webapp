@@ -23,7 +23,7 @@ import {
     ReportCounts,
     ReportSpaceUsage,
     ReportFillRate,
-    // ReportRequests,
+    ReportRequestHistory,
   } from './containers';
 import Header from './components/header';
 import ContentSearch from './util/search';
@@ -193,9 +193,9 @@ export default class Main extends Component {
                 <Route path="/reports/fill-rate" render={() => (
                   <ReportFillRate />
                 )}/>
-                {/* <Route path="/reports/requests" render={() => (
-                  <ReportRequests />
-                )}/> */}
+                <Route path="/reports/request-history" render={() => (
+                  <ReportRequestHistory />
+                )}/>
               </Switch>
             </div>
             :

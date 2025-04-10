@@ -327,6 +327,11 @@ class Load {
     return get;
   }
 
+  getRequestHistory = async (data) => {
+    const requestHistory = await this.handleUpdate(`${itemLogAPI}request-history/`, 'GET');
+    return requestHistory;
+  }
+
   getTrayActions = async () => {
     const get = await this.handleUpdate(`${trayLogAPI}actions-list/`, 'GET');
     return get;

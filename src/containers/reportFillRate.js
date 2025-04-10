@@ -141,8 +141,7 @@ const ReportFillRate = () => {
 
       // If selectedCollections is not empty, check that any collections
       // that are not in selectedCollections are added to it, so that the
-      // toggle buttons work properly. Also add Unassigned, which will
-      // not show up in the collections list from the API!
+      // toggle buttons work properly.
       for (let i = 0; i < allCollections.length; i++) {
         if (selectedCollections[allCollections[i].code] === undefined) {
           selectedCollections[allCollections[i].code] = false;
