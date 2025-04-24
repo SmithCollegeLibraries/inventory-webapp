@@ -1,6 +1,6 @@
 {
   "name": "inventory-webapp",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "private": true,
   "homepage": "https://libtools2.smith.edu/sis-dev",
   "dependencies": {
