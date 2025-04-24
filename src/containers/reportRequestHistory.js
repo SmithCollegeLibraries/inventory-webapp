@@ -112,7 +112,7 @@ const ReportRequestHistory = () => {
             // Add the status to the requestCounts object
             requestCounts[`${year}-${month}`][status] = 0;
           }
-          requestCounts[`${year}-${month}`][status] += entry.count;
+          requestCounts[`${year}-${month}`][status] += parseInt(entry.count, 10) || 0;
         });
 
         useRequestHistory.setState({ requestCounts });
