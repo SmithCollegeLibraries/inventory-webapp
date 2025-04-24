@@ -16,7 +16,7 @@ import CollectionLogs from './logCollections';
 import ReportCounts from './reportCounts';
 import ReportSpaceUsage from './reportSpaceUsage';
 import ReportFillRate from './reportFillRate';
-// import ReportRequests from './reportRequests';
+import ReportRequestHistory from './reportRequestHistory';
 
 export {
   NewTray,
@@ -37,5 +37,5 @@ export {
   ReportCounts,
   ReportSpaceUsage,
   ReportFillRate,
-  // ReportRequests,
+  ReportRequestHistory,
 };

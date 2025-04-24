@@ -480,6 +480,9 @@ const PicklistLeftPane = (props) => {
       dataField: 'barcode',
       text: 'Barcode',
       sort: true,
+      formatter: (cell, row) => {
+        return <span style={{"color": row.flag ? "#dc3545" : "black"}}>{cell}</span>;
+      },
     },
     {
       dataField: 'title',
@@ -585,7 +588,7 @@ const PicklistRightPane = (props) => {
       text: 'Barcode',
       sort: true,
       formatter: (cell, row) => {
-        return <span style={{color: props.stagedBarcodes[cell] ? "lightgray" : "black"}}>{cell}</span>;
+        return <span style={{color: props.stagedBarcodes[cell] ? "lightgray" : (row.flag ? "#dc3545" : "black")}}>{cell}</span>;
       }
     },
     {
@@ -733,6 +736,7 @@ const PicklistRightPane = (props) => {
             depth: item.depth,
             tray: item.tray,
             status: item.status,
+            flag: item.flag,
             actions: props.stagedBarcodes[item.barcode],
           };
          }) }
