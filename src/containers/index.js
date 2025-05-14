@@ -17,6 +17,7 @@ import ReportCounts from './reportCounts';
 import ReportSpaceUsage from './reportSpaceUsage';
 import ReportFillRate from './reportFillRate';
 import ReportRequestHistory from './reportRequestHistory';
+import ReportCircCounts from './reportCircCounts';
 
 export {
   NewTray,
@@ -38,4 +39,5 @@ export {
   ReportSpaceUsage,
   ReportFillRate,
   ReportRequestHistory,
+  ReportCircCounts,
 };

@@ -220,6 +220,11 @@ class Load {
     return counts;
   }
 
+  itemCircCounts = async (min) => {
+    const counts = await this.handleUpdate(`${itemAPI}search-by-circ-count/?min=${min}`, 'GET');
+    return counts;
+  }
+
   /**
    * @desc Picklist management
   */
