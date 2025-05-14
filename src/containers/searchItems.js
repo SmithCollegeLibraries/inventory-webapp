@@ -90,14 +90,14 @@ const SearchItems = (props) => {
     <div>
       <div style={{marginTop: "20px"}}>
         <Row>
-          <Col md="4">
+          <Col md="3">
             <SearchForm
               query={state.item_list_as_string}
               handleSearchButton={handleSearchButton}
               handleQueryChange={handleQueryChange}
             />
           </Col>
-          <Col md="8">
+          <Col md="9">
             { <ResultDisplay data={state.search_results} /> }
             {/* { state.search_results.length
               ? <ResultDisplay data={state.search_results} />
@@ -145,29 +145,23 @@ const TableHead = () => (
   <thead>
     <tr>
       <th>Barcode</th>
-      {/* <th>Title</th>
-      <th>Call number</th> */}
-      <th>System</th>
+      <th>In SIS?</th>
+      <th>Collection</th>
       <th>Status</th>
       <th>Tray</th>
-      <th>Shelf</th>
-      <th>Depth</th>
-      <th>Position</th>
+      <th>Location</th>
     </tr>
   </thead>
 )
 
 const TableRow = ({ item, idx }) => (
   <tr key={idx}>
-    <td>{item.barcode}</td>
-    {/* <td></td>
-    <td></td> */}
+    <td><a href={`https://fivecolleges.folio.ebsco.com/inventory?filters=staffSuppress.false&qindex=items.barcode&query=${item.barcode}&segment=items&sort=title`} rel="noreferrer" target="_blank">{item.barcode}</a></td>
     <td>{item.system ? item.system : 'Not in SIS'}</td>
+    <td>{item.collection ? item.collection : '-'}</td>
     <td>{item.status ? item.status : '-'}</td>
     <td>{item.tray ? item.tray : '-'}</td>
-    <td>{item.shelf ? item.shelf : '-'}</td>
-    <td>{item.depth ? item.depth : '-'}</td>
-    <td>{item.position ? item.position : '-'}</td>
+    <td>{item.shelf ? item.shelf : '-'} {item.depth ? "• " + item.depth : ""} {item.position ? "• " + item.position : ""}</td>
   </tr>
 )
 
