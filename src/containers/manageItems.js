@@ -444,7 +444,7 @@ const ResultDisplay = (props) => {
             <dt className="col-sm-3">Title</dt>
             <dd className="col-sm-9">
               { props.data.title ? props.data.title :
-                (props.folio_loaded ? "(Title not available)" : "-")
+                (props.folio_loaded ? "(Title not available)" : "…")
               }
             </dd>
             <dt className="col-sm-3">Status</dt>
