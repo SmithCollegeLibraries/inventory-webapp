@@ -60,8 +60,9 @@ const reducer = (state, action) => {
           title: '',
           call_number: '',
           collection: '',
-          status: '',
           tray: '',
+          flag: false,
+          status: '',
           shelf: '',
           depth: '',
           position: 0,
@@ -86,8 +87,9 @@ const ManageItems = () => {
       title: '',
       call_number: '',
       collection: '',
-      status: '',
       tray: '',
+      status: '',
+      flag: false,
       shelf: '',
       depth: '',
       position: 0,
@@ -124,7 +126,7 @@ const ManageItems = () => {
       type: "UPDATE_FIELD",
       payload: {
         field: e.target.name,
-        value: e.target.value,
+        value: e.target.value === "true" ? true : e.target.value === "false" ? false : e.target.value,
       }
     });
   };
@@ -140,8 +142,9 @@ const ManageItems = () => {
         title: data.title ? data.title : '',
         call_number: data.callNumber ? data.callNumber : '',
         collection: data.collection ? data.collection : '',
-        status: data.status ? data.status : '',
         tray: data.tray ? data.tray.barcode : '',
+        status: data.status ? data.status : '',
+        flag: data.flag ? true : false,
         shelf: data.tray ? data.tray.shelf : '',
         depth: data.tray ? data.tray.depth : '',
         position: data.tray ? data.tray.position : 0,
@@ -183,8 +186,9 @@ const ManageItems = () => {
         title: results[0].title ? results[0].title : "",
         call_number: results[0].callNnumber ? results[0].callNumber : "",
         collection: results[0].collection ? results[0].collection : "",
-        status: results[0].status ? results[0].status : "",
         tray: (results[0].tray && results[0].tray.barcode) ? results[0].tray.barcode : "",
+        status: results[0].status ? results[0].status : "",
+        flag: results[0].flag ? true : false,
         shelf: (results[0].tray && results[0].tray.shelf) ? results[0].tray.shelf : "",
         depth: (results[0].tray && results[0].tray.depth) ? results[0].tray.depth : "",
         position: (results[0].tray && results[0].tray.position) ? results[0].tray.position : 0,
@@ -230,8 +234,9 @@ const ManageItems = () => {
             title: '',
             call_number: '',
             collection: '',
-            status: '',
             tray: '',
+            status: '',
+            flag: false,
             shelf: '',
             depth: '',
             position: 0,
@@ -257,10 +262,12 @@ const ManageItems = () => {
       barcode: state.fields.item_barcode,
       new_barcode: newBarcode || null,
       collection: state.fields.collection,
-      status: state.fields.status,
       tray: state.fields.tray,
+      status: state.fields.status,
+      flag: state.fields.flag,
     };
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
+      console.log(data);
       const load = await Load.updateItem(data);
       if (load) {
         success(`Item ${load['barcode']} successfully updated`);
@@ -277,8 +284,9 @@ const ManageItems = () => {
     const data = {
       barcode: state.fields.new_item_barcode,
       collection: state.fields.collection,
-      status: state.fields.status || "New",
       tray: state.fields.tray || null,
+      status: state.fields.status || "New",
+      flag: state.fields.flag,
     };
     const newBarcode = state.fields.new_item_barcode;
     if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
@@ -438,7 +446,7 @@ const ResultDisplay = (props) => {
         <Row>
           <dl className="row">
             <dt className="col-sm-3">Barcode</dt>
-            <dd className="col-sm-9">
+            <dd className={`col-sm-9${props.data.flag ? " text-danger" : ""}`}>
               {props.data.barcode}
             </dd>
             <dt className="col-sm-3">Title</dt>
@@ -512,7 +520,11 @@ const ItemForm = (props) => {
             }
           </Row>
           <Row>
-            <FormGroup className="col-sm-6">
+            <FormGroup className="col-sm-4">
+              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
+              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+            </FormGroup>
+            <FormGroup className="col-sm-4">
               <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
               <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
                 <option value="">(none)</option>
@@ -525,9 +537,18 @@ const ItemForm = (props) => {
                 <option value="Imported">Imported</option>
               </Input>
             </FormGroup>
-            <FormGroup className="col-sm-6">
-              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
-              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+            <FormGroup className="col-sm-4">
+              <Label for="flag" style={{"fontWeight":"bold"}}>Flag</Label>
+              <Input
+                type="select"
+                name="flag"
+                className={props.fields.flag ? "text-danger" : ""}
+                value={props.fields.flag}
+                onChange={(e) => props.handleItemChange(e)}
+              >
+                <option value={false}>Not flagged</option>
+                <option value={true}>Flagged</option>
+              </Input>
             </FormGroup>
           </Row>
           { !props.fields.new_item &&
