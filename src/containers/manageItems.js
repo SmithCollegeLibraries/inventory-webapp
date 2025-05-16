@@ -16,12 +16,16 @@ const reducer = (state, action) => {
         ...state,
         query: action.payload
       };
+    case 'FLAGGED_ONLY':
+      return {
+        ...state,
+        flaggedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
         search_results: action.payload.search_results,
         folio_loaded: action.payload.folio_loaded,
-        // fields: action.payload.fields,
       };
     case 'UPDATE_SELECTION':
       return {
@@ -72,6 +76,7 @@ const ManageItems = () => {
   const initialState = {
     collections: [],
     query: '',
+    flaggedOnly: false,
     search_results: [],
     fields: {
       folio_loaded: false,
@@ -103,6 +108,13 @@ const ManageItems = () => {
     dispatch({
       type: "QUERY_CHANGE",
       payload: value,
+    });
+  };
+
+  const handleFlaggedOnlyChange = () => {
+    dispatch({
+      type: "FLAGGED_ONLY",
+      payload: !state.flaggedOnly,
     });
   };
 
@@ -313,23 +325,57 @@ const ManageItems = () => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row
+        style={{
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "20px",
+          paddingLeft: "15px",
+          paddingRight: "20px"
+        }}
+      >
         <SearchForm
           query={state.query}
           handleSearchButton={handleSearchButton}
           handleQueryChange={handleQueryChange}
         />
-        <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
-        { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} items total`}</Button>
-        }
+        <Button
+          color="warning"
+          style={{ marginRight: "20px" }}
+          onClick={(e) => handleNewItemSelect(e)}
+        >
+          New item
+        </Button>
+        <FormGroup check style={{ textAlign: "right", marginBottom: 0, display: "flex", alignItems: "baseline" }}>
+          <Input
+            type="checkbox"
+            checked={state.flaggedOnly}
+            onChange={handleFlaggedOnlyChange}
+            style={{ marginBottom: 0 }}
+          />
+          <Label check style={{ marginBottom: 0, display: "flex", alignItems: "baseline", gap: "6px" }}>
+            Show flagged items only
+          </Label>
+        </FormGroup>
+        { state.count && (
+          <Button
+            color="info"
+            onClick={() => {
+              navigator.clipboard.writeText(`${state.count.toLocaleString()} items`);
+            }}
+            style={{ cursor: "grab", marginLeft: "auto" }}
+          >
+            {`${state.count.toLocaleString()} items total`}
+          </Button>
+        )}
       </Row>
-      <div style={{marginTop: "20px"}}>
+      <div style={{ marginTop: "20px" }}>
         <Row>
           <Col md="6">
-            { state.search_results
+            {state.search_results
               ? Object.keys(state.search_results).map((item, idx) => {
                   return (
+                    !state.flaggedOnly || state.search_results[item].flag ?
                     <ResultDisplay
                       folio_loaded={state.folio_loaded}
                       data={state.search_results[item]}
@@ -337,27 +383,28 @@ const ManageItems = () => {
                       index={idx}
                       key={idx}
                     />
+                    : null
                   );
                 })
-              : null
-            }
+              : null}
           </Col>
           <Col md="6">
-            { state.fields && ((state.fields.item_barcode && state.fields.item_barcode !== "") || state.fields.new_item)
-              ? <Card>
-                  <CardBody>
-                    <ItemForm
-                      fields={state.fields}
-                      collections={state.collections}
-                      handleItemChange={handleItemChange}
-                      handleItemUpdate={handleItemUpdate}
-                      handleItemDelete={handleItemDelete}
-                      handleCreateItem={handleCreateItem}
-                    />
-                  </CardBody>
-                </Card>
-              : null
-            }
+            {state.fields &&
+            ((state.fields.item_barcode && state.fields.item_barcode !== "") ||
+              state.fields.new_item) ? (
+              <Card>
+                <CardBody>
+                  <ItemForm
+                    fields={state.fields}
+                    collections={state.collections}
+                    handleItemChange={handleItemChange}
+                    handleItemUpdate={handleItemUpdate}
+                    handleItemDelete={handleItemDelete}
+                    handleCreateItem={handleCreateItem}
+                  />
+                </CardBody>
+              </Card>
+            ) : null}
           </Col>
         </Row>
       </div>
