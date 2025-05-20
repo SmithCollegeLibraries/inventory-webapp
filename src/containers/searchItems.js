@@ -86,6 +86,13 @@ const SearchItems = (props) => {
     handleSearch();
   };
 
+  const handleClearSearch = (e) => {
+    dispatch({
+      type: 'QUERY_CHANGE',
+      payload: '',
+    });
+  }
+
   return (
     <div>
       <div style={{marginTop: "20px"}}>
@@ -95,6 +102,7 @@ const SearchItems = (props) => {
               query={state.item_list_as_string}
               handleSearchButton={handleSearchButton}
               handleQueryChange={handleQueryChange}
+              handleClearSearch={handleClearSearch}
             />
           </Col>
           <Col md="9">
@@ -118,10 +126,18 @@ const SearchForm = props => {
         name="query"
         rows="20"
         placeholder="List of item barcodes"
-        value={props.item_list_as_string}
+        value={props.query}
         onChange={(e) => props.handleQueryChange(e)}
       />
-      <Button color="primary" style={{"marginTop": "10px"}}>Search</Button>
+      <Row style={{ marginTop: "10px", display: "flex", alignItems: "center" }}>
+        <Col xs="auto">
+          <Button color="primary" type="submit">Search</Button>
+        </Col>
+        <Col />
+        <Col xs="auto" className="text-end">
+          <Button color="warning" type="button" onClick={() => props.handleClearSearch()}>Clear</Button>
+        </Col>
+      </Row>
     </Form>
   );
 };
