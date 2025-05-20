@@ -144,7 +144,7 @@ const ManageItems = () => {
         collection: data.collection ? data.collection : '',
         tray: data.tray ? data.tray.barcode : '',
         status: data.status ? data.status : '',
-        flag: data.flag ? true : false,
+        flag: !!data.flag,
         shelf: data.tray ? data.tray.shelf : '',
         depth: data.tray ? data.tray.depth : '',
         position: data.tray ? data.tray.position : 0,
@@ -164,6 +164,7 @@ const ManageItems = () => {
         call_number: '',
         collection: '',
         status: '',
+        flag: false,
         tray: '',
         shelf: '',
         depth: '',
@@ -188,7 +189,7 @@ const ManageItems = () => {
         collection: results[0].collection ? results[0].collection : "",
         tray: (results[0].tray && results[0].tray.barcode) ? results[0].tray.barcode : "",
         status: results[0].status ? results[0].status : "",
-        flag: results[0].flag ? true : false,
+        flag: !!results[0].flag,
         shelf: (results[0].tray && results[0].tray.shelf) ? results[0].tray.shelf : "",
         depth: (results[0].tray && results[0].tray.depth) ? results[0].tray.depth : "",
         position: (results[0].tray && results[0].tray.position) ? results[0].tray.position : 0,
@@ -267,7 +268,6 @@ const ManageItems = () => {
       flag: state.fields.flag,
     };
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
-      console.log(data);
       const load = await Load.updateItem(data);
       if (load) {
         success(`Item ${load['barcode']} successfully updated`);
@@ -286,7 +286,7 @@ const ManageItems = () => {
       collection: state.fields.collection,
       tray: state.fields.tray || null,
       status: state.fields.status || "New",
-      flag: state.fields.flag,
+      flag: state.fields.flag || false,
     };
     const newBarcode = state.fields.new_item_barcode;
     if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
@@ -542,12 +542,12 @@ const ItemForm = (props) => {
               <Input
                 type="select"
                 name="flag"
-                className={props.fields.flag ? "text-danger" : ""}
-                value={props.fields.flag}
+                className={props.fields.flag.toString() === "true" ? "text-danger" : ""}
+                value={props.fields.flag.toString()}
                 onChange={(e) => props.handleItemChange(e)}
               >
-                <option value={false}>Not flagged</option>
-                <option value={true}>Flagged</option>
+                <option value="false">Not flagged</option>
+                <option value="true">Flagged</option>
               </Input>
             </FormGroup>
           </Row>
