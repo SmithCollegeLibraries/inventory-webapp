@@ -25,18 +25,15 @@ class ContentSearch {
     return search;
   }
 
-  items = async (itemBarcode) => {
+  items = async (itemBarcode, flaggedOnly) => {
     // If a barcode was provided, do an exact search
     if (itemBarcode) {
-      const data = {
-        "barcodes": [itemBarcode]
-      };
-      let results = await this.searchPost(`${itemAPI}search/`, data);
+      let results = await this.search(`${itemAPI}search/?barcode=${itemBarcode}&flagged_only=${flaggedOnly}`);
       return results;
     }
     // Otherwise, show the most recent items
     else {
-      let results = await this.search(`${itemAPI}browse/?query=`);
+      let results = await this.search(`${itemAPI}browse/?flagged_only=${flaggedOnly}`);
       return results;
     }
   }
@@ -57,7 +54,8 @@ class ContentSearch {
     try {
       let response = await fetch(string.includes('?') ? `${string}&access-token=${access_token}` : `${string}?access-token=${access_token}`)
       return this.responseHandling(response)
-    } catch (e) {
+    }
+    catch (e) {
       this.catchError('', e)
     }
   }
@@ -69,15 +67,11 @@ class ContentSearch {
     try {
       let response =  await fetch(`${string}?access-token=${access_token}`, {
         method: "POST",
-        // headers: {
-        //   "Access-Control-Expose-Headers": "X-Pagination-Total-Count, X-Pagination-Current-Page, X-Pagination-Page-Count, X-Pagination-Per-Page",
-        //   'Access-Control-Allow-Origin': '*',
-        //   'Content-ype': 'application/json; charset=UTF-8',
-        // },
         body: JSON.stringify(data)
       })
        return this.responseHandling(response)
-    } catch(e) {
+    }
+    catch(e) {
       this.catchError('', e)
     }
   }

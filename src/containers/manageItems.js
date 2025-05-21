@@ -178,7 +178,7 @@ const ManageItems = () => {
     // recent items) just because the user updated or created an item, but
     // never clicked the search button. However, we do show results if they
     // were already showing, or if there is anything in the search box.
-    const results = (showWarnings === true || state.search_results || state.query) ? await ContentSearch.items(state.query) : [];
+    const results = (showWarnings === true || state.search_results || state.query) ? await ContentSearch.items(state.query, state.flaggedOnly) : [];
     if (results && results[0]) {
       const fields = {
         new_item: false,
