@@ -354,16 +354,31 @@ const ManageItems = () => {
         >
           New item
         </Button>
-        <FormGroup check style={{ textAlign: "right", marginBottom: 0, display: "flex", alignItems: "baseline" }}>
-          <Input
-            type="checkbox"
-            checked={state.flaggedOnly}
-            onChange={handleFlaggedOnlyChange}
-            style={{ marginBottom: 0 }}
-          />
-          <Label check style={{ marginBottom: 0, display: "flex", alignItems: "baseline", gap: "6px" }}>
-            Show flagged items only
-          </Label>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={state.flaggedOnly}
+              onChange={handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Show flagged items only
+            </Label>
+          </div>
         </FormGroup>
         { state.count && (
           <Button
