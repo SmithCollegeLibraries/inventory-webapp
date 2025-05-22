@@ -24,6 +24,11 @@ const reducer = (state, action) => {
         ...state,
         [action.payload.field]: action.payload.value,
       };
+    case 'FLAGGED_ONLY':
+      return {
+        ...state,
+        flaggedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
@@ -83,7 +88,8 @@ const reducer = (state, action) => {
 const ManageTrays = () => {
   const initialState = {
     barcode: '',
-    free_space: '',
+    flaggedOnly: false,
+    freeSpace: '',
     search_results: [],
     fields: {
       new_tray: false,
@@ -115,6 +121,13 @@ const ManageTrays = () => {
         field: e.target.name,
         value: e.target.value,
       },
+    });
+  };
+
+  const handleFlaggedOnlyChange = () => {
+    dispatch({
+      type: "FLAGGED_ONLY",
+      payload: !state.flaggedOnly,
     });
   };
 
@@ -174,7 +187,7 @@ const ManageTrays = () => {
 
   const handleSearch = async (showWarnings = false) => {
     dispatch({ type: 'RESET_RESULTS', payload: '' });
-    const results = await ContentSearch.trays(state.barcode, state.free_space);
+    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly);
     if (results && results[0]) {
       let items = [];
       for (let barcode of results[0].items) {
@@ -350,14 +363,54 @@ const ManageTrays = () => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row
+        style={{
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "20px",
+          paddingLeft: "15px",
+          paddingRight: "20px"
+        }}
+      >
         <SearchForm
           barcode={state.barcode}
-          free_space={state.free_space}
+          freeSpace={state.freeSpace}
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
-        <Button color="warning" onClick={(e) => handleNewTraySelect(e)}>New tray</Button>
+        <Button
+          color="warning"
+          style={{ marginRight: "20px" }}
+          onClick={(e) => handleNewTraySelect(e)}
+        >
+          New tray
+        </Button>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={state.flaggedOnly}
+              onChange={handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Show flagged trays only
+            </Label>
+          </div>
+        </FormGroup>
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} trays total`}</Button>
         }
@@ -368,12 +421,14 @@ const ManageTrays = () => {
             { state.search_results
               ? Object.keys(state.search_results).map((tray, idx) => {
                   return (
+                    !state.flaggedOnly || state.search_results[tray].flag ?
                     <ResultDisplay
                       data={state.search_results[tray]}
                       handleTraySelect={handleTraySelect}
                       index={idx}
                       key={idx}
                     />
+                    : null
                   );
                 })
               : null
@@ -443,7 +498,7 @@ const SearchForm = props => {
         style={{"marginRight": "10px", "width": "8em"}}
         name="free_space"
         placeholder="Free space"
-        value={props.free_space}
+        value={props.freeSpace}
         onChange={(e) => props.handleQueryChange(e)}
       />
       <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
