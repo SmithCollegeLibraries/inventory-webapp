@@ -138,7 +138,7 @@ export default class Main extends Component {
             <div className="container-fluid">
               <Switch>
                 <Route exact path="/">
-                  <Redirect to="/new-tray" />
+                  <Redirect to="/search-items" />
                 </Route>
                 <Route path="/new-tray" render={() => (
                   <NewTray />
