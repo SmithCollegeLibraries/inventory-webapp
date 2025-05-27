@@ -24,10 +24,14 @@ const reducer = (state, action) => {
         ...state,
         [action.payload.field]: action.payload.value,
       };
+    case 'FLAGGED_ONLY':
+      return {
+        ...state,
+        flaggedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
-        // fields: action.payload.data,
         search_results: action.payload.search_results,
       };
     case 'UPDATE_SELECTION':
@@ -70,6 +74,7 @@ const reducer = (state, action) => {
           depth: '',
           position: null,
           full_count: null,
+          flag: false,
           items: [],
           trayer: '',
           created: '',
@@ -83,7 +88,8 @@ const reducer = (state, action) => {
 const ManageTrays = () => {
   const initialState = {
     barcode: '',
-    free_space: '',
+    flaggedOnly: false,
+    freeSpace: '',
     search_results: [],
     fields: {
       new_tray: false,
@@ -95,6 +101,7 @@ const ManageTrays = () => {
       depth: '',
       position: null,
       full_count: null,
+      flag: false,
       items: [],
       trayer: '',
       created: '',
@@ -117,13 +124,20 @@ const ManageTrays = () => {
     });
   };
 
+  const handleFlaggedOnlyChange = () => {
+    dispatch({
+      type: "FLAGGED_ONLY",
+      payload: !state.flaggedOnly,
+    });
+  };
+
   const handleTrayChange = e => {
     e.preventDefault();
     dispatch({
       type: "UPDATE_FIELD",
       payload: {
         field: e.target.name,
-        value: e.target.value,
+        value: e.target.value === "true" ? true : e.target.value === "false" ? false : e.target.value,
       }
     });
   };
@@ -142,6 +156,7 @@ const ManageTrays = () => {
         depth: data.depth,
         position: data.position,
         full_count: data.full_count,
+        flag: !!data.flag,
         items: data.items,
         trayer: data.trayer,
         created: data.created,
@@ -159,6 +174,7 @@ const ManageTrays = () => {
         new_tray_barcode: '',
         size: '',
         collection: '',
+        flag: false,
         shelf: '',
         depth: '',
         position: null,
@@ -171,7 +187,7 @@ const ManageTrays = () => {
 
   const handleSearch = async (showWarnings = false) => {
     dispatch({ type: 'RESET_RESULTS', payload: '' });
-    const results = await ContentSearch.trays(state.barcode, state.free_space);
+    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly);
     if (results && results[0]) {
       let items = [];
       for (let barcode of results[0].items) {
@@ -187,6 +203,7 @@ const ManageTrays = () => {
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
         position: results[0].shelf_position ? results[0].shelf_position : null,
         full_count: results[0].full_count ? results[0].full_count : null,
+        flag: !!results[0].flag,
         items: items,
         trayer: results[0].trayer ? results[0].trayer : "",
         created: results[0].created ? results[0].created : "",
@@ -213,6 +230,7 @@ const ManageTrays = () => {
             depth: '',
             position: null,
             full_count: null,
+            flag: false,
             items: [],
             trayer: '',
             created: '',
@@ -245,6 +263,7 @@ const ManageTrays = () => {
       depth: state.fields.depth || "",
       position: state.fields.position || 0,
       full_count: state.fields.full_count || "",
+      flag: state.fields.flag,
     };
     const load = await Load.updateTray(data);
     if (load) {
@@ -274,6 +293,8 @@ const ManageTrays = () => {
       shelf: state.fields.shelf || null,
       depth: state.fields.depth || null,
       position: state.fields.position || null,
+      full_count: state.fields.full_count || null,
+      flag: state.fields.flag || false,
       items: [],
     };
     const load = await Load.newTray(data);
@@ -342,14 +363,54 @@ const ManageTrays = () => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row
+        style={{
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "20px",
+          paddingLeft: "15px",
+          paddingRight: "20px"
+        }}
+      >
         <SearchForm
           barcode={state.barcode}
-          free_space={state.free_space}
+          freeSpace={state.freeSpace}
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
-        <Button color="warning" onClick={(e) => handleNewTraySelect(e)}>New tray</Button>
+        <Button
+          color="warning"
+          style={{ marginRight: "20px" }}
+          onClick={(e) => handleNewTraySelect(e)}
+        >
+          New tray
+        </Button>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={state.flaggedOnly}
+              onChange={handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Show flagged trays only
+            </Label>
+          </div>
+        </FormGroup>
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} trays total`}</Button>
         }
@@ -360,12 +421,14 @@ const ManageTrays = () => {
             { state.search_results
               ? Object.keys(state.search_results).map((tray, idx) => {
                   return (
+                    !state.flaggedOnly || state.search_results[tray].flag ?
                     <ResultDisplay
                       data={state.search_results[tray]}
                       handleTraySelect={handleTraySelect}
                       index={idx}
                       key={idx}
                     />
+                    : null
                   );
                 })
               : null
@@ -435,7 +498,7 @@ const SearchForm = props => {
         style={{"marginRight": "10px", "width": "8em"}}
         name="free_space"
         placeholder="Free space"
-        value={props.free_space}
+        value={props.freeSpace}
         onChange={(e) => props.handleQueryChange(e)}
       />
       <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
@@ -453,7 +516,7 @@ const ResultDisplay = (props) => {
         <Row>
           <dl className="row">
             <dt className="col-sm-3">Barcode</dt>
-              <dd className="col-sm-9">
+              <dd className={`col-sm-9${props.data.flag ? " text-danger" : ""}`}>
                 {props.data.barcode}
               </dd>
               <dt className="col-sm-3">Created</dt>
@@ -559,10 +622,29 @@ const TrayForm = (props) => {
               </FormGroup>
             </Col>
           </Row>
-          <FormGroup>
-            <Label for="full_count" style={{"fontWeight":"bold"}}>Number of items when full</Label>
-            <Input type="number" style={{"width":"6em"}} value={props.fields.full_count || ''} onChange={(e) => props.handleTrayChange(e)} name="full_count" />
-          </FormGroup>
+          <Row>
+            <Col md="7">
+              <FormGroup>
+                <Label for="full_count" style={{"fontWeight":"bold"}}>Number of items when full</Label>
+                <Input type="number" style={{"width":"6em"}} value={props.fields.full_count || ''} onChange={(e) => props.handleTrayChange(e)} name="full_count" />
+              </FormGroup>
+            </Col>
+            <Col md="5">
+              <FormGroup>
+                <Label for="flag" style={{"fontWeight":"bold"}}>Flag</Label>
+                <Input
+                  type="select"
+                  name="flag"
+                  className={props.fields.flag.toString() === "true" ? "text-danger" : ""}
+                  value={props.fields.flag.toString()}
+                  onChange={(e) => props.handleTrayChange(e)}
+                >
+                  <option value="false">Not flagged</option>
+                  <option value="true">Flagged</option>
+                </Input>
+              </FormGroup>
+            </Col>
+          </Row>
           <FormGroup style={{"marginTop": "40px"}}>
             <Button
               color="primary"

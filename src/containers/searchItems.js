@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import { useReducer, useRef, useEffect } from 'react';
 import { Button, Form, Input, Row, Col, Table } from 'reactstrap';
 import Load from '../util/load';
 import { warning } from '../components/toastAlerts';
@@ -27,6 +27,8 @@ const reducer = (state, action) => {
 };
 
 const SearchItems = (props) => {
+  const inputRef = useRef(null);
+
   const initialState = {
     collections: [],
     item_list_as_string: '',
@@ -86,6 +88,19 @@ const SearchItems = (props) => {
     handleSearch();
   };
 
+  const handleClearSearch = (e) => {
+    dispatch({
+      type: 'QUERY_CHANGE',
+      payload: '',
+    });
+  }
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   return (
     <div>
       <div style={{marginTop: "20px"}}>
@@ -95,6 +110,8 @@ const SearchItems = (props) => {
               query={state.item_list_as_string}
               handleSearchButton={handleSearchButton}
               handleQueryChange={handleQueryChange}
+              handleClearSearch={handleClearSearch}
+              inputRef={inputRef}
             />
           </Col>
           <Col md="9">
@@ -112,16 +129,40 @@ const SearchItems = (props) => {
 
 const SearchForm = props => {
   return (
-    <Form autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearchButton(e)}}>
+    <Form
+      autoComplete="off"
+      onSubmit={e => {
+        e.preventDefault();
+        props.handleSearchButton(e);
+      }}
+    >
       <Input
         type="textarea"
         name="query"
         rows="20"
         placeholder="List of item barcodes"
-        value={props.item_list_as_string}
+        value={props.query}
         onChange={(e) => props.handleQueryChange(e)}
+        innerRef={props.inputRef}
       />
-      <Button color="primary" style={{"marginTop": "10px"}}>Search</Button>
+      <Row style={{ marginTop: "10px", display: "flex", alignItems: "center" }}>
+        <Col xs="auto">
+          <Button color="primary" type="submit">Search</Button>
+        </Col>
+        <Col />
+        <Col xs="auto" className="text-end">
+          <Button
+            color="warning"
+            type="button"
+            onClick={() => {
+              props.handleClearSearch();
+              props.inputRef.current.focus();
+            }}
+          >
+            Clear
+          </Button>
+        </Col>
+      </Row>
     </Form>
   );
 };

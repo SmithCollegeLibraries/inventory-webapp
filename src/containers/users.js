@@ -69,12 +69,13 @@ function Users() {
   const handleSubmit = async (e, index) => {
     e.preventDefault();
     const data = state.users[index];
-    const update = await Load.accountUpdate(data);
+    const update = await Load.updateAccount(data);
     state.users[index].password = "";
     state.updateUserPassword(index, "");
-    if (update) {
+    if (update === true) {
       success("Account successfully updated");
-    } else {
+    }
+    else {
       failure("There was an error updating this account.");
     }
   };
@@ -93,11 +94,12 @@ function Users() {
     e.preventDefault();
     if (window.confirm("Delete this user? This action can only be undone by the database administrator.")) {
       const data = state.users[index];
-      const deleteAccount = Load.accountDelete(data);
-      if (deleteAccount) {
+      const deleteAccount = Load.deleteAccount({id: data.id});
+      if (deleteAccount === true) {
           success('Account successfully deleted');
           state.loadUsers();
-      } else {
+      }
+      else {
         failure("There was an error deleting this account");
       }
     }

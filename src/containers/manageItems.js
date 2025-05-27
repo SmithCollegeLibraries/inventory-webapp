@@ -16,12 +16,16 @@ const reducer = (state, action) => {
         ...state,
         query: action.payload
       };
+    case 'FLAGGED_ONLY':
+      return {
+        ...state,
+        flaggedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
         search_results: action.payload.search_results,
         folio_loaded: action.payload.folio_loaded,
-        // fields: action.payload.fields,
       };
     case 'UPDATE_SELECTION':
       return {
@@ -56,8 +60,9 @@ const reducer = (state, action) => {
           title: '',
           call_number: '',
           collection: '',
-          status: '',
           tray: '',
+          flag: false,
+          status: '',
           shelf: '',
           depth: '',
           position: 0,
@@ -72,6 +77,7 @@ const ManageItems = () => {
   const initialState = {
     collections: [],
     query: '',
+    flaggedOnly: false,
     search_results: [],
     fields: {
       folio_loaded: false,
@@ -81,8 +87,9 @@ const ManageItems = () => {
       title: '',
       call_number: '',
       collection: '',
-      status: '',
       tray: '',
+      status: '',
+      flag: false,
       shelf: '',
       depth: '',
       position: 0,
@@ -106,13 +113,20 @@ const ManageItems = () => {
     });
   };
 
+  const handleFlaggedOnlyChange = () => {
+    dispatch({
+      type: "FLAGGED_ONLY",
+      payload: !state.flaggedOnly,
+    });
+  };
+
   const handleItemChange = e => {
     e.preventDefault();
     dispatch({
       type: "UPDATE_FIELD",
       payload: {
         field: e.target.name,
-        value: e.target.value,
+        value: e.target.value === "true" ? true : e.target.value === "false" ? false : e.target.value,
       }
     });
   };
@@ -128,8 +142,9 @@ const ManageItems = () => {
         title: data.title ? data.title : '',
         call_number: data.callNumber ? data.callNumber : '',
         collection: data.collection ? data.collection : '',
-        status: data.status ? data.status : '',
         tray: data.tray ? data.tray.barcode : '',
+        status: data.status ? data.status : '',
+        flag: !!data.flag,
         shelf: data.tray ? data.tray.shelf : '',
         depth: data.tray ? data.tray.depth : '',
         position: data.tray ? data.tray.position : 0,
@@ -149,6 +164,7 @@ const ManageItems = () => {
         call_number: '',
         collection: '',
         status: '',
+        flag: false,
         tray: '',
         shelf: '',
         depth: '',
@@ -162,7 +178,7 @@ const ManageItems = () => {
     // recent items) just because the user updated or created an item, but
     // never clicked the search button. However, we do show results if they
     // were already showing, or if there is anything in the search box.
-    const results = (showWarnings === true || state.search_results || state.query) ? await ContentSearch.items(state.query) : [];
+    const results = (showWarnings === true || state.search_results || state.query) ? await ContentSearch.items(state.query, state.flaggedOnly) : [];
     if (results && results[0]) {
       const fields = {
         new_item: false,
@@ -171,8 +187,9 @@ const ManageItems = () => {
         title: results[0].title ? results[0].title : "",
         call_number: results[0].callNnumber ? results[0].callNumber : "",
         collection: results[0].collection ? results[0].collection : "",
-        status: results[0].status ? results[0].status : "",
         tray: (results[0].tray && results[0].tray.barcode) ? results[0].tray.barcode : "",
+        status: results[0].status ? results[0].status : "",
+        flag: !!results[0].flag,
         shelf: (results[0].tray && results[0].tray.shelf) ? results[0].tray.shelf : "",
         depth: (results[0].tray && results[0].tray.depth) ? results[0].tray.depth : "",
         position: (results[0].tray && results[0].tray.position) ? results[0].tray.position : 0,
@@ -218,8 +235,9 @@ const ManageItems = () => {
             title: '',
             call_number: '',
             collection: '',
-            status: '',
             tray: '',
+            status: '',
+            flag: false,
             shelf: '',
             depth: '',
             position: 0,
@@ -245,8 +263,9 @@ const ManageItems = () => {
       barcode: state.fields.item_barcode,
       new_barcode: newBarcode || null,
       collection: state.fields.collection,
-      status: state.fields.status,
       tray: state.fields.tray,
+      status: state.fields.status,
+      flag: state.fields.flag,
     };
     if (!newBarcode || await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
       const load = await Load.updateItem(data);
@@ -265,8 +284,9 @@ const ManageItems = () => {
     const data = {
       barcode: state.fields.new_item_barcode,
       collection: state.fields.collection,
-      status: state.fields.status || "New",
       tray: state.fields.tray || null,
+      status: state.fields.status || "New",
+      flag: state.fields.flag || false,
     };
     const newBarcode = state.fields.new_item_barcode;
     if (await Load.itemInFolio(newBarcode) || window.confirm(`Item ${newBarcode} is not in FOLIO. Are you sure you want to continue?`)) {
@@ -313,23 +333,72 @@ const ManageItems = () => {
 
   return (
     <div>
-      <Row style={{"display": "flex", "paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row
+        style={{
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "20px",
+          paddingLeft: "15px",
+          paddingRight: "20px"
+        }}
+      >
         <SearchForm
           query={state.query}
           handleSearchButton={handleSearchButton}
           handleQueryChange={handleQueryChange}
         />
-        <Button color="warning" onClick={(e) => handleNewItemSelect(e)}>New item</Button>
-        { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} items`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} items total`}</Button>
-        }
+        <Button
+          color="warning"
+          style={{ marginRight: "20px" }}
+          onClick={(e) => handleNewItemSelect(e)}
+        >
+          New item
+        </Button>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={state.flaggedOnly}
+              onChange={handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Show flagged items only
+            </Label>
+          </div>
+        </FormGroup>
+        { state.count && (
+          <Button
+            color="info"
+            onClick={() => {
+              navigator.clipboard.writeText(`${state.count.toLocaleString()} items`);
+            }}
+            style={{ cursor: "grab", marginLeft: "auto" }}
+          >
+            {`${state.count.toLocaleString()} items total`}
+          </Button>
+        )}
       </Row>
-      <div style={{marginTop: "20px"}}>
+      <div style={{ marginTop: "20px" }}>
         <Row>
           <Col md="6">
-            { state.search_results
+            {state.search_results
               ? Object.keys(state.search_results).map((item, idx) => {
                   return (
+                    !state.flaggedOnly || state.search_results[item].flag ?
                     <ResultDisplay
                       folio_loaded={state.folio_loaded}
                       data={state.search_results[item]}
@@ -337,27 +406,28 @@ const ManageItems = () => {
                       index={idx}
                       key={idx}
                     />
+                    : null
                   );
                 })
-              : null
-            }
+              : null}
           </Col>
           <Col md="6">
-            { state.fields && ((state.fields.item_barcode && state.fields.item_barcode !== "") || state.fields.new_item)
-              ? <Card>
-                  <CardBody>
-                    <ItemForm
-                      fields={state.fields}
-                      collections={state.collections}
-                      handleItemChange={handleItemChange}
-                      handleItemUpdate={handleItemUpdate}
-                      handleItemDelete={handleItemDelete}
-                      handleCreateItem={handleCreateItem}
-                    />
-                  </CardBody>
-                </Card>
-              : null
-            }
+            {state.fields &&
+            ((state.fields.item_barcode && state.fields.item_barcode !== "") ||
+              state.fields.new_item) ? (
+              <Card>
+                <CardBody>
+                  <ItemForm
+                    fields={state.fields}
+                    collections={state.collections}
+                    handleItemChange={handleItemChange}
+                    handleItemUpdate={handleItemUpdate}
+                    handleItemDelete={handleItemDelete}
+                    handleCreateItem={handleCreateItem}
+                  />
+                </CardBody>
+              </Card>
+            ) : null}
           </Col>
         </Row>
       </div>
@@ -391,13 +461,13 @@ const ResultDisplay = (props) => {
         <Row>
           <dl className="row">
             <dt className="col-sm-3">Barcode</dt>
-            <dd className="col-sm-9">
+            <dd className={`col-sm-9${props.data.flag ? " text-danger" : ""}`}>
               {props.data.barcode}
             </dd>
             <dt className="col-sm-3">Title</dt>
             <dd className="col-sm-9">
               { props.data.title ? props.data.title :
-                (props.folio_loaded ? "(Title not available)" : "-")
+                (props.folio_loaded ? "(Title not available)" : "…")
               }
             </dd>
             <dt className="col-sm-3">Status</dt>
@@ -465,7 +535,11 @@ const ItemForm = (props) => {
             }
           </Row>
           <Row>
-            <FormGroup className="col-sm-6">
+            <FormGroup className="col-sm-4">
+              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
+              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+            </FormGroup>
+            <FormGroup className="col-sm-4">
               <Label for="status" style={{"fontWeight":"bold"}}>Status</Label>
               <Input type="select" name="status" value={props.fields.status || ''} onChange={(e) => props.handleItemChange(e)}>
                 <option value="">(none)</option>
@@ -478,9 +552,18 @@ const ItemForm = (props) => {
                 <option value="Imported">Imported</option>
               </Input>
             </FormGroup>
-            <FormGroup className="col-sm-6">
-              <Label for="tray" style={{"fontWeight":"bold"}}>Tray</Label>
-              <Input type="text" name="tray" value={props.fields.tray || ''} onChange={(e) => props.handleItemChange(e)} />
+            <FormGroup className="col-sm-4">
+              <Label for="flag" style={{"fontWeight":"bold"}}>Flag</Label>
+              <Input
+                type="select"
+                name="flag"
+                className={props.fields.flag.toString() === "true" ? "text-danger" : ""}
+                value={props.fields.flag.toString()}
+                onChange={(e) => props.handleItemChange(e)}
+              >
+                <option value="false">Not flagged</option>
+                <option value="true">Flagged</option>
+              </Input>
             </FormGroup>
           </Row>
           { !props.fields.new_item &&

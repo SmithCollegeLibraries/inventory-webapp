@@ -60,12 +60,12 @@ class Load {
     return get;
   };
 
-  accountDelete = async (data) => {
-    const get = await this.handleUpdate(`${account}delete-users/`, 'POST', data);
+  deleteAccount = async (id) => {
+    const get = await this.handleUpdate(`${account}delete-account/`, 'POST', id);
     return get;
   };
 
-  accountUpdate = async (data) => {
+  updateAccount = async (data) => {
     const get = await this.handleUpdate(`${account}update-account/`, 'POST', data);
     return get;
   };

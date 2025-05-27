@@ -605,7 +605,7 @@ const NewTray = () => {
     const collectionInfo = getCollectionInfo(data.original.collection);
     dispatch({
       type: 'CHANGE_COLLECTION_VALIDATION',
-      value: data.original.collection ? collectionInfo.folio_validated : true
+      value: data.original.collection && collectionInfo ? collectionInfo.folio_validated : true
     });
   }, [data.original.collection]); // eslint-disable-line react-hooks/exhaustive-deps
 
