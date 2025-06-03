@@ -10,7 +10,7 @@ import { warning } from '../components/toastAlerts';
 const useCollectionLogs = create((set) => {
   return {
     query: {
-      "barcode": "",
+      "name": "",
       "timestampPost": null,
       "timestampAnte": null,
       "user": "",
@@ -26,7 +26,7 @@ const useCollectionLogs = create((set) => {
     setQuery: (query) => set({ query }),
     markQueryChanged: (changed) => set({ queryChanged: changed }),
     resetQuery: () => set({ query: {
-          "barcode": "",
+          "name": "",
           "timestampPost": null,
           "timestampAnte": null,
           "user": "",
