@@ -143,6 +143,9 @@ class Header extends Component {
                       <DropdownItem>
                         <NavLink className="nav-link" to="/logs/collections">Collection logs</NavLink>
                       </DropdownItem>
+                      <DropdownItem>
+                        <NavLink className="nav-link" to="/logs/settings">Setting logs</NavLink>
+                      </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 }
