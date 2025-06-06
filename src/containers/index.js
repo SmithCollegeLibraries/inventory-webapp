@@ -9,6 +9,7 @@ import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
 import ManageCollections from './manageCollections';
 import ManageUsers from './users';
+import ManageSettings from './manageSettings';
 import ItemLogs from './logItems';
 import TrayLogs from './logTrays';
 import ShelfLogs from './logShelves';
@@ -32,6 +33,7 @@ export {
   ManageTrays,
   ManageCollections,
   ManageUsers,
+  ManageSettings,
   ItemLogs,
   TrayLogs,
   ShelfLogs,

@@ -15,7 +15,7 @@ import {
     ManageTrays,
     ManageCollections,
     ManageUsers,
-    // ManageSettings,
+    ManageSettings,
     ItemLogs,
     TrayLogs,
     ShelfLogs,
@@ -170,6 +170,9 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/manage-collections" render={() => (
                   <ManageCollections />
+                )}/>
+                <Route path="/settings" render={() => (
+                  <ManageSettings />
                 )}/>
                 <Route path="/users" render={() => (
                   <ManageUsers />

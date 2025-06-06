@@ -32,6 +32,16 @@ class Load {
     return get;
   }
 
+  updateSetting = async (data) => {
+    const update = await this.handleUpdate(`${settings}update-setting/`, 'POST', data);
+    return update;
+  }
+
+  newSetting = async (data) => {
+    const insert = await this.handleUpdate(`${settings}new-setting/`, 'POST', data);
+    return insert;
+  }
+
   /**
     * @desc Account management
   */

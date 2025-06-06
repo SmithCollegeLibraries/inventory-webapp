@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { Button, Form, Input, Label, Row, Table } from 'reactstrap';
-// import BootstrapTable from 'react-bootstrap-table-next';
 import Load from '../util/load';
 import { firstName } from '../util/helpers';
 import { create } from 'zustand';

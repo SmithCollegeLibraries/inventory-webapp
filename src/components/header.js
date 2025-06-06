@@ -119,9 +119,9 @@ class Header extends Component {
                             <NavLink className="nav-link" to="/users">Users</NavLink>
                           </DropdownItem>
                       }
-                      {/* <DropdownItem>
+                      <DropdownItem>
                         <NavLink className="nav-link" to="/settings">Settings</NavLink>
-                      </DropdownItem> */}
+                      </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 }
