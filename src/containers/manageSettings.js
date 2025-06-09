@@ -40,7 +40,7 @@ function ManageSettings() {
   const handleNewSettingChange = (e) => {
     const { name, value } = e.target;
     if (name === "new_setting_name") {
-      state.updateNewSettingName(value);
+      state.updateNewSettingName(value.replace(/[^a-zA-Z]/g, "").replace(/^./, (char) => char.toLowerCase()));
     }
     else if (name === "new_setting_value") {
       state.updateNewSettingValue(value);
@@ -50,19 +50,18 @@ function ManageSettings() {
   // Handle new setting submission
   const handleNewSettingSubmit = async (e) => {
     e.preventDefault();
-    const trimmedName = state.newSettingName.trim();
     // If setting name is empty, show error
-    if (trimmedName === "") {
+    if (state.newSettingName === "") {
       failure("Setting name cannot be empty");
     }
     // If setting name already exists in list, show error
-    if (state.settings[trimmedName]) {
+    if (state.settings[state.newSettingName]) {
       failure("Setting name already exists");
     }
     else {
       // Otherwise, create new setting
       const newSettingData = {
-        name: trimmedName,
+        name: state.newSettingName,
         value: state.newSettingValue
       };
 
