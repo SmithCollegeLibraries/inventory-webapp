@@ -1,14 +1,13 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Load from '../util/load';
 import { success, failure } from '../components/toastAlerts';
-import ContentSearch from '../util/search';
 import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 import { create } from 'zustand';
 
 
 const useSettings = create((set) => {
   return {
-    settings: [],
+    settings: {},
     newSettingName: "",
     newSettingValue: "",
 
@@ -16,7 +15,7 @@ const useSettings = create((set) => {
     updateNewSettingName: (newSettingName) => set({ newSettingName }),
     updateNewSettingValue: (newSettingValue) => set({ newSettingValue }),
     updateSetting: (settingName, settingValue) => set((state) => {
-      let settings = [...state.settings];
+      let settings = state.settings;
       settings[settingName] = settingValue;
       return { settings };
     }),
@@ -76,6 +75,29 @@ function ManageSettings() {
     }
   };
 
+  // Handle updating a setting
+  const handleUpdateSetting = (e, settingName) => {
+    const newValue = e.target.value;
+    state.updateSetting(settingName, newValue);
+  };
+
+  // Handle updating a setting submission
+  const handleUpdateSubmit = async (e, settingName) => {
+    e.preventDefault();
+    const settingValue = state.settings[settingName];
+
+    // Update the setting in the database
+    const response = await Load.updateSetting({
+      name: settingName,
+      value: settingValue,
+    });
+    if (response) {
+      success("Setting updated successfully");
+      const settings = await Load.getAllSettings();
+      state.updateAllSettings(settings);
+    }
+  };
+
   return (
     <div>
       <div style={{backgroundColor: "#fff", padding: '20px', textAlign: "middle", marginTop: "20px"}}>
@@ -86,22 +108,21 @@ function ManageSettings() {
           newSettingValue={state.newSettingValue}
         />
       </div>
-      {/* <Card>
+      <Card>
         <CardBody>
-          {data.collections ? Object.keys(data.collections).map((items, idx) => {
+          {state.settings ? Object.keys(state.settings).map((item, idx) => {
             return (
-              <Display
-                data={data.collections[items]}
+              <SettingDisplay
+                settingName={item}
+                settingValue={state.settings[item]}
                 index={idx}
-                key={idx}
+                handleUpdateSetting={handleUpdateSetting}
                 handleUpdateSubmit={handleUpdateSubmit}
-                handleUpdateFormChange={handleUpdateFormChange}
-                handleDeleteSubmit={handleDeleteSubmit}
               />
             );
           }) : null}
         </CardBody>
-      </Card> */}
+      </Card>
     </div>
   );
 
@@ -125,18 +146,20 @@ const AddNewSetting = ({ handleNewSettingChange, handleNewSettingSubmit, newSett
   </Form>
 );
 
-// const Display = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, handleDeleteSubmit }) => {
-//   return (
-//     <div key={index} style={{paddingBottom: "20px"}}>
-//       <Row>
-//         <Col md="8">
-//           <Input type="text" onChange={(e) => handleUpdateFormChange(e, index)} value={data.name} name="name" />
-//         </Col>
-//         <Col>
-//           <Button color="primary" style={{"marginRight": "10px"}} onClick={(e) => {handleUpdateSubmit(e, index)}}>Update</Button>
-//           <Button color="danger" onClick={(e) => {handleDeleteSubmit(e, data)}}>Delete</Button>
-//         </Col>
-//       </Row>
-//     </div>
-//   )
-// };
+const SettingDisplay = ({ settingName, settingValue, index, handleUpdateSetting, handleUpdateSubmit }) => {
+  return (
+    <div key={index} style={{paddingBottom: "20px"}}>
+      <Row>
+        <Col md="4">
+          <Input type="text" value={settingName} name="name" readOnly />
+        </Col>
+        <Col md="4">
+          <Input type="text" onChange={(e) => handleUpdateSetting(e, settingName)} value={settingValue} name="value" />
+        </Col>
+        <Col md="2">
+          <Button color="primary" style={{"marginRight": "10px"}} onClick={(e) => {handleUpdateSubmit(e, settingName)}}>Update</Button>
+        </Col>
+      </Row>
+    </div>
+  )
+};
