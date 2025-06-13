@@ -115,7 +115,7 @@ function ManageSettings() {
               <SettingDisplay
                 settingName={item}
                 settingValue={state.settings[item]}
-                index={idx}
+                key={idx}
                 handleUpdateSetting={handleUpdateSetting}
                 handleUpdateSubmit={handleUpdateSubmit}
               />
