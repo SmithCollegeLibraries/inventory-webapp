@@ -664,23 +664,7 @@ const NewBox = () => {
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
     }
 
-    if (verifyTrayLive(data.original.tray) === true &&
-        verifyOnSubmit(data.original.tray) === true &&
-        await verifyTrayIfConnected(data.original.tray, data.original.shelf, data.original.depth, data.original.position) === true)
-    {
-      // Check that the tray is in the expected location, and ask for
-      // confirmation if it's not
-      const locationCheck = matchesExpectedLocation(data.original.shelf, data.original.depth, data.original.position);
-      // There will be an error message if it's not true
-      if (locationCheck === true) {
-        processSubmit();
-      }
-      else {
-        if (window.confirm(`${locationCheck} Are you sure that the shelf, depth and location are correct?`)) {
-          processSubmit();
-        }
-      }
-    }
+    processSubmit();
   };
 
   const handleUndo = e => {
