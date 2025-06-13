@@ -197,7 +197,7 @@ const ManageTrays = () => {
         new_tray: false,
         tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
         new_tray_barcode: "",
-        size: results[0].size ? results[0].size : "",
+        size: results[0]?.size?.code ? results[0].size.code : "",
         collection: results[0].collection ? results[0].collection : "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
@@ -533,7 +533,7 @@ const ResultDisplay = (props) => {
               </dd>
               <dt className="col-sm-3">Size</dt>
               <dd className="col-sm-9">
-                {props.data.size ?? '-'}
+                {props.data?.size?.code ?? '-'}
               </dd>
               <dt className="col-sm-3">Items</dt>
               <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ( props.data.items.length > props.data.full_count ? 'text-danger' : '')}` }>
