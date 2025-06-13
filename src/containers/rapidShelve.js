@@ -9,6 +9,66 @@ import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
 
 
+// If the user is connected to the internet, do additional verification;
+// otherwise, we have to assume that everything is OK, and flag anything
+// anomalous at the point of submission.
+
+// If the complete tray information is given, then looking up the results
+// can be skipped (this is the case for newBox, which also uses this function).
+// Otherwise, the trayBarcode is used to look up the tray in the system.
+const verifyTrayIfConnected = async (completeTray, trayBarcode, shelf, depth, position) => {
+  if (navigator.onLine === true) {
+    const trayResults = completeTray ?? await Load.getTray({ "barcode" : trayBarcode });
+    const shelfResults = await Load.getShelf({ "barcode" : shelf });
+
+    const locationPayload = {
+      "shelf": shelf,
+      "depth": depth,
+      "position": position,
+    };
+    const locationResults = await Load.searchTraysByLocation(locationPayload);
+
+    // Check that the tray exists in the system
+    if (trayResults === null) {
+      failure(`Tray ${trayBarcode} does not exist in the system`);
+      return false;
+    }
+    // Check that the tray is not empty
+    else if (trayResults.items.length === 0) {
+      failure(`Tray ${trayBarcode} is empty and should not be shelved`);
+      return false;
+    }
+    // Check that the position is not too high for the shelf
+    else if (shelfResults.positions && parseInt(position) > shelfResults.positions) {
+      failure(`Position ${position} is too high for shelf ${shelfResults.barcode}. It has only ${shelfResults.positions} positions.`);
+      return false;
+    }
+    // Check that, if the depth is "Middle", the shelf has at least 3 depths
+    else if (depth === "Middle" && shelfResults.depths && shelfResults.depths < 3) {
+      failure(`Shelf ${shelfResults.barcode} has only ${shelfResults.depths} depths, so it cannot have a Middle depth.`);
+      return false;
+    }
+    // Check that the tray's size is not too high for the shelf's height
+    else if (trayResults.size && shelfResults.height && trayResults.size.height > shelfResults.height) {
+      failure(`Tray ${trayBarcode} is size ${trayResults.size.code}, but shelf ${shelfResults.barcode} is only ${shelfResults.height}″ high.`);
+      return false;
+    }
+
+    // Check that the location of the new tray isn't already taken
+    else if (locationResults.length > 0) {
+      // TODO: print more than just the first result
+      failure(`Location ${shelf}, depth ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+  else {
+    return true;
+  }
+}
+
 const RapidShelve = () => {
   const initialState = {
     current: {
@@ -135,67 +195,6 @@ const RapidShelve = () => {
       }
     }
   };
-
-  // If the user is connected to the internet, do additional verification;
-  // otherwise, we have to assume that everything is OK, and flag anything
-  // anomalous at the point of submission
-  const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
-    if (navigator.onLine === true) {
-      const trayResults = await Load.getTray({ "barcode" : tray });
-      const shelfResults = await Load.getShelf({ "barcode" : shelf });
-
-      const locationPayload = {
-        "shelf": shelf,
-        "depth": depth,
-        "position": position,
-      };
-      const locationResults = await Load.searchTraysByLocation(locationPayload);
-
-      // Check that the tray exists in the system
-      if (trayResults === null) {
-        failure(`Tray ${tray} does not exist in the system`);
-        return false;
-      }
-      // // Check that it's not shelved already
-      // else if (trayResults.shelf !== null) {
-      //   failure(`Tray ${tray} is already marked as being on shelf ${shelfResults.shelf}`);
-      //   return false;
-      // }
-      // Check that the tray is not empty
-      else if (trayResults.items.length === 0) {
-        failure(`Tray ${tray} is empty and should not be shelved`);
-        return false;
-      }
-      // Check that the position is not too high for the shelf
-      else if (shelfResults.positions && parseInt(position) > shelfResults.positions) {
-        failure(`Position ${position} is too high for shelf ${shelfResults.barcode}. It has only ${shelfResults.positions} positions.`);
-        return false;
-      }
-      // Check that, if the depth is "Middle", the shelf has at least 3 depths
-      else if (depth === "Middle" && shelfResults.depths && shelfResults.depths < 3) {
-        failure(`Shelf ${shelfResults.barcode} has only ${shelfResults.depths} depths, so it cannot have a Middle depth.`);
-        return false;
-      }
-      // Check that the tray's size is not too high for the shelf's height
-      else if (trayResults.size && shelfResults.height && trayResults.size.height > shelfResults.height) {
-        failure(`Tray ${trayResults.barcode} is size ${trayResults.size.code}, but shelf ${shelfResults.barcode} is only ${shelfResults.height}″ high.`);
-        return false;
-      }
-
-      // Check that the location of the new tray isn't already taken
-      else if (locationResults.length > 0) {
-        // TODO: print more than just the first result
-        failure(`Location ${shelf}, depth ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
-        return false;
-      }
-      else {
-        return true;
-      }
-    }
-    else {
-      return true;
-    }
-  }
 
   // Get settings from database on load
   useEffect(() => {
@@ -385,7 +384,7 @@ const RapidShelve = () => {
 
     if (verifyTrayLive(data.current.tray) === true &&
         verifyOnSubmit(data.current.tray) === true &&
-        await verifyTrayIfConnected(data.current.tray, data.current.shelf, data.current.depth, data.current.position) === true)
+        await verifyTrayIfConnected(null, data.current.tray, data.current.shelf, data.current.depth, data.current.position) === true)
     {
       // Check that the tray is in the expected location, and ask for
       // confirmation if it's not
@@ -664,3 +663,4 @@ const Display = props => (
 );
 
 export default RapidShelve;
+export { verifyTrayIfConnected };
