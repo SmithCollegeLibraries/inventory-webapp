@@ -270,22 +270,16 @@ const NewBox = () => {
   // This is the verification that's done on a tray in real time,
   // as opposed to when data is submitted to the system. It checks that
   // the barcode is not already in the list of staged trays.
-  const verifyTrayLive = tray => {
+  const verifyTrayItemLive = (tray, item) => {
+    console.log(data.staged);
     if (data.staged) {
-      const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
-      if (stagedTrays.includes(tray)) {
+      const stagedTrays = tray ? Object.keys(data.staged).map(x => data.staged[x].tray) : null;
+      const stagedItems = item ? Object.keys(data.staged).map(x => data.staged[x].item) : null;
+      if (tray && stagedTrays.includes(tray)) {
         failureTrayIfNew(tray, `Tray ${tray} is already staged`);
         return false;
       }
-    }
-    return true;
-  };
-
-  // Similarly for the item
-  const verifyItemLive = item => {
-    if (data.staged) {
-      const stagedItems = Object.keys(data.staged).map(x => data.staged[x].item);
-      if (stagedItems.includes(item)) {
+      else if (item && stagedItems.includes(item)) {
         failureItemIfNew(item, `Item ${item} is already staged`);
         return false;
       }
@@ -406,12 +400,7 @@ const NewBox = () => {
     const itemRegex = new RegExp(data.settings.itemStructure);
     const trayRegex = new RegExp(data.settings.trayStructure);
 
-    if (itemBarcodeToVerify) {
-      verifyItemLive(itemBarcodeToVerify);
-    }
-    if (trayBarcodeToVerify) {
-      verifyTrayLive(trayBarcodeToVerify);
-    }
+    verifyTrayItemLive(trayBarcodeToVerify, itemBarcodeToVerify);
     // If the item or tray barcode is of the right length but doesn't match
     // the expected structure, alert the user
     if (itemBarcodeToVerify.length >= data.settings.itemMinBarcodeLength && itemBarcodeToVerify.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
@@ -594,8 +583,7 @@ const NewBox = () => {
       dispatch({ type: 'CHANGE_FORM', form: 'verify' });
     }
 
-    if (verifyTrayLive(data.original.tray) === true &&
-        verifyOnSubmit(data.original.tray) === true &&
+    if (verifyOnSubmit(data.original.tray) === true &&
         await verifyTrayIfConnected(
           { items: [data.original.item], size: data.sizes.find(size => size.code === data.original.size) },
           data.original.tray,
@@ -765,7 +753,7 @@ const NewBox = () => {
                   settings={data.settings}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleSubmitOriginal={handleSubmitOriginal}
-                  verifyTrayLive={verifyTrayLive}
+                  verifyTrayItemLive={verifyTrayItemLive}
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
                   disabled={data.form === 'verify'}
