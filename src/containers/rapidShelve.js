@@ -141,8 +141,8 @@ const RapidShelve = () => {
   // anomalous at the point of submission
   const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
     if (navigator.onLine === true) {
-      const payload = { "barcode" : tray };
-      const results = await Load.getTray(payload);
+      const trayResults = await Load.getTray({ "barcode" : tray });
+      const shelfResults = await Load.getShelf({ "barcode" : shelf });
 
       const locationPayload = {
         "shelf": shelf,
@@ -152,20 +152,36 @@ const RapidShelve = () => {
       const locationResults = await Load.searchTraysByLocation(locationPayload);
 
       // Check that the tray exists in the system
-      if (results === null) {
+      if (trayResults === null) {
         failure(`Tray ${tray} does not exist in the system`);
         return false;
       }
       // // Check that it's not shelved already
-      // else if (results.shelf !== null) {
-      //   failure(`Tray ${tray} is already marked as being on shelf ${results.shelf}`);
+      // else if (trayResults.shelf !== null) {
+      //   failure(`Tray ${tray} is already marked as being on shelf ${shelfResults.shelf}`);
       //   return false;
       // }
       // Check that the tray is not empty
-      else if (results.items.length === 0) {
+      else if (trayResults.items.length === 0) {
         failure(`Tray ${tray} is empty and should not be shelved`);
         return false;
       }
+      // Check that the position is not too high for the shelf
+      else if (shelfResults.positions && parseInt(position) > shelfResults.positions) {
+        failure(`Position ${position} is too high for shelf ${shelfResults.barcode}. It has only ${shelfResults.positions} positions.`);
+        return false;
+      }
+      // Check that, if the depth is "Middle", the shelf has at least 3 depths
+      else if (depth === "Middle" && shelfResults.depths && shelfResults.depths < 3) {
+        failure(`Shelf ${shelfResults.barcode} has only ${shelfResults.depths} depths, so it cannot have a Middle depth.`);
+        return false;
+      }
+      // Check that the tray's size is not too high for the shelf's height
+      else if (trayResults.size && shelfResults.height && trayResults.size.height > shelfResults.height) {
+        failure(`Tray ${trayResults.barcode} is size ${trayResults.size.code}, but shelf ${shelfResults.barcode} is only ${shelfResults.height}″ high.`);
+        return false;
+      }
+
       // Check that the location of the new tray isn't already taken
       else if (locationResults.length > 0) {
         // TODO: print more than just the first result
