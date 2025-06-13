@@ -224,6 +224,7 @@ const NewBox = () => {
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
   const debouncedOriginalItem = useDebounce(data.original.item);
+  const debouncedOriginalTray = useDebounce(data.original.tray);
 
   // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
@@ -267,26 +268,6 @@ const NewBox = () => {
         && (data.original.tray === data.verify.tray));
   }
 
-  // This is the verification that's done on a tray in real time,
-  // as opposed to when data is submitted to the system. It checks that
-  // the barcode is not already in the list of staged trays.
-  const verifyTrayItemLive = (tray, item) => {
-    console.log(data.staged);
-    if (data.staged) {
-      const stagedTrays = tray ? Object.keys(data.staged).map(x => data.staged[x].tray) : null;
-      const stagedItems = item ? Object.keys(data.staged).map(x => data.staged[x].item) : null;
-      if (tray && stagedTrays.includes(tray)) {
-        failureTrayIfNew(tray, `Tray ${tray} is already staged`);
-        return false;
-      }
-      else if (item && stagedItems.includes(item)) {
-        failureItemIfNew(item, `Item ${item} is already staged`);
-        return false;
-      }
-    }
-    return true;
-  };
-
   // Live verification functions, which also get called again on submission
   const failureItemIfNew = useCallback((barcode, message) => {
     // Only alert if the barcode is not already in the list of alerted barcodes
@@ -318,7 +299,20 @@ const NewBox = () => {
   }, [data.trayAlreadyAlerted]);
 
   // This is the verification that's done when the user submits data
-  const verifyOnSubmit = tray => {
+  const verifyOnSubmit = (tray, item) => {
+    if (data.staged) {
+      const stagedTrays = tray ? Object.keys(data.staged).map(x => data.staged[x].tray) : null;
+      const stagedItems = item ? Object.keys(data.staged).map(x => data.staged[x].item) : null;
+      if (tray && stagedTrays.includes(tray)) {
+        failureTrayIfNew(tray, `Tray ${tray} is already staged`);
+        return false;
+      }
+      else if (item && stagedItems.includes(item)) {
+        failureItemIfNew(item, `Item ${item} is already staged`);
+        return false;
+      }
+    }
+
     if (parseInt(data.original.position) === 'NaN' || parseInt(data.original.position) > data.settings.maxPosition || parseInt(data.original.position) < 1) {
       failure(`Position should be a number between 1 and ${data.settings.maxPosition}`);
       return false;
@@ -395,21 +389,18 @@ const NewBox = () => {
 
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
-    const itemBarcodeToVerify = debouncedOriginalItem;
-    const trayBarcodeToVerify = data.original.tray;
     const itemRegex = new RegExp(data.settings.itemStructure);
     const trayRegex = new RegExp(data.settings.trayStructure);
 
-    verifyTrayItemLive(trayBarcodeToVerify, itemBarcodeToVerify);
     // If the item or tray barcode is of the right length but doesn't match
     // the expected structure, alert the user
-    if (itemBarcodeToVerify.length >= data.settings.itemMinBarcodeLength && itemBarcodeToVerify.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
-      failureItemIfNew(itemBarcodeToVerify, itemError(itemBarcodeToVerify));
+    if (debouncedOriginalItem.length >= data.settings.itemMinBarcodeLength && debouncedOriginalItem.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(debouncedOriginalItem)) {
+      failureItemIfNew(debouncedOriginalItem, itemError(debouncedOriginalItem));
     }
-    if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
-      failureTrayIfNew(trayBarcodeToVerify, trayError(trayBarcodeToVerify));
+    if (debouncedOriginalTray.length === data.settings.trayBarcodeLength && !trayRegex.test(debouncedOriginalTray)) {
+      failureTrayIfNew(debouncedOriginalTray, trayError(debouncedOriginalTray));
     }
-  }, [debouncedOriginalItem, data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedOriginalItem, debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
@@ -583,7 +574,7 @@ const NewBox = () => {
       dispatch({ type: 'CHANGE_FORM', form: 'verify' });
     }
 
-    if (verifyOnSubmit(data.original.tray) === true &&
+    if (verifyOnSubmit(data.original.tray, data.original.item) === true &&
         await verifyTrayIfConnected(
           { items: [data.original.item], size: data.sizes.find(size => size.code === data.original.size) },
           data.original.tray,
@@ -753,7 +744,6 @@ const NewBox = () => {
                   settings={data.settings}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleSubmitOriginal={handleSubmitOriginal}
-                  verifyTrayItemLive={verifyTrayItemLive}
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
                   disabled={data.form === 'verify'}
