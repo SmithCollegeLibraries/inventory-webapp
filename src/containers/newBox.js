@@ -619,7 +619,7 @@ const NewBox = () => {
       let newBox = data.original;
       newBox['collection'] = data.original.collection === UNKNOWN ? '' : data.original.collection;
       newBox['size'] = data.original.size === UNKNOWN ? '' : data.original.size;
-      const newStaged = [data.original].concat(data.staged);
+      const newStaged = data.original ? [data.original].concat(data.staged) : data.staged;
       localforage.setItem('newbox', newStaged);
       dispatch({ type: 'RESET' });
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
