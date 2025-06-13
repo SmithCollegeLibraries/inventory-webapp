@@ -378,8 +378,8 @@ const RapidShelve = () => {
     const processSubmit = async () => {
       const newStaged = data.current ? [data.current].concat(data.staged) : data.staged;
       localforage.setItem('load', newStaged);
-      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
       dispatch({ type: 'RESET_CURRENT' });
+      dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
     }
 
     if (verifyTrayLive(data.current.tray) === true &&
