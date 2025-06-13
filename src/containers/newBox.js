@@ -7,6 +7,7 @@ import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
+import { verifyTrayIfConnected } from './rapidShelve';
 
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 const SIZE_PLACEHOLDER = '- Size -';
@@ -351,41 +352,6 @@ const NewBox = () => {
     }
   };
 
-  // If the user is connected to the internet, do additional verification;
-  // otherwise, we have to assume that everything is OK, and flag anything
-  // anomalous at the point of submission
-  const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
-    if (navigator.onLine === true) {
-      const payload = { "barcode" : tray };
-      const results = await Load.getTray(payload);
-
-      const locationPayload = {
-        "shelf": shelf,
-        "depth": depth,
-        "position": position,
-      };
-      const locationResults = await Load.searchTraysByLocation(locationPayload);
-
-      // Check that the tray does not in the system
-      if (results !== null) {
-        failure(`Tray ${tray} already exists in the system`);
-        return false;
-      }
-      // Check that the location of the new tray isn't already taken
-      else if (locationResults.length > 0) {
-        // TODO: print more than just the first result
-        failure(`Location ${shelf}, depth ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
-        return false;
-      }
-      else {
-        return true;
-      }
-    }
-    else {
-      return true;
-    }
-  }
-
   // Get settings from database on load
   useEffect(() => {
     const getSettings = async () => {
@@ -630,7 +596,14 @@ const NewBox = () => {
 
     if (verifyTrayLive(data.original.tray) === true &&
         verifyOnSubmit(data.original.tray) === true &&
-        await verifyTrayIfConnected(data.original.tray, data.original.shelf, data.original.depth, data.original.position) === true)
+        await verifyTrayIfConnected(
+          { items: [data.original.item], size: data.sizes.find(size => size.code === data.original.size) },
+          data.original.tray,
+          data.original.shelf,
+          data.original.depth,
+          data.original.position)
+        === true
+      )
     {
       // Check that the tray is in the expected location, and ask for
       // confirmation if it's not
