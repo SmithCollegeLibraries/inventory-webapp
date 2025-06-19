@@ -15,11 +15,12 @@ import {
     ManageTrays,
     ManageCollections,
     ManageUsers,
-    // ManageSettings,
+    ManageSettings,
     ItemLogs,
     TrayLogs,
     ShelfLogs,
     CollectionLogs,
+    SettingLogs,
     ReportCounts,
     ReportSpaceUsage,
     ReportFillRate,
@@ -170,6 +171,9 @@ export default class Main extends Component {
                 <Route path="/manage-collections" render={() => (
                   <ManageCollections />
                 )}/>
+                <Route path="/settings" render={() => (
+                  <ManageSettings />
+                )}/>
                 <Route path="/users" render={() => (
                   <ManageUsers />
                 )}/>
@@ -184,6 +188,9 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/logs/collections" render={() => (
                   <CollectionLogs />
+                )}/>
+                <Route path="/logs/settings" render={() => (
+                  <SettingLogs />
                 )}/>
                 <Route path="/reports/counts" render={() => (
                   <ReportCounts />

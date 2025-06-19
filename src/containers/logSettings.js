@@ -1,26 +1,22 @@
 import React, { useEffect } from 'react';
 import { Button, Form, Input, Label, Row, Table } from 'reactstrap';
-// import BootstrapTable from 'react-bootstrap-table-next';
 import Load from '../util/load';
 import { firstName } from '../util/helpers';
 import { create } from 'zustand';
 import { warning } from '../components/toastAlerts';
 
 
-const useCollectionLogs = create((set) => {
+const useSettingLogs = create((set) => {
   return {
     query: {
       "name": "",
       "timestampPost": null,
       "timestampAnte": null,
       "user": "",
-      "action": null,
-      "details": "",
     },
     queryChanged: true,
     results: [],
     resultsFetched: false,
-    actionList: [],
     nameList: [],
 
     setQuery: (query) => set({ query }),
@@ -30,20 +26,17 @@ const useCollectionLogs = create((set) => {
           "timestampPost": null,
           "timestampAnte": null,
           "user": "",
-          "action": null,
-          "details": "",
         }
       }),
     updateResults: (results) => set({ results }),
     clearResults: () => set({ results: [] }),
     updateResultsFetched: (resultsFetched) => set({ resultsFetched }),
-    updateActionList: (actionList) => set({ actionList }),
     updateNameList: (nameList) => set({ nameList }),
   }
 });
 
-const CollectionLogs = () => {
-  const state = useCollectionLogs();
+const SettingLogs = () => {
+  const state = useSettingLogs();
 
   const handleQueryChange = (e, query) => {
     e.preventDefault();
@@ -53,7 +46,7 @@ const CollectionLogs = () => {
 
   const handleSearch = async () => {
     state.clearResults();
-    const results = await Load.searchCollectionLogs(state.query);
+    const results = await Load.searchSettingLogs(state.query);
     if (results && results.length > 0) {
       state.updateResults(results);
     }
@@ -64,11 +57,6 @@ const CollectionLogs = () => {
     state.markQueryChanged(false);
   };
 
-  // Get list of all actions
-  useEffect(() => {
-    Load.getCollectionActions().then((actionList) => {state.updateActionList(actionList)});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Get list of user names
   useEffect(() => {
     Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
@@ -78,7 +66,6 @@ const CollectionLogs = () => {
     <div>
       <SearchForm
         query={state.query}
-        actionList={state.actionList}
         nameList={state.nameList}
         queryChanged={state.queryChanged}
         handleQueryChange={handleQueryChange}
@@ -101,7 +88,7 @@ const SearchForm = props => {
   return (
     <Form inline style={{"float": "left", "width": "100%"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
-        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search collection logs</Button>
+        <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search setting logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
@@ -145,21 +132,6 @@ const SearchForm = props => {
           name="user"
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
-            "action": e.target.value
-          })}
-        >
-          <option value="">-- Action --</option>
-          { props.actionList.map((action, idx) =>
-              <option key={idx} value={action}>{action}</option>
-            )
-          }
-        </Input>
-        <Input
-          type="select"
-          style={{"marginRight": "10px"}}
-          name="user"
-          onChange={(e) => props.handleQueryChange(e, {
-            ...props.query,
             "user": e.target.value
           })}
         >
@@ -169,17 +141,6 @@ const SearchForm = props => {
             )
           }
         </Input>
-        <Input
-          type="text"
-          style={{"marginRight": "10px", "width": "300px"}}
-          name="details"
-          placeholder="Details"
-          value={props.details}
-          onChange={(e) => props.handleQueryChange(e, {
-            ...props.query,
-            "details": e.target.value
-          })}
-        />
       </Row>
     </Form>
   );
@@ -203,11 +164,9 @@ const ResultDisplay = ({ data }) => (
 const TableHead = () => (
   <thead>
     <tr>
-      <th>Collection log ID</th>
+      <th>Setting log ID</th>
       <th>Name</th>
-      <th>Action</th>
       <th>User</th>
-      <th>Details</th>
       <th>Timestamp</th>
     </tr>
   </thead>
@@ -217,11 +176,9 @@ const TableRow = ({ log, idx }) => (
   <tr key={idx}>
     <td>{log.id}</td>
     <td>{log.name}</td>
-    <td>{log.action}</td>
     <td>{firstName(log.user)}</td>
-    <td>{log.details}</td>
     <td>{log.timestamp}</td>
   </tr>
 )
 
-export default CollectionLogs;
+export default SettingLogs;

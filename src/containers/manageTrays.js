@@ -29,6 +29,11 @@ const reducer = (state, action) => {
         ...state,
         flaggedOnly: action.payload
       };
+    case 'UNSHELVED_ONLY':
+      return {
+        ...state,
+        unshelvedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
@@ -89,6 +94,7 @@ const ManageTrays = () => {
   const initialState = {
     barcode: '',
     flaggedOnly: false,
+    unshelvedOnly: false,
     freeSpace: '',
     search_results: [],
     fields: {
@@ -128,6 +134,13 @@ const ManageTrays = () => {
     dispatch({
       type: "FLAGGED_ONLY",
       payload: !state.flaggedOnly,
+    });
+  };
+
+  const handleUnshelvedOnlyChange = () => {
+    dispatch({
+      type: "UNSHELVED_ONLY",
+      payload: !state.unshelvedOnly,
     });
   };
 
@@ -187,7 +200,7 @@ const ManageTrays = () => {
 
   const handleSearch = async (showWarnings = false) => {
     dispatch({ type: 'RESET_RESULTS', payload: '' });
-    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly);
+    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly, state.unshelvedOnly);
     if (results && results[0]) {
       let items = [];
       for (let barcode of results[0].items) {
@@ -197,7 +210,7 @@ const ManageTrays = () => {
         new_tray: false,
         tray_barcode: results[0].tray_barcode ? results[0].tray_barcode : "",
         new_tray_barcode: "",
-        size: results[0].size ? results[0].size : "",
+        size: results[0]?.size?.code ? results[0].size.code : "",
         collection: results[0].collection ? results[0].collection : "",
         shelf: results[0].shelf ? results[0].shelf : "",
         depth: results[0].shelf_depth ? results[0].shelf_depth : "",
@@ -385,7 +398,7 @@ const ManageTrays = () => {
         >
           New tray
         </Button>
-        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <Input
               id="flaggedOnlyCheckbox"
@@ -407,7 +420,33 @@ const ManageTrays = () => {
                 fontWeight: 400
               }}
             >
-              Show flagged trays only
+              Flagged only
+            </Label>
+          </div>
+        </FormGroup>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="unshelvedOnlyCheckbox"
+              type="checkbox"
+              checked={state.unshelvedOnly}
+              onChange={handleUnshelvedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="unshelvedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Unshelved only
             </Label>
           </div>
         </FormGroup>
@@ -422,13 +461,15 @@ const ManageTrays = () => {
               ? Object.keys(state.search_results).map((tray, idx) => {
                   return (
                     !state.flaggedOnly || state.search_results[tray].flag ?
-                    <ResultDisplay
-                      data={state.search_results[tray]}
-                      handleTraySelect={handleTraySelect}
-                      index={idx}
-                      key={idx}
-                    />
-                    : null
+                    ( !state.unshelvedOnly || !state.search_results[tray].shelf ?
+                      <ResultDisplay
+                        data={state.search_results[tray]}
+                        handleTraySelect={handleTraySelect}
+                        index={idx}
+                        key={idx}
+                      />
+                      : null
+                    ) : null
                   );
                 })
               : null
@@ -533,7 +574,7 @@ const ResultDisplay = (props) => {
               </dd>
               <dt className="col-sm-3">Size</dt>
               <dd className="col-sm-9">
-                {props.data.size ?? '-'}
+                {props.data?.size?.code ?? '-'}
               </dd>
               <dt className="col-sm-3">Items</dt>
               <dd className={ `col-sm-9 ${props.data.full_count === null || props.data.items.length < props.data.full_count ? 'text-info' : ( props.data.items.length > props.data.full_count ? 'text-danger' : '')}` }>

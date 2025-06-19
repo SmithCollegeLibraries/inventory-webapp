@@ -9,10 +9,12 @@ import ManageItems from './manageItems';
 import ManageTrays from './manageTrays';
 import ManageCollections from './manageCollections';
 import ManageUsers from './users';
+import ManageSettings from './manageSettings';
 import ItemLogs from './logItems';
 import TrayLogs from './logTrays';
 import ShelfLogs from './logShelves';
 import CollectionLogs from './logCollections';
+import SettingLogs from './logSettings';
 import ReportCounts from './reportCounts';
 import ReportSpaceUsage from './reportSpaceUsage';
 import ReportFillRate from './reportFillRate';
@@ -31,10 +33,12 @@ export {
   ManageTrays,
   ManageCollections,
   ManageUsers,
+  ManageSettings,
   ItemLogs,
   TrayLogs,
   ShelfLogs,
   CollectionLogs,
+  SettingLogs,
   ReportCounts,
   ReportSpaceUsage,
   ReportFillRate,

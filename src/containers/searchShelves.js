@@ -5,7 +5,6 @@ import ContentSearch from '../util/search';
 import { displayItemList, padShelfBarcode } from '../util/helpers';
 import { success, warning } from '../components/toastAlerts';
 
-// Put default collection for each user separately
 const ANY_SIZE = '(Any)';
 const ANY_COLLECTION = '(Any)';
 const ANY_SHELF_FULNESS = '(Any)';
@@ -391,6 +390,10 @@ const ResultDisplay = (props) => {
             <dl>
               <dt>Barcode</dt>
               <dd>{props.currentTray.barcode}</dd>
+              <dt>Size</dt>
+              <dd className={(props.currentTray?.size?.code != props.data.size) ? "text-danger" : ""}>
+                {props.currentTray?.size?.code ?? '-'}
+              </dd>
               { props.currentTray.flag ? <><dt className="text-danger">Flagged</dt><dd></dd></> : null}
               <dt>Location</dt>
               <dd>{`${props.data.barcode} • ${props.currentTray.depth} • ${props.currentTray.position}`}</dd>

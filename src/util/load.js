@@ -11,6 +11,7 @@ const itemLogAPI = `${process.env.REACT_APP_DATABASE_URL}/item-log-api/`
 const trayLogAPI = `${process.env.REACT_APP_DATABASE_URL}/tray-log-api/`
 const shelfLogAPI = `${process.env.REACT_APP_DATABASE_URL}/shelf-log-api/`
 const collectionLogAPI = `${process.env.REACT_APP_DATABASE_URL}/collection-log-api/`
+const settingLogAPI = `${process.env.REACT_APP_DATABASE_URL}/setting-log-api/`
 const picklistAPI = `${process.env.REACT_APP_DATABASE_URL}/picklist-api/`
 const fillRateAPI = `${process.env.REACT_APP_DATABASE_URL}/fill-rate-api/`
 
@@ -29,6 +30,16 @@ class Load {
   getAllSettings = async () => {
     const get = await this.handleUpdate(`${settings}get-all-settings/`, 'GET');
     return get;
+  }
+
+  updateSetting = async (data) => {
+    const update = await this.handleUpdate(`${settings}update-setting/`, 'POST', data);
+    return update;
+  }
+
+  newSetting = async (data) => {
+    const insert = await this.handleUpdate(`${settings}new-setting/`, 'POST', data);
+    return insert;
   }
 
   /**
@@ -364,6 +375,11 @@ class Load {
 
   searchCollectionLogs = async (data) => {
     const get = await this.handleUpdate(`${collectionLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+  searchSettingLogs = async (data) => {
+    const get = await this.handleUpdate(`${settingLogAPI}search/`, 'POST', data);
     return get;
   }
 

@@ -7,6 +7,7 @@ import localforage from 'localforage';
 // import PropTypes from 'prop-types';
 import useDebounce from '../components/debounce';
 import { success, failure } from '../components/toastAlerts';
+import { verifyTrayIfConnected } from './rapidShelve';
 
 const COLLECTION_PLACEHOLDER = '--- Select collection ---';
 const SIZE_PLACEHOLDER = '- Size -';
@@ -223,6 +224,7 @@ const NewBox = () => {
   const [data, dispatch] = useReducer(loadReducer, initialState);
 
   const debouncedOriginalItem = useDebounce(data.original.item);
+  const debouncedOriginalTray = useDebounce(data.original.tray);
 
   // Anytime the DOM is updated, update based on local storage
   useEffect(() => {
@@ -266,32 +268,6 @@ const NewBox = () => {
         && (data.original.tray === data.verify.tray));
   }
 
-  // This is the verification that's done on a tray in real time,
-  // as opposed to when data is submitted to the system. It checks that
-  // the barcode is not already in the list of staged trays.
-  const verifyTrayLive = tray => {
-    if (data.staged) {
-      const stagedTrays = Object.keys(data.staged).map(x => data.staged[x].tray);
-      if (stagedTrays.includes(tray)) {
-        failureTrayIfNew(tray, `Tray ${tray} is already staged`);
-        return false;
-      }
-    }
-    return true;
-  };
-
-  // Similarly for the item
-  const verifyItemLive = item => {
-    if (data.staged) {
-      const stagedItems = Object.keys(data.staged).map(x => data.staged[x].item);
-      if (stagedItems.includes(item)) {
-        failureItemIfNew(item, `Item ${item} is already staged`);
-        return false;
-      }
-    }
-    return true;
-  };
-
   // Live verification functions, which also get called again on submission
   const failureItemIfNew = useCallback((barcode, message) => {
     // Only alert if the barcode is not already in the list of alerted barcodes
@@ -323,7 +299,20 @@ const NewBox = () => {
   }, [data.trayAlreadyAlerted]);
 
   // This is the verification that's done when the user submits data
-  const verifyOnSubmit = tray => {
+  const verifyOnSubmit = (tray, item) => {
+    if (data.staged) {
+      const stagedTrays = tray ? Object.keys(data.staged).map(x => data.staged[x].tray) : null;
+      const stagedItems = item ? Object.keys(data.staged).map(x => data.staged[x].item) : null;
+      if (tray && stagedTrays.includes(tray)) {
+        failureTrayIfNew(tray, `Tray ${tray} is already staged`);
+        return false;
+      }
+      else if (item && stagedItems.includes(item)) {
+        failureItemIfNew(item, `Item ${item} is already staged`);
+        return false;
+      }
+    }
+
     if (parseInt(data.original.position) === 'NaN' || parseInt(data.original.position) > data.settings.maxPosition || parseInt(data.original.position) < 1) {
       failure(`Position should be a number between 1 and ${data.settings.maxPosition}`);
       return false;
@@ -350,41 +339,6 @@ const NewBox = () => {
       }
     }
   };
-
-  // If the user is connected to the internet, do additional verification;
-  // otherwise, we have to assume that everything is OK, and flag anything
-  // anomalous at the point of submission
-  const verifyTrayIfConnected = async (tray, shelf, depth, position) => {
-    if (navigator.onLine === true) {
-      const payload = { "barcode" : tray };
-      const results = await Load.getTray(payload);
-
-      const locationPayload = {
-        "shelf": shelf,
-        "depth": depth,
-        "position": position,
-      };
-      const locationResults = await Load.searchTraysByLocation(locationPayload);
-
-      // Check that the tray does not in the system
-      if (results !== null) {
-        failure(`Tray ${tray} already exists in the system`);
-        return false;
-      }
-      // Check that the location of the new tray isn't already taken
-      else if (locationResults.length > 0) {
-        // TODO: print more than just the first result
-        failure(`Location ${shelf}, depth ${depth}, position ${position} is already occupied by tray ${locationResults[0].barcode}`);
-        return false;
-      }
-      else {
-        return true;
-      }
-    }
-    else {
-      return true;
-    }
-  }
 
   // Get settings from database on load
   useEffect(() => {
@@ -435,26 +389,18 @@ const NewBox = () => {
 
   // Perform real-time checks that don't require an internet connection
   useEffect(() => {
-    const itemBarcodeToVerify = debouncedOriginalItem;
-    const trayBarcodeToVerify = data.original.tray;
     const itemRegex = new RegExp(data.settings.itemStructure);
     const trayRegex = new RegExp(data.settings.trayStructure);
 
-    if (itemBarcodeToVerify) {
-      verifyItemLive(itemBarcodeToVerify);
-    }
-    if (trayBarcodeToVerify) {
-      verifyTrayLive(trayBarcodeToVerify);
-    }
     // If the item or tray barcode is of the right length but doesn't match
     // the expected structure, alert the user
-    if (itemBarcodeToVerify.length >= data.settings.itemMinBarcodeLength && itemBarcodeToVerify.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(itemBarcodeToVerify)) {
-      failureItemIfNew(itemBarcodeToVerify, itemError(itemBarcodeToVerify));
+    if (debouncedOriginalItem.length >= data.settings.itemMinBarcodeLength && debouncedOriginalItem.length <= data.settings.itemMaxBarcodeLength && !itemRegex.test(debouncedOriginalItem)) {
+      failureItemIfNew(debouncedOriginalItem, itemError(debouncedOriginalItem));
     }
-    if (trayBarcodeToVerify.length === data.settings.trayBarcodeLength && !trayRegex.test(trayBarcodeToVerify)) {
-      failureTrayIfNew(trayBarcodeToVerify, trayError(trayBarcodeToVerify));
+    if (debouncedOriginalTray.length === data.settings.trayBarcodeLength && !trayRegex.test(debouncedOriginalTray)) {
+      failureTrayIfNew(debouncedOriginalTray, trayError(debouncedOriginalTray));
     }
-  }, [debouncedOriginalItem, data.original.tray]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedOriginalItem, debouncedOriginalTray]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getPreviousTray = () => {
     if (Object.keys(data.staged).length === 0) {
@@ -628,9 +574,15 @@ const NewBox = () => {
       dispatch({ type: 'CHANGE_FORM', form: 'verify' });
     }
 
-    if (verifyTrayLive(data.original.tray) === true &&
-        verifyOnSubmit(data.original.tray) === true &&
-        await verifyTrayIfConnected(data.original.tray, data.original.shelf, data.original.depth, data.original.position) === true)
+    if (verifyOnSubmit(data.original.tray, data.original.item) === true &&
+        await verifyTrayIfConnected(
+          { items: [data.original.item], size: data.sizes.find(size => size.code === data.original.size) },
+          data.original.tray,
+          data.original.shelf,
+          data.original.depth,
+          data.original.position)
+        === true
+      )
     {
       // Check that the tray is in the expected location, and ask for
       // confirmation if it's not
@@ -658,29 +610,13 @@ const NewBox = () => {
       let newBox = data.original;
       newBox['collection'] = data.original.collection === UNKNOWN ? '' : data.original.collection;
       newBox['size'] = data.original.size === UNKNOWN ? '' : data.original.size;
-      const newStaged = [data.original].concat(data.staged);
+      const newStaged = data.original ? [data.original].concat(data.staged) : data.staged;
       localforage.setItem('newbox', newStaged);
       dispatch({ type: 'RESET' });
       dispatch({ type: 'UPDATE_STAGED', staged: newStaged });
     }
 
-    if (verifyTrayLive(data.original.tray) === true &&
-        verifyOnSubmit(data.original.tray) === true &&
-        await verifyTrayIfConnected(data.original.tray, data.original.shelf, data.original.depth, data.original.position) === true)
-    {
-      // Check that the tray is in the expected location, and ask for
-      // confirmation if it's not
-      const locationCheck = matchesExpectedLocation(data.original.shelf, data.original.depth, data.original.position);
-      // There will be an error message if it's not true
-      if (locationCheck === true) {
-        processSubmit();
-      }
-      else {
-        if (window.confirm(`${locationCheck} Are you sure that the shelf, depth and location are correct?`)) {
-          processSubmit();
-        }
-      }
-    }
+    processSubmit();
   };
 
   const handleUndo = e => {
@@ -808,7 +744,6 @@ const NewBox = () => {
                   settings={data.settings}
                   handleOriginalOnChange={handleOriginalOnChange}
                   handleSubmitOriginal={handleSubmitOriginal}
-                  verifyTrayLive={verifyTrayLive}
                   checkVerifyPossible={checkVerifyPossible}
                   clearOriginal={clearOriginal}
                   disabled={data.form === 'verify'}
