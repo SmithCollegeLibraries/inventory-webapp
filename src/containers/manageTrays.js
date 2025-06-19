@@ -29,6 +29,11 @@ const reducer = (state, action) => {
         ...state,
         flaggedOnly: action.payload
       };
+    case 'UNSHELVED_ONLY':
+      return {
+        ...state,
+        unshelvedOnly: action.payload
+      };
     case 'UPDATE_RESULTS':
       return {
         ...state,
@@ -89,6 +94,7 @@ const ManageTrays = () => {
   const initialState = {
     barcode: '',
     flaggedOnly: false,
+    unshelvedOnly: false,
     freeSpace: '',
     search_results: [],
     fields: {
@@ -128,6 +134,13 @@ const ManageTrays = () => {
     dispatch({
       type: "FLAGGED_ONLY",
       payload: !state.flaggedOnly,
+    });
+  };
+
+  const handleUnshelvedOnlyChange = () => {
+    dispatch({
+      type: "UNSHELVED_ONLY",
+      payload: !state.unshelvedOnly,
     });
   };
 
@@ -187,7 +200,7 @@ const ManageTrays = () => {
 
   const handleSearch = async (showWarnings = false) => {
     dispatch({ type: 'RESET_RESULTS', payload: '' });
-    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly);
+    const results = await ContentSearch.trays(state.barcode, state.freeSpace, state.flaggedOnly, state.unshelvedOnly);
     if (results && results[0]) {
       let items = [];
       for (let barcode of results[0].items) {
@@ -385,6 +398,32 @@ const ManageTrays = () => {
         >
           New tray
         </Button>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="unshelvedOnlyCheckbox"
+              type="checkbox"
+              checked={state.unshelvedOnly}
+              onChange={handleUnshelvedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="unshelvedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Unshelved only
+            </Label>
+          </div>
+        </FormGroup>
         <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <Input
@@ -407,7 +446,7 @@ const ManageTrays = () => {
                 fontWeight: 400
               }}
             >
-              Show flagged trays only
+              Flagged only
             </Label>
           </div>
         </FormGroup>
@@ -422,13 +461,15 @@ const ManageTrays = () => {
               ? Object.keys(state.search_results).map((tray, idx) => {
                   return (
                     !state.flaggedOnly || state.search_results[tray].flag ?
-                    <ResultDisplay
-                      data={state.search_results[tray]}
-                      handleTraySelect={handleTraySelect}
-                      index={idx}
-                      key={idx}
-                    />
-                    : null
+                    ( !state.unshelvedOnly || state.search_results[tray].shelf === "" ?
+                      <ResultDisplay
+                        data={state.search_results[tray]}
+                        handleTraySelect={handleTraySelect}
+                        index={idx}
+                        key={idx}
+                      />
+                      : null
+                    ) : null
                   );
                 })
               : null
