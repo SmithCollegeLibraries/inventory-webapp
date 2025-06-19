@@ -401,32 +401,6 @@ const ManageTrays = () => {
         <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
             <Input
-              id="unshelvedOnlyCheckbox"
-              type="checkbox"
-              checked={state.unshelvedOnly}
-              onChange={handleUnshelvedOnlyChange}
-              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
-            />
-            <Label
-              for="unshelvedOnlyCheckbox"
-              check
-              style={{
-                marginBottom: "0",
-                marginTop: "0",
-                display: "flex",
-                alignItems: "center",
-                verticalAlign: "middle",
-                cursor: "pointer",
-                fontWeight: 400
-              }}
-            >
-              Unshelved only
-            </Label>
-          </div>
-        </FormGroup>
-        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Input
               id="flaggedOnlyCheckbox"
               type="checkbox"
               checked={state.flaggedOnly}
@@ -450,6 +424,32 @@ const ManageTrays = () => {
             </Label>
           </div>
         </FormGroup>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="unshelvedOnlyCheckbox"
+              type="checkbox"
+              checked={state.unshelvedOnly}
+              onChange={handleUnshelvedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="unshelvedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Unshelved only
+            </Label>
+          </div>
+        </FormGroup>
         { state.count &&
           <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} trays`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} trays total`}</Button>
         }
@@ -461,7 +461,7 @@ const ManageTrays = () => {
               ? Object.keys(state.search_results).map((tray, idx) => {
                   return (
                     !state.flaggedOnly || state.search_results[tray].flag ?
-                    ( !state.unshelvedOnly || state.search_results[tray].shelf === "" ?
+                    ( !state.unshelvedOnly || !state.search_results[tray].shelf ?
                       <ResultDisplay
                         data={state.search_results[tray]}
                         handleTraySelect={handleTraySelect}
