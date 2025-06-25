@@ -68,6 +68,17 @@ function Users() {
 
   const handleSubmit = async (e, index) => {
     e.preventDefault();
+    // Don't update if level is not between 1 and 100
+    if (isNaN(state.users[index].level) || state.users[index].level < 1 || state.users[index].level > 100) {
+      failure("Level must be a number between 1 and 100");
+      return;
+    }
+    // Don't update if level is not an integer
+    if (!Number.isInteger(Number(state.users[index].level))) {
+      failure("Level must be an integer");
+      return;
+    }
+
     const data = state.users[index];
     const update = await Load.updateAccount(data);
     state.users[index].password = "";
