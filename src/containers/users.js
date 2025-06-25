@@ -101,14 +101,15 @@ function Users() {
     state.updateUserPassword(index, e.target.value);
   };
 
-  const handleDelete = (e, index) => {
+  const handleDelete = async (e, index) => {
     e.preventDefault();
     if (window.confirm("Delete this user? This action can only be undone by the database administrator.")) {
       const data = state.users[index];
       const deleteAccount = Load.deleteAccount({id: data.id});
-      if (deleteAccount === true) {
-          success('Account successfully deleted');
-          state.loadUsers();
+      console.log(deleteAccount);
+      if (await deleteAccount === true) {
+        success('Account successfully deleted');
+        state.loadUsers();
       }
       else {
         failure("There was an error deleting this account");
