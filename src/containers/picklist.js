@@ -17,6 +17,7 @@ const truncate = (str, n) => {
 const usePicklist = create((set) => {
   return {
     user_id: null,
+    userCollection: null,
     newBarcode: '',
     notInNewSystem: [],
     oldSystemCopied: false,
@@ -28,13 +29,16 @@ const usePicklist = create((set) => {
     showingAll: false,
     heightLimited: false,
     hideCirculating: true,
+    hideNotMyCollection: false,
     folioWaiting: false,  // The "Add all from FOLIO" button is disabled while we're waiting for the results from FOLIO so that there is some visual feedback
 
     setShowingAll: (showingAll) => set({ showingAll }),
     setNewBarcode: (newBarcode) => set({ newBarcode }),
+    setUserCollection: (userCollection) => set({ userCollection }),
     resetNewBarcode: () => set({ newBarcode: '' }),
     toggleHeightLimited: () => set((state) => ({ heightLimited: !state.heightLimited })),
     toggleHideCirculating: (hideCirculating) => set({ hideCirculating }),
+    toggleHideNotMyCollection: () => set((state) => ({ hideNotMyCollection: !state.hideNotMyCollection })),
     updatePicklist: (picklist, user_id) => {
       if (!localStorage['rungMinimum']) {
         localStorage.setItem('rungMinimum', 0);
@@ -99,8 +103,10 @@ const Picklist = () => {
   // so that it can be used by getPicklist accurately
   const fetchPicklist = async () => {
     const user_id = JSON.parse(sessionStorage.getItem('account')).account.id
+    const userCollection = JSON.parse(sessionStorage.getItem('account')).account.default_collection;
     const picklist = await Load.getPicklist();
     state.updatePicklist(picklist, user_id);
+    state.setUserCollection(userCollection);
     return {
       picklistComplete: picklist.filter(i => i['user_id'] !== user_id),
       picklistUnassigned: picklist.filter(i => i['user_id'] === null),
@@ -204,7 +210,11 @@ const Picklist = () => {
     const listToPick = (state.showingAll ?
       fetched.picklistVisibleComplete :
       fetched.picklistVisibleUnassigned
-    ).filter(i => state.hideCirculating ? i['status'] !== CIRCULATING : true);
+    ).filter(
+      i => state.hideCirculating ? i['status'] !== CIRCULATING : true
+    ).filter(
+      i => state.hideNotMyCollection ? i['collection'] === state.userCollection : true
+    );
     // If there are any items in the list that are claimed by someone else,
     // give a warning before allowing the user to claim all of them.
     const itemsAlreadyClaimed = listToPick.filter(i => i['user_id'] !== null).length;
@@ -235,6 +245,12 @@ const Picklist = () => {
   const handleToggleHideCirculating = (e) => {
     e.preventDefault();
     state.toggleHideCirculating(!state.hideCirculating);
+    getPicklist();
+  };
+
+  const handleToggleHideNotMyCollection = (e) => {
+    e.preventDefault();
+    state.toggleHideNotMyCollection();
     getPicklist();
   };
 
@@ -415,6 +431,15 @@ const Picklist = () => {
                       </div>
                     : null
                   }
+                  {/* Only show this if the user has a default collection */}
+                  { state.userCollection
+                    ? <div style={{"paddingBottom": "20px", "cursor": "default"}}>
+                      {/* double-not (!!) needed to convert from null to true to false */}
+                        <input type="checkbox" readOnly checked={!!state.hideNotMyCollection} id="hideNotMyCollectionCheckbox" onClick={handleToggleHideNotMyCollection} style={{"marginRight": "10px", "height": "18px", "width": "18px", "marginBottom": "4px", "verticalAlign": "middle"}} />
+                        <span style={{"color": state.hideNotMyCollection ? "black" : "gray"}} onClick={handleToggleHideNotMyCollection}>Hide items not in {state.userCollection}</span>
+                      </div>
+                    : null
+                  }
                   {/* Only show this if there is at least one item in the picklist with a Circulating status */}
                   { state.picklistComplete.filter(i => i['status'] === CIRCULATING).length > 0
                     ? <div style={{"paddingBottom": "20px", "cursor": "default"}}>
@@ -427,12 +452,28 @@ const Picklist = () => {
                   <PicklistLeftPane
                     picklist={ state.showingAll ?
                                 ( state.heightLimited ?
-                                  state.picklistVisibleComplete.filter(i => state.hideCirculating ? i['status'] !== CIRCULATING : true) :
-                                  state.picklistComplete.filter(i => state.hideCirculating ? i['status'] !== CIRCULATING : true)
+                                  state.picklistVisibleComplete.filter(
+                                    i => state.hideCirculating ? i['status'] !== CIRCULATING : true
+                                  ).filter(
+                                    i => state.hideNotMyCollection ? i['collection'] === state.userCollection : true
+                                  ) :
+                                  state.picklistComplete.filter(
+                                    i => state.hideCirculating ? i['status'] !== CIRCULATING : true
+                                  ).filter(
+                                    i => state.hideNotMyCollection ? i['collection'] === state.userCollection : true
+                                  )
                                 ) :
                                 ( state.heightLimited ?
-                                  state.picklistVisibleUnassigned.filter(i => state.hideCirculating ? i['status'] !== CIRCULATING : true) :
-                                  state.picklistUnassigned.filter(i => state.hideCirculating ? i['status'] !== CIRCULATING : true)
+                                  state.picklistVisibleUnassigned.filter(
+                                    i => state.hideCirculating ? i['status'] !== CIRCULATING : true
+                                  ).filter(
+                                    i => state.hideNotMyCollection ? i['collection'] === state.userCollection : true
+                                  ) :
+                                  state.picklistUnassigned.filter(
+                                    i => state.hideCirculating ? i['status'] !== CIRCULATING : true
+                                  ).filter(
+                                    i => state.hideNotMyCollection ? i['collection'] === state.userCollection : true
+                                  )
                                 )
                               }
                     user_id={JSON.parse(sessionStorage.getItem('account')).account.id}

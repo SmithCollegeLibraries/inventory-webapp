@@ -99,14 +99,15 @@ export default class Main extends Component {
       password: this.state.password
     };
     const account = await Load.getAccount(data);
-    const { id, name, access_token, level } = account || '';
+    const { id, name, access_token, level, default_collection } = account || '';
     if (account && account.access_token) {
       this.setState({
         loggedIn: true,
         id: id,
         name: name,
         access_key: access_token,
-        level: level
+        level: level,
+        default_collection: default_collection,
       }, () => {
         sessionStorage.setItem('account', JSON.stringify({loggedIn: true, account }));
         this.getCollections();
