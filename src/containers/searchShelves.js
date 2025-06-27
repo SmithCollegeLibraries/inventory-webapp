@@ -42,13 +42,14 @@ const processTrayInformation = (data) => {
   }
   // Truncate barcodes for a shelf/depth that has > 14 positions,
   // Always replace barcode with just numeric portion
+  let truncateBarcodes = Object.values(trayData.trayGrid).some(depth => depth.length > TOO_MANY_POSITIONS);
+
   for (let depth of ["Front", "Middle", "Rear", "Other"]) {
     for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
       if (trayData.trayGrid[depth][i]) {
-        if (trayData.trayGrid[depth].length > TOO_MANY_POSITIONS) {
+        if (truncateBarcodes) {
           trayData.trayGrid[depth][i].shortBarcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
-        }
-        else {
+        } else {
           trayData.trayGrid[depth][i].shortBarcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
         }
       }
