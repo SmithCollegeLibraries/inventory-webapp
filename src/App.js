@@ -13,6 +13,7 @@ import {
     SearchShelves,
     ManageItems,
     ManageTrays,
+    ManageShelves,
     ManageCollections,
     ManageUsers,
     ManageSettings,
@@ -168,6 +169,9 @@ export default class Main extends Component {
                 )}/>
                 <Route path="/manage-trays" render={() => (
                   <ManageTrays />
+                )}/>
+                <Route path="/manage-shelves" render={() => (
+                  <ManageShelves />
                 )}/>
                 <Route path="/manage-collections" render={() => (
                   <ManageCollections />

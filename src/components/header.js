@@ -112,6 +112,9 @@ class Header extends Component {
                         <NavLink className="nav-link" to="/manage-trays">Trays</NavLink>
                       </DropdownItem>
                       <DropdownItem>
+                        <NavLink className="nav-link" to="/manage-shelves">Shelves</NavLink>
+                      </DropdownItem>
+                      <DropdownItem>
                         <NavLink className="nav-link" to="/manage-collections">Collections</NavLink>
                       </DropdownItem>
                       {level >= 100 &&

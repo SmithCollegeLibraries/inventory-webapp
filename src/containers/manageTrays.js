@@ -308,7 +308,6 @@ const ManageTrays = () => {
       position: state.fields.position || null,
       full_count: state.fields.full_count || null,
       flag: state.fields.flag || false,
-      items: [],
     };
     const load = await Load.newTray(data);
     if (load) {
@@ -600,12 +599,12 @@ const TrayForm = (props) => {
         <Form autoComplete="off">
           { !props.fields.new_tray &&
             <FormGroup>
-              <Label for="tray" style={{"fontWeight":"bold"}}>Tray barcode</Label>
+              <Label for="tray_barcode" style={{"fontWeight":"bold"}}>Tray barcode</Label>
               <Input type="text" disabled value={props.fields.tray_barcode} name="tray_barcode" />
             </FormGroup>
           }
           <FormGroup>
-            <Label for="tray" style={{"fontWeight":"bold"}}>New tray barcode</Label>
+            <Label for="new_tray_barcode" style={{"fontWeight":"bold"}}>New tray barcode</Label>
             <Input type="text" value={props.fields.new_tray_barcode || ''} onChange={(e) => props.handleTrayChange(e)} name="new_tray_barcode" />
           </FormGroup>
           <Row>
