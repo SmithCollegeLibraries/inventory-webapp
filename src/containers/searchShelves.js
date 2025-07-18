@@ -106,7 +106,7 @@ const reducer = (state, action) => {
         query: {
           size: "",
           collection: "",
-          positionsfree: "",
+          positions_free: "",
           shelf: "",
           tray: "",
         },
@@ -120,7 +120,7 @@ const reducer = (state, action) => {
         query: {
           size: "",
           collection: "",
-          positionsfree: "",
+          positions_free: "",
           shelf: "",
           tray: state.query.tray,
         },
@@ -135,7 +135,7 @@ const SearchShelves = () => {
     query: {
       size: "",
       collection: "",
-      positionsfree: "",
+      positions_free: "",
       shelf: "",
       tray: "",
     },
@@ -182,7 +182,8 @@ const SearchShelves = () => {
         state.query.tray,
         state.query.size,
         state.query.collection,
-        state.query.positionsfree
+        state.query.positions_free,
+        false,
       );
     if (response.resultCount > 0) {
       dispatch({
@@ -331,13 +332,13 @@ const SearchForm = props => {
             : null
           }
         </Input>
-        <Label for="positionsfree" style={{marginRight: "10px"}}>
+        <Label for="positions_free" style={{marginRight: "10px"}}>
           Free space
         </Label>
         <Input
           type="select"
-          name="positionsfree"
-          value={props.query.positionsfree || ""}
+          name="positions_free"
+          value={props.query.positions_free || ""}
           style={{width: "12em", marginRight: "20px"}}
           onChange={(e) => props.handleQueryChange(e)}
         >
