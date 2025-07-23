@@ -18,6 +18,7 @@ const usePicklist = create((set) => {
   return {
     user_id: null,
     userCollection: null,
+    nameList: [],
     newBarcode: '',
     notInNewSystem: [],
     oldSystemCopied: false,
@@ -58,6 +59,7 @@ const usePicklist = create((set) => {
     updateOldSystem: (notInNewSystem) => set({ notInNewSystem }),
     clearOldSystem: () => set({ notInNewSystem: [], oldSystemCopied: false }),
     setOldSystemCopied: (oldSystemCopied) => set({ oldSystemCopied }),
+    updateNameList: (nameList) => set({ nameList }),
   }
 });
 
@@ -146,6 +148,11 @@ const Picklist = () => {
 
     return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get list of user names
+  useEffect(() => {
+    Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBarcodeChange = (e) => {
     e.preventDefault();
@@ -480,6 +487,7 @@ const Picklist = () => {
                     handleClaim={handleClaim}
                     handleUnclaim={handleUnclaim}
                     handleRemove={handleRemove}
+                    nameList={state.nameList}
                   />
                 </CardBody>
               </Card>
@@ -587,7 +595,7 @@ const PicklistLeftPane = (props) => {
           return <span>-</span>;
         }
         else {
-          return <span>{firstName(row.assignee)}</span>;
+          return <span style={{ whiteSpace: "nowrap" }}>{firstName(row.assignee, props.nameList)}</span>;
         }
       },
     },

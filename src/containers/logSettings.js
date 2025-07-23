@@ -74,8 +74,8 @@ const SettingLogs = () => {
       <div style={{marginTop: "20px"}}>
         { state.results && state.results.length
           ? (state.results.length >= 100
-              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100.</em></p><ResultDisplay data={state.results} /></>
-              : <ResultDisplay data={state.results} />
+              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
+              : <ResultDisplay data={state.results} nameList={state.nameList} />
             )
           : null
         }
@@ -137,7 +137,7 @@ const SearchForm = props => {
         >
           <option value="">-- User --</option>
           { props.nameList.map((name, idx) =>
-              <option key={idx} value={name}>{firstName(name)}</option>
+              <option key={idx} value={name}>{firstName(name, props.nameList)}</option>
             )
           }
         </Input>
@@ -146,7 +146,7 @@ const SearchForm = props => {
   );
 };
 
-const ResultDisplay = ({ data }) => (
+const ResultDisplay = ({ data, nameList }) => (
   <Table responsive striped>
     <TableHead />
     <tbody>
@@ -154,6 +154,7 @@ const ResultDisplay = ({ data }) => (
           <TableRow
             log={log}
             key={idx}
+            nameList={nameList}
           />
         )
       }
@@ -172,11 +173,11 @@ const TableHead = () => (
   </thead>
 )
 
-const TableRow = ({ log, idx }) => (
+const TableRow = ({ log, idx, nameList }) => (
   <tr key={idx}>
     <td>{log.id}</td>
     <td>{log.name}</td>
-    <td>{firstName(log.user)}</td>
+    <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
     <td>{log.timestamp}</td>
   </tr>
 )
