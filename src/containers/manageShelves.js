@@ -442,74 +442,37 @@ const ManageShelves = () => {
     <div>
       <Row
         style={{
-          display: "flex",
-          alignItems: "center",
+          // display: "flex",
+          // alignItems: "center",
           paddingTop: "20px",
           paddingLeft: "15px",
           paddingRight: "20px"
         }}
       >
-        <SearchForm
-          sizes={state.sizes}
-          collections={state.collections}
-          heights={state.heights}
-          widths={state.widths}
-          barcode={state.query.barcode}
-          sizeQuery={state.query.size}
-          collectionQuery={state.query.collection}
-          heightQuery={state.query.height}
-          widthQuery={state.query.width}
-          positionsFree={state.query.positions_free}
-          flaggedOnly={state.flaggedOnly}
-          handleSearch={handleSearch}
-          handleQueryChange={handleQueryChange}
-        />
-      </Row>
-      <Row
-        style={{
-          display: "flex",
-          alignItems: "center",
-          paddingTop: "20px",
-          paddingLeft: "15px",
-          paddingRight: "20px"
-        }}
-      >
-        <Button
-          color="warning"
-          style={{ marginRight: "20px" }}
-          onClick={(e) => handleNewShelfSelect(e)}
-        >
-          New shelf
-        </Button>
-        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Input
-              id="flaggedOnlyCheckbox"
-              type="checkbox"
-              checked={state.flaggedOnly}
-              onChange={handleFlaggedOnlyChange}
-              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
-            />
-            <Label
-              for="flaggedOnlyCheckbox"
-              check
-              style={{
-                marginBottom: "0",
-                marginTop: "0",
-                display: "flex",
-                alignItems: "center",
-                verticalAlign: "middle",
-                cursor: "pointer",
-                fontWeight: 400
-              }}
-            >
-              Flagged only
-            </Label>
-          </div>
-        </FormGroup>
-        { state.count &&
-          <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} shelves total`}</Button>
-        }
+        <Col md="8" style={{paddingLeft: "5px"}}>
+          <SearchForm
+            sizes={state.sizes}
+            collections={state.collections}
+            heights={state.heights}
+            widths={state.widths}
+            barcode={state.query.barcode}
+            sizeQuery={state.query.size}
+            collectionQuery={state.query.collection}
+            heightQuery={state.query.height}
+            widthQuery={state.query.width}
+            positionsFree={state.query.positions_free}
+            flaggedOnly={state.flaggedOnly}
+            handleSearch={handleSearch}
+            handleQueryChange={handleQueryChange}
+            handleFlaggedOnlyChange={handleFlaggedOnlyChange}
+            handleNewShelfSelect={handleNewShelfSelect}
+          />
+        </Col>
+        <Col md="4" style={{ textAlign: "right", margin: "0", padding: "0" }}>
+          { state.count &&
+            <Button color="info" onClick={() => {navigator.clipboard.writeText(`${state.count.toLocaleString()} shelves`)}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.count.toLocaleString()} shelves total`}</Button>
+          }
+        </Col>
       </Row>
       <div style={{marginTop: "20px"}}>
         <Row>
@@ -571,7 +534,7 @@ const ManageShelves = () => {
 const SearchForm = props => {
   return (
     <Form autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
-      <FormGroup style={{display: "flex", alignItems: "baseline", paddingTop: "20px"}}>
+      <FormGroup style={{display: "flex", alignItems: "baseline"}}>
         <Label for="size" style={{marginRight: "10px", marginBottom: "0px"}}>
           Size
         </Label>
@@ -677,6 +640,39 @@ const SearchForm = props => {
           }
         </Input>
         <Button color="primary" type="submit" style={{"marginRight": "10px"}}>Search</Button>
+        <Button
+          color="warning"
+          style={{ marginRight: "20px" }}
+          onClick={(e) => props.handleNewShelfSelect(e)}
+        >
+          New shelf
+        </Button>
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={props.flaggedOnly}
+              onChange={props.handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Flagged only
+            </Label>
+          </div>
+        </FormGroup>
         {/* <Button color="warning" style={{"marginRight": "10px"}} onClick={(e) => props.handleClearSearch(e)}>Clear</Button> */}
       </FormGroup>
     </Form>
@@ -686,7 +682,7 @@ const SearchForm = props => {
 const ResultDisplay = (props) => {
   return (
     <Card
-      style={{"paddingLeft": "10px", "cursor": "pointer"}}
+      style={{paddingLeft: "10px", cursor: "pointer"}}
       onClick={(e) => props.handleShelfSelect(props.data, e)}
     >
       <CardBody>
