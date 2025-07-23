@@ -1,5 +1,5 @@
 export function firstName(str, allNames=null) {
-    const strTrim = str.trim();
+    const strTrim = str ? str.trim() : "";
     const allFirstNames = allNames ? allNames.map((n) => n.split(' ')[0]) : null;
     const allFirstNamesWithLastInitial = allNames ? allNames.map((n) => `${n.split(' ')[0]} ${n.split(' ')[1].charAt(0)}.`) : null;
 
