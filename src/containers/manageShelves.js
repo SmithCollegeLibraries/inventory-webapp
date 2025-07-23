@@ -6,6 +6,15 @@ import { padShelfBarcode } from '../util/helpers';
 import { success, warning } from '../components/toastAlerts';
 
 const UNKNOWN = 'Unknown';
+const ANY_SIZE = '(Any)';
+const ANY_COLLECTION = '(Any)';
+const ANY_HEIGHT = '(Any)';
+const ANY_WIDTH = '(Any)';
+const HEIGHT_NOT_SET_DISPLAY = 'Not set';
+const WIDTH_NOT_SET_DISPLAY = 'Not set';
+const HEIGHT_NOT_SET_VALUE = '-';
+const WIDTH_NOT_SET_VALUE = '-';
+const ANY_SHELF_FULNESS = '(Any)';
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -19,15 +28,28 @@ const reducer = (state, action) => {
         ...state,
         sizes: action.sizes,
       };
+    case 'UPDATE_HEIGHTS':
+      return {
+        ...state,
+        heights: action.heights,
+      };
+    case 'UPDATE_WIDTHS':
+      return {
+        ...state,
+        widths: action.widths,
+      };
     case 'QUERY_CHANGE':
       return {
         ...state,
-        [action.payload.field]: action.payload.value,
+        query: {
+          ...state.query,
+          [action.payload.field]: action.payload.value,
+        }
       };
     case 'FLAGGED_ONLY':
       return {
         ...state,
-        flaggedOnly: action.payload
+        flaggedOnly: action.payload,
       };
     case 'UPDATE_RESULTS':
       return {
@@ -72,8 +94,8 @@ const reducer = (state, action) => {
           side: '',
           ladder: '',
           rung: '',
-          width: null,
           height: null,
+          width: null,
           depths: null,
           positions: null,
           size: null,
@@ -90,10 +112,14 @@ const reducer = (state, action) => {
 
 const ManageShelves = () => {
   const initialState = {
-    barcode: '',
-    sizeQuery: null,
-    collectionQuery: null,
-    positionsFree: '',
+    query: {
+      barcode: '',
+      size: null,
+      collection: null,
+      height: null,
+      width: null,
+      positions_free: '',
+    },
     flaggedOnly: false,
     search_results: [],
     fields: {
@@ -104,8 +130,8 @@ const ManageShelves = () => {
       side: '',
       ladder: '',
       rung: '',
-      width: null,
       height: null,
+      width: null,
       depths: null,
       positions: null,
       size: null,
@@ -116,6 +142,8 @@ const ManageShelves = () => {
     },
     collections: [],
     sizes: [],
+    heights: [],
+    widths: [],
   };
 
   const [ state, dispatch ] = useReducer(reducer, initialState);
@@ -161,8 +189,8 @@ const ManageShelves = () => {
         side: data.side,
         ladder: data.ladder,
         rung: data.rung,
-        width: data.width,
         height: data.height,
+        width: data.width,
         depths: data.depths,
         positions: data.positions,
         size: data.size,
@@ -186,8 +214,8 @@ const ManageShelves = () => {
         side: '',
         ladder: '',
         rung: '',
-        width: null,
         height: null,
+        width: null,
         depths: null,
         positions: null,
         size: null,
@@ -201,15 +229,18 @@ const ManageShelves = () => {
 
   const handleSearch = async (showWarnings = false) => {
     dispatch({ type: 'RESET_RESULTS', payload: '' });
-    const results = await ContentSearch.shelves(
-      padShelfBarcode(state.barcode),
+    const response = await ContentSearch.shelves(
+      padShelfBarcode(state.query.barcode),
       null,  // not searching by tray
-      state.sizeQuery,
-      state.collectionQuery,
-      state.positionsFree,
+      state.query.size,
+      state.query.collection,
+      state.query.height,
+      state.query.width,
+      state.query.positions_free,
       state.flaggedOnly,
     );
-    if (results && results[0]) {
+    if (response.resultCount > 0) {
+      const results = response.results;
       let trays = [];
       for (let barcode of results[0].trays) {
         trays.push(barcode);
@@ -222,8 +253,8 @@ const ManageShelves = () => {
         side: results[0].side ?? "",
         ladder: results[0].ladder ?? "",
         rung: results[0].rung ?? "",
-        width: results[0].width ?? null,
         height: results[0].height ?? null,
+        width: results[0].width ?? null,
         depths: results[0].depths ?? null,
         positions: results[0].positions ?? null,
         size: results[0].size ?? null,
@@ -252,8 +283,8 @@ const ManageShelves = () => {
             side: '',
             ladder: '',
             rung: '',
-            width: null,
             height: null,
+            width: null,
             depths: null,
             positions: null,
             size: null,
@@ -282,8 +313,8 @@ const ManageShelves = () => {
       side: state.fields.side || "",
       ladder: state.fields.ladder || "",
       rung: state.fields.rung || "",
-      width: state.fields.width || "",
       height: state.fields.height || "",
+      width: state.fields.width || "",
       depths: state.fields.depths || "",
       positions: state.fields.positions || "",
       size: state.fields.size || "",
@@ -312,8 +343,8 @@ const ManageShelves = () => {
       side: state.fields.side || null,
       ladder: state.fields.ladder || null,
       rung: state.fields.rung || null,
-      width: state.fields.width || null,
       height: state.fields.height || null,
+      width: state.fields.width || null,
       depths: state.fields.depths || null,
       positions: state.fields.positions || null,
       size: state.fields.size || null,
@@ -375,6 +406,24 @@ const ManageShelves = () => {
     getSizes();
   }, []);
 
+  // Get list of heights from database on load
+  useEffect(() => {
+    const getHeights = async () => {
+      const heights = await Load.getShelfHeights();
+      dispatch({ type: 'UPDATE_HEIGHTS', heights: heights});
+    };
+    getHeights();
+  }, []);
+
+  // Get list of widths from database on load
+  useEffect(() => {
+    const getWidths = async () => {
+      const widths = await Load.getShelfWidths();
+      dispatch({ type: 'UPDATE_WIDTHS', widths: widths});
+    };
+    getWidths();
+  }, []);
+
   // Get the total number of shelves via the API on load
   useEffect(() => {
     async function fetchShelfCount() {
@@ -401,14 +450,30 @@ const ManageShelves = () => {
         }}
       >
         <SearchForm
-          barcode={state.barcode}
-          sizeQuery={state.sizeQuery}
-          collectionQuery={state.collectionQuery}
-          positionsFree={state.positionsFree}
+          sizes={state.sizes}
+          collections={state.collections}
+          heights={state.heights}
+          widths={state.widths}
+          barcode={state.query.barcode}
+          sizeQuery={state.query.size}
+          collectionQuery={state.query.collection}
+          heightQuery={state.query.height}
+          widthQuery={state.query.width}
+          positionsFree={state.query.positions_free}
           flaggedOnly={state.flaggedOnly}
           handleSearch={handleSearch}
           handleQueryChange={handleQueryChange}
         />
+      </Row>
+      <Row
+        style={{
+          display: "flex",
+          alignItems: "center",
+          paddingTop: "20px",
+          paddingLeft: "15px",
+          paddingRight: "20px"
+        }}
+      >
         <Button
           color="warning"
           style={{ marginRight: "20px" }}
@@ -500,29 +565,117 @@ const ManageShelves = () => {
   );
 };
 
-// TODO: Search form should have working "Positions free", and also
-// allow for searching by collection and size.
-
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
-      <Input
-        type="text"
-        style={{"marginRight": "10px"}}
-        name="barcode"
-        placeholder="Shelf barcode"
-        value={props.barcode}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Input
-        type="number"
-        style={{"marginRight": "10px", "width": "9em"}}
-        name="positions_free"
-        placeholder="Positions free"
-        value={props.positionsFree}
-        onChange={(e) => props.handleQueryChange(e)}
-      />
-      <Button color="primary" style={{"marginRight": "10px"}}>Search</Button>
+    <Form autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <FormGroup style={{display: "flex", alignItems: "baseline", paddingTop: "20px"}}>
+        <Label for="size" style={{marginRight: "10px", marginBottom: "0px"}}>
+          Size
+        </Label>
+        <Input
+          type="select"
+          name="size"
+          value={props.sizeQuery || ""}
+          style={{width: "8em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_SIZE}</option>
+          { props.sizes
+            ? Object.keys(props.sizes).map((objects, idx) => (
+                <option value={props.sizes[objects].code} key={idx}>{props.sizes[objects].code}</option>
+              ))
+            : null
+          }
+        </Input>
+        <Label for="collection" style={{marginRight: "10px"}}>
+          Collection
+        </Label>
+        <Input
+          type="select"
+          name="collection"
+          value={props.collectionQuery || ""}
+          style={{width: "20em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_COLLECTION}</option>
+          { props.collections
+            ? Object.keys(props.collections).map((objects, idx) => (
+                <option value={props.collections[objects].name} key={idx}>{props.collections[objects].name}</option>
+              ))
+            : null
+          }
+        </Input>
+        <Label for="height" style={{marginRight: "10px"}}>
+          Height
+        </Label>
+        <Input
+          type="select"
+          name="height"
+          value={props.heightQuery || ANY_HEIGHT}
+          style={{width: "7em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_HEIGHT}</option>
+          <option value={HEIGHT_NOT_SET_VALUE}>{HEIGHT_NOT_SET_DISPLAY}</option>
+          { props.heights ? props.heights.map((i) => (
+                <option value={i} key={i}>{i}″</option>
+              ))
+            : null
+          }
+        </Input>
+        <Label for="width" style={{marginRight: "10px"}}>
+          Width
+        </Label>
+        <Input
+          type="select"
+          name="width"
+          value={props.widthQuery || ANY_WIDTH}
+          style={{width: "7em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_WIDTH}</option>
+          <option value={WIDTH_NOT_SET_VALUE}>{WIDTH_NOT_SET_DISPLAY}</option>
+          { props.widths ? props.widths.map((i) => (
+                <option value={i} key={i}>{i}″</option>
+              ))
+            : null
+          }
+        </Input>
+      </FormGroup>
+      <FormGroup style={{display: "flex", alignItems: "baseline"}}>
+        <Label for="barcode" style={{marginRight: "10px", marginBottom: "0px"}}>
+          Barcode
+        </Label>
+        <Input
+          type="text"
+          name="barcode"
+          placeholder="09R--1-"
+          value={props.barcode}
+          maxLength={7}
+          style={{width: "8em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        />
+        <Label for="positions_free" style={{marginRight: "10px"}}>
+          Free space
+        </Label>
+        <Input
+          type="select"
+          name="positions_free"
+          value={props.positionsFree || ""}
+          style={{width: "12em", marginRight: "20px"}}
+          onChange={(e) => props.handleQueryChange(e)}
+        >
+          <option value="">{ANY_SHELF_FULNESS}</option>
+          <option value="0">Shelf full</option>
+          <option value="-1">Shelf empty</option>
+          { Array.from({length: 15}, (_, i) => (
+              <option value={i+1} key={i+1}>Room for {i+1}+ trays</option>
+            ))
+          }
+        </Input>
+        <Button color="primary" type="submit" style={{"marginRight": "10px"}}>Search</Button>
+        {/* <Button color="warning" style={{"marginRight": "10px"}} onClick={(e) => props.handleClearSearch(e)}>Clear</Button> */}
+      </FormGroup>
     </Form>
   );
 };
@@ -556,15 +709,15 @@ const ResultDisplay = (props) => {
                       ? (props.data.trays.length === props.data.capacity ? 'full' : 'overfull')
                       : `${props.data.capacity - props.data.trays.length} ${props.data.capacity - props.data.trays.length === 1 ? "space" : "spaces" } free`
                     )
-                  : 'may have free space'})
-              </dd>
-              <dt className="col-sm-3">Width</dt>
-              <dd className="col-sm-9">
-                {props.data?.width ? props.data?.width + '″' : '-'}
+                  : props.data.trays.length === 0 ? 'shelf empty' : 'may have free space'})
               </dd>
               <dt className="col-sm-3">Height</dt>
               <dd className="col-sm-9">
                 {props.data?.height ? props.data?.height + '″' : '-'}
+              </dd>
+              <dt className="col-sm-3">Width</dt>
+              <dd className="col-sm-9">
+                {props.data?.width ? props.data?.width + '″' : '-'}
               </dd>
               <dt className="col-sm-3">Depths</dt>
               <dd className="col-sm-9">
@@ -676,7 +829,7 @@ const ShelfForm = (props) => {
             </Col>
             </Row>
           <Row>
-            <Col md="3">
+            <Col md="4">
               <FormGroup>
                 <Label for="height" style={{"fontWeight":"bold"}}>Height</Label>
                 <Input type="number" value={props.fields.height || ''} min={0} onChange={(e) => props.handleShelfChange(e)} name="height" />
@@ -688,7 +841,7 @@ const ShelfForm = (props) => {
                 <Input type="number" value={props.fields.width || ''} min={0} onChange={(e) => props.handleShelfChange(e)} name="width" />
               </FormGroup>
             </Col>
-            <Col md="6">
+            <Col md="5">
               <FormGroup>
                 <Label for="flag" style={{"fontWeight":"bold"}}>Flag</Label>
                 <Input

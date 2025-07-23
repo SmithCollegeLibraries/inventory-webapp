@@ -583,7 +583,7 @@ const ResultDisplay = (props) => {
                       ? (props.data.items.length === props.data.full_count ? 'full' : 'overfull')
                       : `~${props.data.full_count - props.data.items.length} ${props.data.full_count - props.data.items.length === 1 ? "space" : "spaces" } free`
                     )
-                  : 'may have free space'})
+                  : props.data.items.length === 0 ? 'tray empty' : 'may have free space'})
               </dd>
           </dl>
         </Row>

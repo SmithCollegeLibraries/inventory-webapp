@@ -182,6 +182,8 @@ const SearchShelves = () => {
         state.query.tray,
         state.query.size,
         state.query.collection,
+        null,
+        null,
         state.query.positions_free,
         false,
       );

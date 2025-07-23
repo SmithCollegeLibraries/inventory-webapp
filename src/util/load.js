@@ -125,6 +125,16 @@ class Load {
     return usage;
   };
 
+  getShelfHeights = async () => {
+    const get = await this.handleUpdate(`${shelfAPI}get-all-heights/`, 'GET');
+    return get;
+  }
+
+  getShelfWidths = async () => {
+    const get = await this.handleUpdate(`${shelfAPI}get-all-widths/`, 'GET');
+    return get;
+  }
+
   /**
     * @desc Tray
   */

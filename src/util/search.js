@@ -20,8 +20,8 @@ class ContentSearch {
     return search;
   }
 
-  shelves = async (shelfBarcode, trayBarcode, size, collection, positionsFree, flaggedOnly) => {
-    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode??''}&tray=${trayBarcode??''}&size=${size??''}&collection=${collection??''}&positions_free=${positionsFree??''}&flagged_only=${flaggedOnly}`);
+  shelves = async (shelfBarcode, trayBarcode, size, collection, height, width, positionsFree, flaggedOnly) => {
+    let search = await this.search(`${shelfAPI}search/?shelf=${shelfBarcode??''}&tray=${trayBarcode??''}&size=${size??''}&collection=${collection??''}&height=${height??''}&width=${width??''}&positions_free=${positionsFree??''}&flagged_only=${flaggedOnly}`);
     return search;
   }
 
