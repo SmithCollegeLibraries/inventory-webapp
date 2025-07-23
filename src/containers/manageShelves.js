@@ -338,7 +338,7 @@ const ManageShelves = () => {
     e.preventDefault();
 
     const data = {
-      barcode: state.fields.shelf_barcode,
+      barcode: state.fields.new_shelf_barcode,
       row: state.fields.row || null,
       side: state.fields.side || null,
       ladder: state.fields.ladder || null,
