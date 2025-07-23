@@ -2,7 +2,7 @@ import React, { useEffect, useReducer } from 'react';
 import { Button, Card, CardBody, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import Load from '../util/load';
 import ContentSearch from '../util/search';
-import { padShelfBarcode } from '../util/helpers';
+import { padShelfBarcode, displayTrayList } from '../util/helpers';
 import { success, warning } from '../components/toastAlerts';
 
 const UNKNOWN = 'Unknown';
@@ -554,7 +554,10 @@ const ManageShelves = () => {
           <Col md="4">
             { state.fields && state.fields.shelf_barcode && state.fields.shelf_barcode !== ""
               ? <Card>
-                {/* TODO: put list of trays here; other info? see displayItemList in manageTrays */}
+                <CardBody>
+                  <dt style={{marginBottom: "10px"}}>Trays ({state.fields.trays.length})</dt>
+                  <dd>{displayTrayList(state.fields.trays)}</dd>
+                </CardBody>
                 </Card>
               : null
             }
@@ -831,13 +834,13 @@ const ShelfForm = (props) => {
           <Row>
             <Col md="4">
               <FormGroup>
-                <Label for="height" style={{"fontWeight":"bold"}}>Height</Label>
+                <Label for="height" style={{"fontWeight":"bold"}}>Height (in.)</Label>
                 <Input type="number" value={props.fields.height || ''} min={0} onChange={(e) => props.handleShelfChange(e)} name="height" />
               </FormGroup>
             </Col>
             <Col md="3">
               <FormGroup>
-                <Label for="width" style={{"fontWeight":"bold"}}>Width</Label>
+                <Label for="width" style={{"fontWeight":"bold"}}>Width (in.)</Label>
                 <Input type="number" value={props.fields.width || ''} min={0} onChange={(e) => props.handleShelfChange(e)} name="width" />
               </FormGroup>
             </Col>

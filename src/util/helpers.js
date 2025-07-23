@@ -91,3 +91,15 @@ export function displayItemList(items) {
         </span>
     );
 }
+
+export function displayTrayList(trays) {
+    return trays.map(tray =>
+        <span
+            key={tray.barcode}
+            className={tray.flag ? "text-danger" : ""}
+          >
+          {tray.barcode}
+          <br />
+        </span>
+    );
+}
