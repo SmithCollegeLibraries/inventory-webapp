@@ -42,13 +42,14 @@ const processTrayInformation = (data) => {
   }
   // Truncate barcodes for a shelf/depth that has > 14 positions,
   // Always replace barcode with just numeric portion
+  let truncateBarcodes = Object.values(trayData.trayGrid).some(depth => depth.length > TOO_MANY_POSITIONS);
+
   for (let depth of ["Front", "Middle", "Rear", "Other"]) {
     for (let i = 0; i < trayData.trayGrid[depth].length; i++) {
       if (trayData.trayGrid[depth][i]) {
-        if (trayData.trayGrid[depth].length > TOO_MANY_POSITIONS) {
+        if (truncateBarcodes) {
           trayData.trayGrid[depth][i].shortBarcode = '…' + trayData.trayGrid[depth][i].barcode.replace(/\D/g,'').slice(-4);
-        }
-        else {
+        } else {
           trayData.trayGrid[depth][i].shortBarcode = trayData.trayGrid[depth][i].barcode.replace(/\D/g,'');
         }
       }
@@ -105,7 +106,7 @@ const reducer = (state, action) => {
         query: {
           size: "",
           collection: "",
-          positionsfree: "",
+          positions_free: "",
           shelf: "",
           tray: "",
         },
@@ -119,7 +120,7 @@ const reducer = (state, action) => {
         query: {
           size: "",
           collection: "",
-          positionsfree: "",
+          positions_free: "",
           shelf: "",
           tray: state.query.tray,
         },
@@ -134,7 +135,7 @@ const SearchShelves = () => {
     query: {
       size: "",
       collection: "",
-      positionsfree: "",
+      positions_free: "",
       shelf: "",
       tray: "",
     },
@@ -181,7 +182,10 @@ const SearchShelves = () => {
         state.query.tray,
         state.query.size,
         state.query.collection,
-        state.query.positionsfree
+        null,
+        null,
+        state.query.positions_free,
+        false,
       );
     if (response.resultCount > 0) {
       dispatch({
@@ -330,13 +334,13 @@ const SearchForm = props => {
             : null
           }
         </Input>
-        <Label for="positionsfree" style={{marginRight: "10px"}}>
+        <Label for="positions_free" style={{marginRight: "10px"}}>
           Free space
         </Label>
         <Input
           type="select"
-          name="positionsfree"
-          value={props.query.positionsfree || ""}
+          name="positions_free"
+          value={props.query.positions_free || ""}
           style={{width: "12em", marginRight: "20px"}}
           onChange={(e) => props.handleQueryChange(e)}
         >

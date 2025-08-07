@@ -8,26 +8,30 @@ import { Row, Col, Form, Button, Input, Card, CardBody } from 'reactstrap';
 function ManageCollections() {
 
   const initialState = {
-    collections: [],
-    collection: ''
+    existingCollections: [],
+    newCollection: {
+      name: "",
+      code: "",
+      folio_validated: true,
+    },
   };
 
   const collectionReducer = (state, action) => {
     switch (action.type) {
-      case 'ADD_COLLECTIONS':
+      case 'ADD_EXISTING_COLLECTIONS':
         return {
           ...state,
-          collections: action.collections
+          existingCollections: action.collections,
         };
-      case 'UPDATE_COLLECTION_FORM':
+      case 'UPDATE_NEW_COLLECTION_FORM':
         return {
           ...state,
-          collection: action.collections
+          newCollection: action.collection,
         };
-      case 'UPDATE_COLLECTIONS':
+      case 'UPDATE_EXISTING_COLLECTIONS':
         return {
           ...state,
-          collections: action.collections
+          existingCollections: action.collections,
         };
       default:
         return state;
@@ -37,45 +41,85 @@ function ManageCollections() {
   const [data, dispatch] = useReducer(collectionReducer, initialState);
 
   useEffect(() => {
-    getCollections()
+    getCollections();
   }, []);
 
   const getCollections = async () => {
     const search = await ContentSearch.collections();
-    dispatch({ type: "ADD_COLLECTIONS", collections: search});
+    search.sort((a, b) => a.name.localeCompare(b.name));
+    dispatch({ type: "ADD_EXISTING_COLLECTIONS", collections: search});
   };
 
-  const handleFormChange = (e) => {
-    dispatch({ type: "UPDATE_COLLECTION_FORM", collections: e.target.value});
+  const handleNewCollectionFormChange = (e) => {
+    dispatch({
+      type: "UPDATE_NEW_COLLECTION_FORM",
+      collection: {
+        ...data.newCollection,
+        [e.target.name]: e.target.value,
+      },
+    });
   };
 
-  const handleFormSubmit = async (e) => {
+  const handleToggleNewCollectionFolioValidation = async (e) => {
+    e.preventDefault();
+    dispatch({
+      type: "UPDATE_NEW_COLLECTION_FORM",
+      collection: {
+        ...data.newCollection,
+        folio_validated: !data.newCollection.folio_validated,
+      },
+    });
+  }
+
+  const handleNewCollectionFormSubmit = async (e) => {
     e.preventDefault();
     const createData = {
-      'name' : data.collection
+      'name' : data.newCollection.name,
+      'code' : data.newCollection.code ? data.newCollection.code : null,
+      'folio_validated' : data.newCollection.folio_validated,
     };
+    console.log(createData);
     const results = await Load.createNewCollection(createData);
     if (results) {
       success("New collection successfully created");
-      dispatch({ type: "UPDATE_COLLECTION_FORM", collections: ""});
+      dispatch({
+        type: "UPDATE_NEW_COLLECTION_FORM",
+        collection: {
+          name: "",
+          code: "",
+          folio_validated: true,
+        }}
+      );
       getCollections();
     }
   };
 
   const handleUpdateFormChange = (e, key) => {
-    const collection = data.collections;
-    collection[key]["name"] = e.target.value;
-    dispatch({ type: "UPDATE_COLLECTIONS", collections: collection});
+    const collection = data.existingCollections;
+    collection[key][e.target.name] = e.target.value;
+    dispatch({ type: "UPDATE_EXISTING_COLLECTIONS", collections: collection});
+  };
+
+  const handleToggleUpdateFormFolioValidation = (e, key) => {
+    e.preventDefault();
+    const collection = data.existingCollections;
+    collection[key]["folio_validated"] = !collection[key]["folio_validated"];
+    dispatch({ type: "UPDATE_EXISTING_COLLECTIONS", collections: collection});
   };
 
   const handleUpdateSubmit = async(e, key) => {
-    if (window.confirm('This will update all items in this collection. Are you sure you want to update?')) {
-      const update = await Load.updateCollection(data.collections[key]);
-      if (update) {
-        success('Collections updated');
-      } else {
-        failure("There was a problem updating this collection");
-      }
+    let newData = {
+      id: data.existingCollections[key].id,
+      name: data.existingCollections[key].name,
+      // If code is not set, use the name as the code
+      code: data.existingCollections[key].code ? data.existingCollections[key].code : data.existingCollections[key].name,
+      folio_validated: data.existingCollections[key].folio_validated,
+    }
+    const update = await Load.updateCollection(newData);
+    if (update) {
+      success('Collections updated');
+    } else {
+      failure("There was a problem updating this collection");
     }
     getCollections();
   };
@@ -101,22 +145,24 @@ function ManageCollections() {
   return (
     <div>
       <div style={{backgroundColor: "#fff", padding: '20px', textAlign: "middle", marginTop: "20px"}}>
-        <DisplayForm
-          handleFormChange={handleFormChange}
-          handleFormSubmit={handleFormSubmit}
-          collection={data.collection}
+        <DisplayNewCollectionForm
+          handleNewCollectionFormChange={handleNewCollectionFormChange}
+          handleNewCollectionFormSubmit={handleNewCollectionFormSubmit}
+          handleToggleNewCollectionFolioValidation={handleToggleNewCollectionFolioValidation}
+          newCollection={data.newCollection}
         />
       </div>
       <Card>
         <CardBody>
-          {data.collections ? Object.keys(data.collections).map((items, idx) => {
+          {data.existingCollections ? Object.keys(data.existingCollections).map((items, idx) => {
             return (
-              <Display
-                data={data.collections[items]}
+              <DisplayExistingCollections
+                data={data.existingCollections[items]}
                 index={idx}
                 key={idx}
                 handleUpdateSubmit={handleUpdateSubmit}
                 handleUpdateFormChange={handleUpdateFormChange}
+                handleToggleUpdateFormFolioValidation={handleToggleUpdateFormFolioValidation}
                 handleDeleteSubmit={handleDeleteSubmit}
               />
             );
@@ -130,25 +176,50 @@ function ManageCollections() {
 
 export default ManageCollections;
 
-const DisplayForm = ({ handleFormChange, handleFormSubmit, collection }) => (
-  <Form autoComplete="off" onSubmit={(e) => handleFormSubmit(e)}>
-    <Row>
-      <Col md="8">
-        <Input type="text" value={collection} onChange={(e) => handleFormChange(e)} name="collection" placeholder="Add a new collection..." />
-      </Col>
-      <Col md="2">
-        <Button color="primary">Submit</Button>
-      </Col>
-    </Row>
-  </Form>
-);
+const DisplayNewCollectionForm = ({ handleNewCollectionFormChange, handleNewCollectionFormSubmit, newCollection, handleToggleNewCollectionFolioValidation }) => {
 
-const Display = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, handleDeleteSubmit }) => {
+  return (
+    <Form autoComplete="off">
+      <Row>
+        <Col md="4" style={{ maxWidth: "30em" }}>
+          <Input type="text" value={newCollection.name} onChange={(e) => handleNewCollectionFormChange(e)} name="name" placeholder="New collection name" />
+        </Col>
+        <Col md="2" style={{ maxWidth: "15em" }}>
+          <Input type="text" value={newCollection.code} onChange={(e) => handleNewCollectionFormChange(e)} name="code" placeholder="New collection code" />
+        </Col>
+        <Col md="3" style={{ maxWidth: "15em", marginRight: "20px" }}>
+          <Button
+            color={newCollection.folio_validated ? "success" : "secondary"}
+            onClick={(e) => handleToggleNewCollectionFolioValidation(e)}
+          >
+            {newCollection.folio_validated ? "Validated against FOLIO" : "Not validated against FOLIO"}
+          </Button>
+        </Col>
+        <Col>
+          <Button color="primary" onClick={(e) => handleNewCollectionFormSubmit(e)}>Submit</Button>
+        </Col>
+      </Row>
+    </Form>
+  );
+};
+
+const DisplayExistingCollections = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, handleToggleUpdateFormFolioValidation, handleDeleteSubmit }) => {
   return (
     <div key={index} style={{paddingBottom: "20px"}}>
       <Row>
-        <Col md="8">
+        <Col md="4" style={{ maxWidth: "30em" }}>
           <Input type="text" onChange={(e) => handleUpdateFormChange(e, index)} value={data.name} name="name" />
+        </Col>
+        <Col md="2" style={{ maxWidth: "15em" }}>
+          <Input type="text" onChange={(e) => handleUpdateFormChange(e, index)} value={data.code} name="code" />
+        </Col>
+        <Col md="3" style={{ maxWidth: "15em", marginRight: "20px" }}>
+          <Button
+            color={data.folio_validated ? "success" : "secondary"}
+            onClick={(e) => handleToggleUpdateFormFolioValidation(e, index)}
+          >
+            {data.folio_validated ? "Validated against FOLIO" : "Not validated against FOLIO"}
+          </Button>
         </Col>
         <Col>
           <Button color="primary" style={{"marginRight": "10px"}} onClick={(e) => {handleUpdateSubmit(e, index)}}>Update</Button>
@@ -156,5 +227,5 @@ const Display = ({ data, index, handleUpdateFormChange, handleUpdateSubmit, hand
         </Col>
       </Row>
     </div>
-  )
+  );
 };

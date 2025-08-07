@@ -1,15 +1,18 @@
-const FIRST_NAMES_ONLY = true;
-const LAST_NAME_INITIAL = false;
+export function firstName(str, allNames=null) {
+    const strTrim = str ? str.trim() : "";
+    const allFirstNames = allNames ? allNames.map((n) => n.split(' ')[0]) : null;
+    const allFirstNamesWithLastInitial = allNames ? allNames.map((n) => `${n.split(' ')[0]} ${n.split(' ')[1].charAt(0)}.`) : null;
 
-export function firstName(str) {
-    const strTrim = str.trim();
     if (!strTrim.includes(' ')) {
         return strTrim;
     }
-    else if (FIRST_NAMES_ONLY) {
+    if (!allFirstNames || allFirstNames.filter(n => n === strTrim.split(' ')[0]).length <= 1) {
         return strTrim.split(' ')[0];
     }
-    else if (LAST_NAME_INITIAL) {
+    else if (!allFirstNamesWithLastInitial ||
+            allFirstNamesWithLastInitial.filter(
+                n => n === `${strTrim.split(' ')[0]} ${strTrim.split(' ')[1].charAt(0)}.`).length <= 1
+            ) {
         return `${strTrim.split(' ')[0]} ${strTrim.split(' ')[1].charAt(0)}.`;
     }
     else {
@@ -87,6 +90,18 @@ export function displayItemList(items) {
             className={ item.flag || item.status === "Missing" ? "text-danger" : (item.status === "Trayed" || item.status === "Imported") ? "" : "text-info" }
           >
           {item.barcode}
+          <br />
+        </span>
+    );
+}
+
+export function displayTrayList(trays) {
+    return trays.map(tray =>
+        <span
+            key={tray.barcode}
+            className={tray.flag ? "text-danger" : ""}
+          >
+          {tray.barcode}
           <br />
         </span>
     );

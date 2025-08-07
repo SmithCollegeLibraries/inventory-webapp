@@ -88,31 +88,51 @@ class Load {
   getShelf = async (data) => {
     const get = await this.handleUpdate(`${shelfAPI}get-shelf`, 'POST', data);
     return get;
-  }
+  };
 
   newShelf = async (data) => {
     const insert = await this.handleUpdate(`${shelfAPI}new-shelf/`, 'POST', data);
     return insert;
   };
 
+  updateShelf = async (data) => {
+    const update = await this.handleUpdate(`${shelfAPI}update-shelf/`, 'POST', data);
+    return update;
+  };
+
+  deleteShelf = async (data) => {
+    const results = await this.handleUpdate(`${shelfAPI}delete-shelf/`, 'POST', data);
+    return results;
+  };
+
   shelfCount = async () => {
     const count = await this.handleUpdate(`${shelfAPI}total-count/`, 'GET');
     return parseInt(count);
-  }
+  };
 
   ladderCount = async () => {
     const count = await this.handleUpdate(`${shelfAPI}ladder-count/`, 'GET');
     return parseInt(count);
-  }
+  };
 
   shelfCountsCollectionSize = async () => {
     const counts = await this.handleUpdate(`${shelfAPI}counts-collection-size/`, 'GET');
     return counts;
-  }
+  };
 
   shelfSpaceUsage = async () => {
     const usage = await this.handleUpdate(`${shelfAPI}space-usage/`, 'GET');
     return usage;
+  };
+
+  getShelfHeights = async () => {
+    const get = await this.handleUpdate(`${shelfAPI}get-all-heights/`, 'GET');
+    return get;
+  }
+
+  getShelfWidths = async () => {
+    const get = await this.handleUpdate(`${shelfAPI}get-all-widths/`, 'GET');
+    return get;
   }
 
   /**
@@ -129,7 +149,7 @@ class Load {
     return tray;
   };
 
-  updateTray = async (data, id) => {
+  updateTray = async (data) => {
     const update = await this.handleUpdate(`${trayAPI}update-tray/`, 'POST', data);
     return update;
   }
