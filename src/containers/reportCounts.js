@@ -40,7 +40,7 @@ const useCounts = create((set, get) => {
     shelfSubtotals: {},
     traySubtotals: {},
     itemSubtotals: {},
-    allViews: [LADDERS, SHELVES, TRAYS, ITEMS],
+    allViews: [SHELVES, TRAYS, ITEMS],
     totalCountText: (view) => {
       const state = get();
       if (view === LADDERS) {
