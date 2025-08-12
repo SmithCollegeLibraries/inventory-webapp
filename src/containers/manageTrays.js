@@ -625,7 +625,7 @@ const TrayForm = (props) => {
             <Col md="4">
               <FormGroup>
                 <Label for="size" style={{"fontWeight":"bold"}}>Size</Label>
-                <Input type="select" value={props.fields.size} onChange={(e) => props.handleTrayChange(e)} name="size">
+                <Input type="select" value={props.fields.size.code} onChange={(e) => props.handleTrayChange(e)} name="size">
                   <option value={UNKNOWN}>{ UNKNOWN }</option>
                   { props.sizes
                     ? Object.keys(props.sizes).map((items, idx) => (

@@ -370,7 +370,7 @@ const ManageShelves = () => {
     };
     const load = await Load.deleteShelf(data);
     if (load) {
-      success(`Shelf ${load['barcode']} successfully deleted`);
+      success(`Shelf successfully deleted`);
       dispatch({ type: 'RESET', payload: '' });
       handleSearch(false);
     }
