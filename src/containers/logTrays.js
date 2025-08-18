@@ -87,7 +87,7 @@ const TrayLogs = () => {
       <div style={{marginTop: "20px"}}>
         { state.results && state.results.length
           ? (state.results.length >= 100
-              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
+              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100. Download a CSV to access the full list of results.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
               : <ResultDisplay data={state.results} nameList={state.nameList} />
             )
           : null
@@ -205,7 +205,7 @@ const TableHead = () => (
   <thead>
     <tr>
       <th>Tray log ID</th>
-      <th>Barcode</th>
+      <th>Tray barcode</th>
       <th>Action</th>
       <th>User</th>
       <th>Details</th>

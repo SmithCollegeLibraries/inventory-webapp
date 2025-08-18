@@ -363,6 +363,11 @@ class Load {
     return get;
   }
 
+  downloadItemLogs = async (data) => {
+    const get = await this.handleUpdate(`${itemLogAPI}search/?download=true`, 'POST', data);
+    return get;
+  }
+
   getRequestHistory = async (data) => {
     const requestHistory = await this.handleUpdate(`${itemLogAPI}request-history/`, 'GET');
     return requestHistory;

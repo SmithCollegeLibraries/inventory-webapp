@@ -211,7 +211,6 @@ const ReportCounts = () => {
             {view}
           </Button>
         ))}
-        <Button color="info" onClick={() => {navigator.clipboard.writeText(state.totalCountText(currentView))}} style={{"cursor": "grab", "marginLeft": "auto"}}>{`${state.totalCountText(currentView)} total`}</Button>
       </Row>
       { currentView === ITEMS
         ? <ItemCounts
