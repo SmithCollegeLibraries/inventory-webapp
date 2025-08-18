@@ -67,33 +67,29 @@ const ItemLogs = () => {
   };
 
   const handleCsvDownload = async () => {
-    state.updateDownloadInProgress(true);
+    try {
+      state.updateDownloadInProgress(true);
 
-    const downloadResponse = await Load.downloadItemLogs(state.query);
+      const blob = await Load.downloadItemLogs(state.query);
+      const url = window.URL.createObjectURL(blob);
 
-    if (downloadResponse) {
-      const response = await fetch(downloadResponse.file);
-      const fileContents = await response.text();
-      const blob = new Blob([fileContents], { type: 'text/csv' });
-      // Prepend /reports/ to the blob URL path
-      const blobUrl = window.URL.createObjectURL(blob);
-      const url = `${process.env.REACT_APP_ROOT}/reports/${blobUrl.split('/').pop()}`;
-      console.log('Download URL:', url);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'sis-item-logs.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Create a temporary <a> tag and open in new tab
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `item-logs-${new Date().toISOString().slice(0,10)}.csv`;
+      a.target = '_blank'; // open in new tab
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
 
       window.URL.revokeObjectURL(url);
+      state.updateDownloadInProgress(false);
     }
-    else {
-      warning('Failed to download CSV');
+    catch (error) {
+      console.error('Error downloading CSV:', error);
+      state.updateDownloadInProgress(false);
+      warning('Error downloading CSV');
     }
-
-    state.updateDownloadInProgress(false);
   };
 
   // Get list of all actions
