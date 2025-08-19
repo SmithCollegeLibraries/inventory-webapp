@@ -148,14 +148,14 @@ const SearchForm = props => {
           Download CSV
         </Button>
       </div>
-      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px", "width": "100%"}}>
         <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search item logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampPost"
           name="timestampPost"
-          placeholder="Timestamp post"
           value={props.timestampPost}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
@@ -166,8 +166,8 @@ const SearchForm = props => {
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampAnte"
           name="timestampAnte"
-          placeholder="Timestamp ante"
           value={props.timestampAnte}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
@@ -190,7 +190,7 @@ const SearchForm = props => {
         <Input
           type="select"
           style={{"marginRight": "10px"}}
-          name="user"
+          name="action"
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
             "action": e.target.value
