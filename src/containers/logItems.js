@@ -22,6 +22,7 @@ const useItemLogs = create((set) => {
     resultsFetched: false,
     actionList: [],
     nameList: [],
+    downloadInProgress: false,
 
     setQuery: (query) => set({ query }),
     markQueryChanged: (changed) => set({ queryChanged: changed }),
@@ -39,6 +40,7 @@ const useItemLogs = create((set) => {
     updateResultsFetched: (resultsFetched) => set({ resultsFetched }),
     updateActionList: (actionList) => set({ actionList }),
     updateNameList: (nameList) => set({ nameList }),
+    updateDownloadInProgress: (inProgress) => set({ downloadInProgress: inProgress }),
   }
 });
 
@@ -64,6 +66,32 @@ const ItemLogs = () => {
     state.markQueryChanged(false);
   };
 
+  const handleCsvDownload = async () => {
+    try {
+      state.updateDownloadInProgress(true);
+
+      const blob = await Load.downloadItemLogs(state.query);
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary <a> tag and open in new tab
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `item-logs-${new Date().toISOString().slice(0,10)}.csv`;
+      a.target = '_blank'; // open in new tab
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+      state.updateDownloadInProgress(false);
+    }
+    catch (error) {
+      console.error('Error downloading CSV:', error);
+      state.updateDownloadInProgress(false);
+      warning('Error downloading CSV');
+    }
+  };
+
   // Get list of all actions
   useEffect(() => {
     Load.getItemActions().then((actionList) => {state.updateActionList(actionList)});
@@ -83,11 +111,13 @@ const ItemLogs = () => {
         queryChanged={state.queryChanged}
         handleQueryChange={handleQueryChange}
         handleSearch={handleSearch}
+        handleCsvDownload={handleCsvDownload}
+        downloadInProgress={state.downloadInProgress}
       />
       <div style={{marginTop: "20px"}}>
         { state.results && state.results.length
           ? (state.results.length >= 100
-              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
+              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100. Download a CSV to access the full list of results.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
               : <ResultDisplay data={state.results} nameList={state.nameList} />
             )
           : null
@@ -99,7 +129,25 @@ const ItemLogs = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left", "width": "100%"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <div style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        zIndex: 2
+      }}>
+        <Button
+          color={props.downloadInProgress ? "secondary" : "success"}
+          disabled={props.downloadInProgress}
+          style={{
+            margin: "0",
+            cursor: props.downloadInProgress ? "wait" : "pointer"
+          }}
+          onClick={props.handleCsvDownload}
+        >
+          Download CSV
+        </Button>
+      </div>
       <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
         <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search item logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
@@ -205,7 +253,7 @@ const TableHead = () => (
   <thead>
     <tr>
       <th>Item log ID</th>
-      <th>Barcode</th>
+      <th>Item barcode</th>
       <th>Action</th>
       <th>User</th>
       <th>Details</th>

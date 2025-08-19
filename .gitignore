@@ -5,4 +5,5 @@ node_modules/
 src/config/endpoints.js
 src/.DS_Store
 .env*
+reports/
 

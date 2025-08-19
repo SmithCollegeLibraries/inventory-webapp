@@ -363,6 +363,11 @@ class Load {
     return get;
   }
 
+  downloadItemLogs = async (data) => {
+    const get = await this.handleUpdate(`${itemLogAPI}search/?download=true`, 'POST', data, false);
+    return get;
+  }
+
   getRequestHistory = async (data) => {
     const requestHistory = await this.handleUpdate(`${itemLogAPI}request-history/`, 'GET');
     return requestHistory;
@@ -424,7 +429,7 @@ class Load {
     return this.responseHandling(response);
   }
 
-  handleUpdate = async (string, method, data) => {
+  handleUpdate = async (string, method, data, expectJson=true) => {
     const storage = JSON.parse(sessionStorage.getItem('account'));
     const { account } = storage || '';
     const { access_token } = account || '';
@@ -437,7 +442,13 @@ class Load {
           "body": JSON.stringify(data)
         },
       );
-    return this.responseHandling(response);
+    if (expectJson) {
+      return this.responseHandling(response);
+    }
+    else {
+      // For example, CSV downloads: return a blob directly
+      return response.blob();
+    }
   }
 
   responseHandling = async response => {
