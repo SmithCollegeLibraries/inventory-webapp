@@ -265,7 +265,7 @@ const TableHead = () => (
 const TableRow = ({ log, idx, nameList }) => (
   <tr key={idx}>
     <td>{log.id}</td>
-    <td>{log.barcode}</td>
+    <td className={log.flag ? "text-danger" : ""}>{log.barcode}</td>
     <td>{log.action}</td>
     <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
     <td>{log.details}</td>
