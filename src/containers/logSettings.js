@@ -215,6 +215,7 @@ const TableHead = () => (
     <tr>
       <th>Setting log ID</th>
       <th>Name</th>
+      <th>Value</th>
       <th>User</th>
       <th>Timestamp</th>
     </tr>
@@ -225,6 +226,7 @@ const TableRow = ({ log, idx, nameList }) => (
   <tr key={idx}>
     <td>{log.id}</td>
     <td>{log.name}</td>
+    <td>{log.value}</td>
     <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
     <td>{log.timestamp}</td>
   </tr>
