@@ -16,11 +16,16 @@ const UNASSIGNED_SIZE = 'No size';
 // to calculate the percentage full on the fly, since percentages
 // can't be added at the point of the API: collections can be
 // selected by the user
-const TOTAL_TRAYS_SUBTOTAL = "Total trays";
-const CAPACITY_SUBTOTAL = "Capacity";
-// This one is calculated on the fly
-const SPACE_USED = "Space used";
-
+const LABEL_TRAYS = "Total trays";
+const LABEL_CAPACITY = "Capacity";
+const LABEL_SHELVES = "Shelves";
+const LABEL_PARTIAL = "Partial/full";
+const LABEL_FULL = "Full";
+// These are calculated on the fly
+const SHELVES_TOTAL = "Shelves (total)";
+const SHELVES_SELECTED = "Shelves (selected)"; // This is just an alias for LABEL_SHELVES
+const SPACE_USED = "Space used (of selected)";
+const SPACE_USED_ALL = "Space used (of total)";
 
 const useSpaceUsage = create((set, get) => {
   return {
@@ -96,7 +101,9 @@ const ReportSpaceUsage = () => {
         // Iterate through the space usage breakdown, which is nested:
         // { "ExampleCollection": { "ExampleSizeA": {"total_shelves": 2, "empty": 1, "full": 0, "partial": 1}, "ExampleSizeB": {"total_shelves": 1, "empty": 0, "full": 1, "partial": 0} } }
         // The outer key is the collection code, the inner key is the size code
-        let shelfSubtotals = {};
+
+        // These are the calculated ones we want at the top of the list
+        let shelfSubtotals = {[SHELVES_TOTAL]: {}, [LABEL_SHELVES]: {}, [SPACE_USED_ALL]: {}, [SPACE_USED]: {}};
 
         for (let collection in spaceUsageBreakdown) {
           const normalizedCollection = collection && collection !== "" ? collection : UNASSIGNED_COLLECTION;
@@ -131,7 +138,9 @@ const ReportSpaceUsage = () => {
 
       // Add null and total size, as well as null collection
       allCollections.push({ code: UNASSIGNED_COLLECTION });
-      allSizes.push({ code: UNASSIGNED_SIZE });
+      // Turn off unassigned size information: there aren't any shelves
+      // without sizes except for pseudo-shelves which shouldn't be counted
+      // allSizes.push({ code: UNASSIGNED_SIZE });
       allSizes.unshift({ code: ALL_SIZES });
       useSpaceUsage.setState({ allCollections, allSizes });
 
@@ -198,6 +207,13 @@ const ReportSpaceUsage = () => {
           />
         </Col>
       </Row>
+      <p style={{fontStyle: "italic", maxWidth: "800px"}}>
+        * Shelves with trays of nonstandard size do not have a defined capacity.
+        For the starred columns, space used is calculated simply as the percentage
+        of (partially or fully) used shelves divided by the total number of shelves.
+        Percentages for other columns are calculated based on the actual amount
+        of free space.
+      </p>
     </div>
   );
 };
@@ -216,44 +232,84 @@ const SpaceUsage = (props) => {
         </tr>
       </thead>
       <tbody>
-        { Object.keys(props.subtotals).map((subtotal) =>
+        { console.log(props.subtotals) || Object.keys(props.subtotals).map((subtotal) =>
+          // Hide the built-in totals for trays and capacity, since they
+          // only used for calculating percentages
+          (subtotal === LABEL_TRAYS || subtotal === LABEL_CAPACITY) ? null :
           <tr key={`row-month-${subtotal}`}>
-            {/* If it's "Total trays", omit; if "Capacity", calculate */}
-            { subtotal === TOTAL_TRAYS_SUBTOTAL
-              ? null
-              : subtotal === CAPACITY_SUBTOTAL
-                ? <th key={`row-month-${SPACE_USED}`}>{SPACE_USED}</th>
-                : <th key={`row-month-${subtotal}`}>{subtotal}</th>
+            {/* Change label for shelves to "Shelves (selected)" */}
+            { subtotal === LABEL_SHELVES
+              ? <th key={`row-month-${SHELVES_SELECTED}`}>{SHELVES_SELECTED}</th>
+              : <th key={`row-month-${subtotal}`}>{subtotal}</th>
             }
 
             { Object.keys(props.allSizes).map((sizeIndex) => {
               let total = 0;
-              let tray_total = 0;
-              let capacity_total = 0;
-              if (subtotal === TOTAL_TRAYS_SUBTOTAL) {
-                return null;
+              let roughTotal = false;
+              let trayTotal = 0;
+              let capacitySelected = 0;
+              let capacityAll = 0;
+              let usedShelves = 0;
+              let shelvesSelected = 0;
+              let shelvesAll = 0;
+
+              if (subtotal === SHELVES_TOTAL) {
+                // Get total shelves for all collections, not just selected ones.
+                // Should be same as SHELVES_SELECTED if all collections are selected.
+                Object.keys(props.selectedCollections).forEach((collection) => {
+                  total += props.subtotals[LABEL_SHELVES]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                });
               }
-              else if (subtotal === CAPACITY_SUBTOTAL) {
-                // If it's for "all sizes", return null because that can't
-                // be calculated for oversize, etc.
-                if (props.allSizes[sizeIndex].code === ALL_SIZES) {
-                  total = null;
+
+              // Use these two subtotals as placeholders for giving a percentage.
+              // Total Trays will have the total percentage against the entire facility,
+              // and Capacity will have the percentage against the selected collections.
+              else if (subtotal === SPACE_USED || subtotal === SPACE_USED_ALL) {
+                Object.keys(props.selectedCollections).forEach((collection) => {
+                  if (props.selectedCollections[collection]) {
+                    trayTotal += props.subtotals[LABEL_TRAYS]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                    if (capacitySelected !== null) {
+                      if (props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection] === null) {
+                        capacitySelected = null;
+                      }
+                      else if (capacitySelected !== null) {
+                        capacitySelected += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection];
+                      }
+                    }
+                    usedShelves += props.subtotals[LABEL_FULL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                    usedShelves += props.subtotals[LABEL_PARTIAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                    shelvesSelected += props.subtotals[LABEL_SHELVES]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                  }
+                  if (capacityAll !== null) {
+                    if (props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection] === null) {
+                      capacityAll = null;
+                    }
+                    else if (capacityAll !== null) {
+                      capacityAll += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection];
+                    }
+                  }
+                  shelvesAll += props.subtotals[LABEL_SHELVES]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
+                });
+                // Assume it's unreliable if capacity is undefined, or if the total trays
+                // significantly exceeds the capacity. In this case, calculate the number
+                // of partial/full (and full, if any) shelves divided by the total number of shelves.
+                console.log(capacitySelected, props.allSizes[sizeIndex].code);
+                if (props.allSizes[sizeIndex].code === ALL_SIZES
+                    || !capacitySelected
+                    || trayTotal > capacitySelected * 1.15) {
+                  let denominator = subtotal === SPACE_USED_ALL ? shelvesAll : shelvesSelected;
+                  if (denominator === 0) { total = null; }
+                  else {
+                    total = Math.round((usedShelves / denominator) * 100);
+                  }
+                  roughTotal = true;
                 }
                 else {
-                  // Otherwise, calculate from total trays and capacity
-                  Object.keys(props.selectedCollections).forEach((collection) => {
-                    if (props.selectedCollections[collection]) {
-                      tray_total += props.subtotals[TOTAL_TRAYS_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                    }
-                  });
-                  Object.keys(props.selectedCollections).forEach((collection) => {
-                    if (props.selectedCollections[collection]) {
-                      capacity_total += props.subtotals[CAPACITY_SUBTOTAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                    }
-                  });
-                  // Assume it's unreliable if capacity is undefined, or
-                  // if the total trays significantly exceeds the capacity
-                  total = capacity_total && tray_total / capacity_total < 1.15 ? Math.round((tray_total / capacity_total) * 100) : null;
+                  let denominator = subtotal === SPACE_USED_ALL ? capacityAll : capacitySelected;
+                  if (denominator === 0) { total = null; }
+                  else {
+                    total = Math.round((trayTotal / denominator) * 100);
+                  }
                 }
               }
               else {
@@ -263,31 +319,38 @@ const SpaceUsage = (props) => {
                   }
                 });
               }
-                return (
+              return (
                 <td key={`cell-${subtotal}-${sizeIndex}`}
                   style={{
                   textAlign: "right",
                   position: "relative",
+                  height: "9ex",
                   color: props.allSizes[sizeIndex].code === ALL_SIZES
-                      ? "#0d6efd"
-                      : (
-                      !total || total === 0
-                      ? "#e9ecef"
-                      : "black"
-                      )
-                    }
-                  }
+                    ? "#0d6efd"
+                    : (
+                    !total || total === 0
+                    ? "#e9ecef"
+                    : "black"
+                    )
+                  }}
                 >
-                  {subtotal === CAPACITY_SUBTOTAL && total !== null && (
-                  <span style={{
-                    position: "absolute",
-                    right: "-0.5ex",
-                    color: "black"
-                  }}>%</span>
-                  )}
-                  { total ?? "N/A" }
+                  {(subtotal === SPACE_USED || subtotal === SPACE_USED_ALL) &&
+                  total !== null &&
+                  (<>
+                    <span style={{
+                      position: "absolute",
+                      right: "-0.5ex",
+                      textAlign: "left",
+                    }}>%</span>
+                    <span style={{
+                      position: "absolute",
+                      right: "-1.5ex",
+                      textAlign: "left",
+                    }}>{ roughTotal ? "*" : "" }</span>
+                  </>)}
+                  { total ?? "-" }
                 </td>
-                );
+              );
             })}
           </tr>
           )
