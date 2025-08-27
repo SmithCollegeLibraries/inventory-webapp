@@ -173,16 +173,6 @@ const ReportSpaceUsage = () => {
     // with the count of the current view in the upper right
     <div>
       <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
-        {allViews.map((view) => (
-          <Button
-            key={view}
-            onClick={() => changeView(view)}
-            color={view === currentView ? 'primary' : 'secondary'}
-            style={{marginRight: '8px'}}
-          >
-            {view}
-          </Button>
-        ))}
       </Row>
       <Row>
         <Col md="10">
