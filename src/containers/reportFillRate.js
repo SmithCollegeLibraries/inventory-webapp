@@ -10,7 +10,17 @@ const ITEMS = 'Items';
 const ALL_SIZES = 'Total';
 const UNASSIGNED_COLLECTION = 'Unassigned';
 const UNASSIGNED_SIZE = 'No size';
-const NUMBER_OF_MONTHS = 18  // TODO: Get from settings
+// Calculate the number of months from March 2023 to the current month
+// -- this is when the webapp version of SIS was launched, and when
+// the retraying project started.
+const NUMBER_OF_MONTHS = (() => {
+  const startYear = 2023;
+  const startMonth = 3; // March (1-based)
+  const today = new Date();
+  const yearDiff = today.getFullYear() - startYear;
+  const monthDiff = today.getMonth() + 1 - startMonth; // getMonth() is 0-based
+  return yearDiff * 12 + monthDiff;
+})();
 
 const formatMonth = (year, month) => {
   return `${year}-${month.toString().padStart(2, '0')}`;
