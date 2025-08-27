@@ -1,6 +1,6 @@
 import { Button, Form, Input, Table } from 'reactstrap';
 import Load from '../util/load';
-import { warning } from '../components/toastAlerts';
+import { success, warning } from '../components/toastAlerts';
 import { create } from 'zustand';
 
 const useCircCounts = create((set, get) => {
@@ -25,7 +25,9 @@ const ReportCircCounts = (props) => {
     const results = await Load.itemCircCounts(state.min);
     if (results) {
       useCircCounts.setState({ results });
-    } else {
+      success(`${results.length} results found`);
+    }
+    else {
       useCircCounts.setState({ results: [] });
       warning('No results found');
     }
@@ -85,7 +87,8 @@ const SearchForm = (props) => {
         style={{ display: 'inline', width: '4em', marginLeft: '10px', marginRight: '10px' }}
         onChange={(e) => props.handleQueryChange(e)}
       />
-      {props.min > 1 ? 'loans' : 'loan'}
+      {props.min > 1 ? 'loans ' : 'loan '}
+      since being added or retrayed in the Annex
       <br />
       <Button color="primary" style={{ marginTop: '10px', marginBottom: '20px' }}>Search</Button>
     </Form>
