@@ -103,7 +103,7 @@ const ReportSpaceUsage = () => {
         // The outer key is the collection code, the inner key is the size code
 
         // These are the calculated ones we want at the top of the list
-        let shelfSubtotals = {[SHELVES_TOTAL]: {}, [LABEL_SHELVES]: {}, [SPACE_USED_ALL]: {}, [SPACE_USED]: {}};
+        let shelfSubtotals = {[SHELVES_TOTAL]: {}, [SPACE_USED_ALL]: {}, [LABEL_SHELVES]: {}, [SPACE_USED]: {}};
 
         for (let collection in spaceUsageBreakdown) {
           const normalizedCollection = collection && collection !== "" ? collection : UNASSIGNED_COLLECTION;
@@ -222,7 +222,7 @@ const SpaceUsage = (props) => {
         </tr>
       </thead>
       <tbody>
-        { console.log(props.subtotals) || Object.keys(props.subtotals).map((subtotal) =>
+        { Object.keys(props.subtotals).map((subtotal) =>
           // Hide the built-in totals for trays and capacity, since they
           // only used for calculating percentages
           (subtotal === LABEL_TRAYS || subtotal === LABEL_CAPACITY) ? null :
@@ -251,39 +251,36 @@ const SpaceUsage = (props) => {
                 });
               }
 
-              // Use these two subtotals as placeholders for giving a percentage.
-              // Total Trays will have the total percentage against the entire facility,
-              // and Capacity will have the percentage against the selected collections.
+              // Calculate "Space used" and "Space used (all)" from the tray totals
+              // and shelf capacity
               else if (subtotal === SPACE_USED || subtotal === SPACE_USED_ALL) {
                 Object.keys(props.selectedCollections).forEach((collection) => {
+                  // Add the shelf's capacity to that size and collection
+                  const thisSubtotal = props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection]
+                  if (typeof thisSubtotal === 'undefined') {
+                    // This indicates that there are no shelves of this size and collection,
+                    // so do nothing
+                  }
+                  else if (thisSubtotal === null) {
+                    if (props.selectedCollections[collection]) { capacitySelected = null; }
+                    capacityAll = null;
+                  }
+                  else {
+                    if (props.selectedCollections[collection]) { capacitySelected += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection]; }
+                    capacityAll += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection];
+                  }
+                  // Add the trays on the shelf to the tray total
                   if (props.selectedCollections[collection]) {
                     trayTotal += props.subtotals[LABEL_TRAYS]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                    if (capacitySelected !== null) {
-                      if (props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection] === null) {
-                        capacitySelected = null;
-                      }
-                      else if (capacitySelected !== null) {
-                        capacitySelected += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection];
-                      }
-                    }
                     usedShelves += props.subtotals[LABEL_FULL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
                     usedShelves += props.subtotals[LABEL_PARTIAL]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
                     shelvesSelected += props.subtotals[LABEL_SHELVES]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
-                  }
-                  if (capacityAll !== null) {
-                    if (props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection] === null) {
-                      capacityAll = null;
-                    }
-                    else if (capacityAll !== null) {
-                      capacityAll += props.subtotals[LABEL_CAPACITY]?.[props.allSizes[sizeIndex].code]?.[collection];
-                    }
                   }
                   shelvesAll += props.subtotals[LABEL_SHELVES]?.[props.allSizes[sizeIndex].code]?.[collection] || 0;
                 });
                 // Assume it's unreliable if capacity is undefined, or if the total trays
                 // significantly exceeds the capacity. In this case, calculate the number
                 // of partial/full (and full, if any) shelves divided by the total number of shelves.
-                console.log(capacitySelected, props.allSizes[sizeIndex].code);
                 if (props.allSizes[sizeIndex].code === ALL_SIZES
                     || !capacitySelected
                     || trayTotal > capacitySelected * 1.15) {
