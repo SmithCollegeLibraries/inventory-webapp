@@ -296,7 +296,7 @@ const ManageShelves = () => {
         }
       })
       if (showWarnings) {
-        warning('No results found');
+        warning('No results');
       }
     }
   };

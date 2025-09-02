@@ -25,11 +25,11 @@ const ReportCircCounts = (props) => {
     const results = await Load.itemCircCounts(state.min);
     if (results) {
       useCircCounts.setState({ results });
-      success(`${results.length} results found`);
+      success(`${results.length} results`);
     }
     else {
       useCircCounts.setState({ results: [] });
-      warning('No results found');
+      warning('No results');
     }
   };
 

@@ -79,7 +79,7 @@ const SearchItems = (props) => {
           },
         }
       });
-      warning('No results found');
+      warning('No results');
     }
   };
 

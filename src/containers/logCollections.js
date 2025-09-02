@@ -62,7 +62,7 @@ const CollectionLogs = () => {
     }
     else {
       state.updateResults([]);
-      warning('No results found');
+      warning('No results');
     }
     state.markQueryChanged(false);
   };
