@@ -21,7 +21,7 @@ const handleCsvDownload = async () => {
     return;
   }
 
-  const headers = ['Collection', 'Barcode', 'Loans', 'Last circulated', 'Status', 'Location'];
+  const headers = ['Collection', 'Barcode', 'Loans', 'Last circulated', 'Status', 'Shelf', 'Depth', 'Position'];
   const csvRows = [
     headers.join(','), // Header row
     ...results.map(item => [
@@ -30,7 +30,9 @@ const handleCsvDownload = async () => {
       item.loans ?? '',
       item.last_circulation_date ?? '',
       item.status ?? '',
-      `${item.shelf ?? ''} ${item.depth ? "• " + item.depth : ""} ${item.position ? "• " + item.position : ""}`.trim()
+      item.shelf ?? '',
+      item.depth ?? '',
+      item.position ?? '',
     ].map(value => `"${value}"`).join(','))
   ];
 
@@ -170,7 +172,9 @@ const TableHead = ({ sortColumn, sortOrder, handleSort }) => (
       <th onClick={() => handleSort('loans')}>Loans {sortColumn === 'loans' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
       <th onClick={() => handleSort('last_circulation_date')}>Last circulated {sortColumn === 'last_circulation_date' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
       <th onClick={() => handleSort('status')}>Status {sortColumn === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
-      <th onClick={() => handleSort('shelf')}>Location {sortColumn === 'shelf' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+      <th onClick={() => handleSort('shelf')}>Shelf {sortColumn === 'shelf' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+      <th onClick={() => handleSort('depth')}>Depth {sortColumn === 'depth' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+      <th onClick={() => handleSort('position')}>Position {sortColumn === 'position' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
     </tr>
   </thead>
 );
@@ -182,7 +186,9 @@ const TableRow = ({ item, idx }) => (
     <td>{item.loans ?? '-'}</td>
     <td>{item.last_circulation_date ?? '-'}</td>
     <td>{item.status ?? '-'}</td>
-    <td>{item.shelf ?? '-'} {item.depth ? "• " + item.depth : ""} {item.position ? "• " + item.position : ""}</td>
+    <td>{item.shelf ?? '-'}</td>
+    <td>{item.depth ?? '-'}</td>
+    <td>{item.position ?? '-'}</td>
   </tr>
 );
 
