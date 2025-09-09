@@ -64,6 +64,47 @@ const useView = create(
   )
 );
 
+const handleCsvDownload = async () => {
+  const state = useRequestHistory.getState();
+  const allCollections = state.allCollections;
+  const requestCounts = state.requestCounts;
+  const selectedCollections = useView.getState().selectedCollections;
+
+  // The CSV download should have the same data as shown in the table,
+  // based on the collections selected by the user.
+  // PLEASE NOTE that this calculates everything from scratch, so any
+  // updates to the HTML display should also be made here.
+
+  // Create CSV header row
+  let csvContent = "Month";
+  Object.values(REQUEST_STATUSES).forEach((status) => {
+    csvContent += `,${status}`;
+  });
+  csvContent += "\n";
+
+  // Create CSV rows for each month
+  Object.keys(requestCounts)
+    // There are very few circulations before July 2023, so hide those
+    .filter((month) => month >= START_DATE)
+    .forEach((month) => {
+      let row = `${month}`;
+      Object.values(REQUEST_STATUSES).forEach((status) => {
+        row += `,${requestCounts[month][status]}`;
+      });
+      csvContent += row + "\n";
+    });
+
+  // Create a download link and click it
+  const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  const dateStr = new Date().toISOString().slice(0,10);
+  link.setAttribute("download", `request-history-report-${dateStr}.csv`);
+  document.body.appendChild(link); // Required for FF
+
+  link.click();
+};
+
 const ReportRequestHistory = () => {
   const state = useRequestHistory();
   const allCollections = useRequestHistory((state) => state.allCollections);
@@ -152,8 +193,24 @@ const ReportRequestHistory = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div>
-      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
+    <div inline style={{"float": "left", "width": "100%", "position": "relative"}}>
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        right: 0,
+        zIndex: 2
+      }}>
+        <Button
+          color={"success"}
+          style={{
+            margin: "0",
+          }}
+          onClick={handleCsvDownload}
+        >
+          Download CSV
+        </Button>
+      </div>
+      <Row style={{"paddingTop": "10px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
       </Row>
       <Row>
         <Col md="2">

@@ -83,6 +83,48 @@ const useView = create(
   )
 );
 
+const handleCsvDownload = () => {
+  const state = useFillRates.getState();
+  const allSizes = state.allSizes;
+  const allCollections = state.allCollections;
+  const currentView = useView.getState().currentView;
+  const selectedCollections = useView.getState().selectedCollections;
+  const subtotals = currentView === ITEMS ? state.itemSubtotals : (currentView === TRAYS ? state.traySubtotals : state.shelfSubtotals);
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  // Create the header row
+  let headerRow = ["Month"];
+  for (let sizeIndex in allSizes) {
+    headerRow.push(allSizes[sizeIndex].code ?? UNASSIGNED_SIZE);
+  }
+  csvContent += headerRow.join(",") + "\r\n";
+
+  // Create the data rows
+  for (let month in subtotals) {
+    let dataRow = [month];
+    for (let sizeIndex in allSizes) {
+      let total = 0;
+      for (let collection in selectedCollections) {
+        if (selectedCollections[collection]) {
+          total += subtotals[month][allSizes[sizeIndex].code][collection] || 0;
+        }
+      }
+      dataRow.push(total);
+    }
+    csvContent += dataRow.join(",") + "\r\n";
+  }
+
+  // Encode and trigger the download
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `fill-rates-${currentView.toLowerCase()}-${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link); // Required for FF
+  link.click();
+  document.body.removeChild(link);
+};
+
 const ReportFillRate = () => {
   const state = useFillRates();
   const allSizes = useFillRates((state) => state.allSizes);
@@ -209,20 +251,44 @@ const ReportFillRate = () => {
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
     <div>
-      <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
-        {allViews.map((view) => (
-          <Button
-            key={view}
-            onClick={() => changeView(view)}
-            color={view === currentView ? 'primary' : 'secondary'}
-            style={{marginRight: '8px'}}
-          >
-            {view}
-          </Button>
-        ))}
-      </Row>
-      <Row>
+      <Row style={{"paddingTop": "20px", "paddingRight": "15px", "paddingBottom": "10px"}}>
+        <Col md="2">
+          <CollectionSelector
+            selectedCollections={useView((state) => state.selectedCollections)}
+            setCollection={setCollection}
+            selectAllCollections={useView((state) => state.selectAllCollections)}
+            clearSelectedCollections={useView((state) => state.clearSelectedCollections)}
+          />
+        </Col>
         <Col md="10">
+          <div style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            zIndex: 2
+          }}>
+            <Button
+              color={"success"}
+              style={{
+                margin: "0",
+              }}
+              onClick={handleCsvDownload}
+            >
+              Download CSV
+            </Button>
+          </div>
+          <div style={{marginBottom:'10px'}}>
+            {allViews.map((view) => (
+              <Button
+                key={view}
+                onClick={() => changeView(view)}
+                color={view === currentView ? 'primary' : 'secondary'}
+                style={{marginRight: '8px'}}
+              >
+                {view}
+              </Button>
+            ))}
+          </div>
           {(currentView === SHELVES && JSON.stringify(state.shelfSubtotals) === "{}")
             || (currentView === TRAYS && JSON.stringify(state.traySubtotals) === "{}")
             || (currentView === ITEMS && JSON.stringify(state.itemSubtotals) === "{}")
@@ -234,14 +300,6 @@ const ReportFillRate = () => {
               selectedCollections={selectedCollections}
             />
           }
-        </Col>
-        <Col md="2">
-          <CollectionSelector
-            selectedCollections={useView((state) => state.selectedCollections)}
-            setCollection={setCollection}
-            selectAllCollections={useView((state) => state.selectAllCollections)}
-            clearSelectedCollections={useView((state) => state.clearSelectedCollections)}
-          />
         </Col>
       </Row>
     </div>

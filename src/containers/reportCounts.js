@@ -85,20 +85,18 @@ const handleCsvDownload = async () => {
   csvContent += state.allSizes.map(size => size.code ?? UNASSIGNED_SIZE).join(",") + "\n";
 
   // Select data based on current view
-  let subtotals, total, filenamePrefix;
+  let subtotals, total;
   if (currentView === ITEMS) {
     subtotals = state.itemSubtotals;
     total = state.itemTotal;
-    filenamePrefix = "item-counts";
   } else if (currentView === TRAYS) {
     subtotals = state.traySubtotals;
     total = state.trayTotal;
-    filenamePrefix = "tray-counts";
   } else {
     subtotals = state.shelfSubtotals;
     total = state.shelfTotal;
-    filenamePrefix = currentView === LADDERS ? "ladder-counts" : "shelf-counts";
   }
+  const filenamePrefix = `counts-${currentView.toLowerCase()}`;
 
   // Add data rows
   state.allCollections.forEach(collection => {

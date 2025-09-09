@@ -84,8 +84,9 @@ const useView = create(
 );
 
 // The CSV download should have the same data as shown in the table,
-// based on the collections selected by the user. Please note that this
-// calculates everything from scratch!
+// based on the collections selected by the user.
+// PLEASE NOTE that this calculates everything from scratch, so any
+// updates to the HTML display should also be made here.
 const handleCsvDownload = async () => {
   const state = useSpaceUsage.getState();
   const allSizes = state.allSizes;
@@ -208,7 +209,8 @@ const handleCsvDownload = async () => {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "space_usage_report.csv");
+  const dateStr = new Date().toISOString().slice(0,10);
+  link.setAttribute("download", `space-usage-report-${dateStr}.csv`);
   document.body.appendChild(link); // Required for FF
 
   link.click();
@@ -321,7 +323,7 @@ const ReportSpaceUsage = () => {
           </p>
         </Col>
         <Col md="10" inline style={{"float": "left", "width": "100%", "position": "relative"}}>
-          <Row style={{height: "60px"}}>
+          <Row style={{height: "50px"}}>
             <div style={{
               position: "absolute",
               top: "0px",
@@ -358,7 +360,7 @@ const ReportSpaceUsage = () => {
 
 const SpaceUsage = (props) => {
   return (
-    <div style={{paddingLeft: "10px", paddingRight: "10px"}}>
+    <div>
       <Table style={{tableLayout: "fixed"}}>
         <thead>
           <tr>
