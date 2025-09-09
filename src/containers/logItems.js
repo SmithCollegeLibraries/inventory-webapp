@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Button, Form, Input, Label, Row, Table } from 'reactstrap';
+import { Button, Form, FormGroup, Input, Label, Row, Table } from 'reactstrap';
 // import BootstrapTable from 'react-bootstrap-table-next';
 import Load from '../util/load';
 import { firstName } from '../util/helpers';
@@ -13,6 +13,7 @@ const useItemLogs = create((set) => {
       "barcode": "",
       "timestampPost": null,
       "timestampAnte": null,
+      "flag": false,
       "user": "",
       "action": null,
       "details": "",
@@ -30,6 +31,7 @@ const useItemLogs = create((set) => {
           "barcode": "",
           "timestampPost": null,
           "timestampAnte": null,
+          "flag": false,
           "user": "",
           "action": null,
           "details": "",
@@ -53,6 +55,15 @@ const ItemLogs = () => {
     state.markQueryChanged(true);
   };
 
+  const handleFlaggedOnlyChange = (e) => {
+    const newQuery = {
+      ...state.query,
+      "flag": e.target.checked,
+    };
+    state.setQuery(newQuery);
+    state.markQueryChanged(true);
+  };
+
   const handleSearch = async () => {
     state.clearResults();
     const results = await Load.searchItemLogs(state.query);
@@ -61,7 +72,7 @@ const ItemLogs = () => {
     }
     else {
       state.updateResults([]);
-      warning('No results found');
+      warning('No results');
     }
     state.markQueryChanged(false);
   };
@@ -110,6 +121,7 @@ const ItemLogs = () => {
         nameList={state.nameList}
         queryChanged={state.queryChanged}
         handleQueryChange={handleQueryChange}
+        handleFlaggedOnlyChange={handleFlaggedOnlyChange}
         handleSearch={handleSearch}
         handleCsvDownload={handleCsvDownload}
         downloadInProgress={state.downloadInProgress}
@@ -117,8 +129,8 @@ const ItemLogs = () => {
       <div style={{marginTop: "20px"}}>
         { state.results && state.results.length
           ? (state.results.length >= 100
-              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100. Download a CSV to access the full list of results.</em></p><ResultDisplay data={state.results} nameList={state.nameList} /></>
-              : <ResultDisplay data={state.results} nameList={state.nameList} />
+              ? <><p style={{"marginTop": "10px"}}><em>Results are limited to the most recent 100. Download a CSV to access the full list of results.</em></p><ResultDisplay data={state.results} nameList={state.nameList} flaggedOnly={state.query.flag} /></>
+              : <ResultDisplay data={state.results} nameList={state.nameList} flaggedOnly={state.query.flag} />
             )
           : null
         }
@@ -148,14 +160,14 @@ const SearchForm = props => {
           Download CSV
         </Button>
       </div>
-      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px", "width": "100%"}}>
         <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search item logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampPost"
           name="timestampPost"
-          placeholder="Timestamp post"
           value={props.timestampPost}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
@@ -166,14 +178,40 @@ const SearchForm = props => {
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampAnte"
           name="timestampAnte"
-          placeholder="Timestamp ante"
           value={props.timestampAnte}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
             "timestampAnte": e.target.value
           })}
         />
+        <FormGroup check style={{ textAlign: "right", display: "flex", alignItems: "center", marginRight: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Input
+              id="flaggedOnlyCheckbox"
+              type="checkbox"
+              checked={props.query.flag}
+              onChange={props.handleFlaggedOnlyChange}
+              style={{ marginTop: "0", marginBottom: "0", marginRight: "4px", verticalAlign: "middle", cursor: "pointer" }}
+            />
+            <Label
+              for="flaggedOnlyCheckbox"
+              check
+              style={{
+                marginBottom: "0",
+                marginTop: "0",
+                display: "flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                cursor: "pointer",
+                fontWeight: 400
+              }}
+            >
+              Flagged only
+            </Label>
+          </div>
+        </FormGroup>
       </Row>
       <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
         <Input
@@ -190,7 +228,7 @@ const SearchForm = props => {
         <Input
           type="select"
           style={{"marginRight": "10px"}}
-          name="user"
+          name="action"
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
             "action": e.target.value
@@ -233,7 +271,7 @@ const SearchForm = props => {
   );
 };
 
-const ResultDisplay = ({ data, nameList }) => (
+const ResultDisplay = ({ data, nameList, flaggedOnly }) => (
   <Table responsive striped>
     <TableHead />
     <tbody>
@@ -242,6 +280,7 @@ const ResultDisplay = ({ data, nameList }) => (
             log={log}
             key={idx}
             nameList={nameList}
+            flaggedOnly={flaggedOnly}
           />
         )
       }
@@ -262,15 +301,18 @@ const TableHead = () => (
   </thead>
 )
 
-const TableRow = ({ log, idx, nameList }) => (
-  <tr key={idx}>
-    <td>{log.id}</td>
-    <td>{log.barcode}</td>
-    <td>{log.action}</td>
-    <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
-    <td>{log.details}</td>
-    <td>{log.timestamp}</td>
-  </tr>
-)
+const TableRow = ({ log, idx, nameList, flaggedOnly }) => {
+  if (flaggedOnly && !log.flag) { return null; }
+  return (
+    <tr key={idx}>
+      <td>{log.id}</td>
+      <td className={log.flag ? "text-danger" : ""}>{log.barcode}</td>
+      <td>{log.action}</td>
+      <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
+      <td>{log.details}</td>
+      <td>{log.timestamp}</td>
+    </tr>
+  );
+};
 
 export default ItemLogs;

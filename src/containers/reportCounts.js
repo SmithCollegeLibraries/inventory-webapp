@@ -73,6 +73,56 @@ const useViews = create(
   )
 );
 
+const handleCsvDownload = async () => {
+  const state = useCounts.getState();
+  const viewsState = useViews.getState();
+  const currentView = viewsState.currentView || viewsState.defaultView;
+
+  let csvContent = "data:text/csv;charset=utf-8,";
+
+  // Add header row
+  csvContent += "Collection/Size,";
+  csvContent += state.allSizes.map(size => size.code ?? UNASSIGNED_SIZE).join(",") + "\n";
+
+  // Select data based on current view
+  let subtotals, total;
+  if (currentView === ITEMS) {
+    subtotals = state.itemSubtotals;
+    total = state.itemTotal;
+  } else if (currentView === TRAYS) {
+    subtotals = state.traySubtotals;
+    total = state.trayTotal;
+  } else {
+    subtotals = state.shelfSubtotals;
+    total = state.shelfTotal;
+  }
+  const filenamePrefix = `counts-${currentView.toLowerCase()}`;
+
+  // Add data rows
+  state.allCollections.forEach(collection => {
+    let row = `${collection.code ?? UNASSIGNED_COLLECTION},`;
+    row += state.allSizes.map(size => {
+      if (collection.code === ALL_COLLECTIONS && size.code === ALL_SIZES) {
+        return total;
+      } else if (subtotals[collection.code] && subtotals[collection.code][size.code]) {
+        return subtotals[collection.code][size.code];
+      } else {
+        return 0;
+      }
+    }).join(",");
+    csvContent += row + "\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `${filenamePrefix}-${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link); // Required for FF
+
+  link.click();
+  document.body.removeChild(link);
+};
+
 const ReportCounts = () => {
   const state = useCounts();
   const allSizes = useCounts((state) => state.allSizes);
@@ -199,7 +249,23 @@ const ReportCounts = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div>
+    <div inline style={{"float": "left", "width": "100%", "position": "relative"}}>
+      <div style={{
+        position: "absolute",
+        top: "20px",
+        right: 0,
+        zIndex: 2
+      }}>
+        <Button
+          color={"success"}
+          style={{
+            margin: "0",
+          }}
+          onClick={handleCsvDownload}
+        >
+          Download CSV
+        </Button>
+      </div>
       <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
         {allViews.map((view) => (
           <Button

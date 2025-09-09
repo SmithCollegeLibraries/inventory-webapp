@@ -18,6 +18,8 @@ const useSettingLogs = create((set) => {
     results: [],
     resultsFetched: false,
     nameList: [],
+    downloadInProgress: false,
+    updateDownloadInProgress: (inProgress) => set({ downloadInProgress: inProgress }),
 
     setQuery: (query) => set({ query }),
     markQueryChanged: (changed) => set({ queryChanged: changed }),
@@ -52,9 +54,35 @@ const SettingLogs = () => {
     }
     else {
       state.updateResults([]);
-      warning('No results found');
+      warning('No results');
     }
     state.markQueryChanged(false);
+  };
+
+  const handleCsvDownload = async () => {
+    try {
+      state.updateDownloadInProgress(true);
+
+      const blob = await Load.downloadSettingLogs(state.query);
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary <a> tag and open in new tab
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `setting-logs-${new Date().toISOString().slice(0,10)}.csv`;
+      a.target = '_blank'; // open in new tab
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+      state.updateDownloadInProgress(false);
+    }
+    catch (error) {
+      console.error('Error downloading CSV:', error);
+      state.updateDownloadInProgress(false);
+      warning('Error downloading CSV');
+    }
   };
 
   // Get list of user names
@@ -70,6 +98,8 @@ const SettingLogs = () => {
         queryChanged={state.queryChanged}
         handleQueryChange={handleQueryChange}
         handleSearch={handleSearch}
+        handleCsvDownload={handleCsvDownload}
+        downloadInProgress={state.downloadInProgress}
       />
       <div style={{marginTop: "20px"}}>
         { state.results && state.results.length
@@ -86,15 +116,33 @@ const SettingLogs = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left", "width": "100%"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
-      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px"}}>
+    <Form inline style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+      <div style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        zIndex: 2
+      }}>
+        <Button
+          color={props.downloadInProgress ? "secondary" : "success"}
+          disabled={props.downloadInProgress}
+          style={{
+            margin: "0",
+            cursor: props.downloadInProgress ? "wait" : "pointer"
+          }}
+          onClick={props.handleCsvDownload}
+        >
+          Download CSV
+        </Button>
+      </div>
+      <Row style={{"display": "flex", "paddingBottom": "10px", "paddingLeft": "15px", "paddingRight": "20px", "width": "100%"}}>
         <Button color={props.queryChanged ? "primary" : "secondary"} style={{"marginRight": "10px"}}>Search setting logs</Button>
         <Label for="timestampPost" style={{"marginRight": "10px"}}>From</Label>
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampPost"
           name="timestampPost"
-          placeholder="Timestamp post"
           value={props.timestampPost}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
@@ -105,8 +153,8 @@ const SearchForm = props => {
         <Input
           type="date"
           style={{"marginRight": "10px"}}
+          id="timestampAnte"
           name="timestampAnte"
-          placeholder="Timestamp ante"
           value={props.timestampAnte}
           onChange={(e) => props.handleQueryChange(e, {
             ...props.query,
@@ -167,6 +215,7 @@ const TableHead = () => (
     <tr>
       <th>Setting log ID</th>
       <th>Name</th>
+      <th>Value</th>
       <th>User</th>
       <th>Timestamp</th>
     </tr>
@@ -177,6 +226,7 @@ const TableRow = ({ log, idx, nameList }) => (
   <tr key={idx}>
     <td>{log.id}</td>
     <td>{log.name}</td>
+    <td>{log.value}</td>
     <td style={{ whiteSpace: "nowrap" }}>{firstName(log.user, nameList)}</td>
     <td>{log.timestamp}</td>
   </tr>

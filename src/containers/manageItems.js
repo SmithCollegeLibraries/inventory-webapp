@@ -245,7 +245,7 @@ const ManageItems = () => {
         }
       })
       if (showWarnings) {
-        warning('No results found');
+        warning('No results');
       }
     }
   };

@@ -383,6 +383,11 @@ class Load {
     return get;
   }
 
+  downloadTrayLogs = async (data) => {
+    const get = await this.handleUpdate(`${trayLogAPI}search/?download=true`, 'POST', data, false);
+    return get;
+  }
+
   getShelfActions = async () => {
     const get = await this.handleUpdate(`${shelfLogAPI}actions-list/`, 'GET');
     return get;
@@ -390,6 +395,11 @@ class Load {
 
   searchShelfLogs = async (data) => {
     const get = await this.handleUpdate(`${shelfLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+  downloadShelfLogs = async (data) => {
+    const get = await this.handleUpdate(`${shelfLogAPI}search/?download=true`, 'POST', data, false);
     return get;
   }
 
@@ -403,8 +413,18 @@ class Load {
     return get;
   }
 
+  downloadCollectionLogs = async (data) => {
+    const get = await this.handleUpdate(`${collectionLogAPI}search/?download=true`, 'POST', data, false);
+    return get;
+  }
+
   searchSettingLogs = async (data) => {
     const get = await this.handleUpdate(`${settingLogAPI}search/`, 'POST', data);
+    return get;
+  }
+
+  downloadSettingLogs = async (data) => {
+    const get = await this.handleUpdate(`${settingLogAPI}search/?download=true`, 'POST', data, false);
     return get;
   }
 

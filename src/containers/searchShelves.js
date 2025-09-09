@@ -10,6 +10,10 @@ const ANY_COLLECTION = '(Any)';
 const ANY_SHELF_FULNESS = '(Any)';
 const TOO_MANY_POSITIONS = 14;
 
+const SHELF_FULL = 0;
+const SHELF_EMPTY = -1;
+const UNSHELVED = -2;
+
 
 const processTrayInformation = (data) => {
   let trayGrid = {'Rear': [], 'Middle': [], 'Front': [], 'Other': []};
@@ -114,17 +118,6 @@ const reducer = (state, action) => {
         currentTray: null,
         currentShelf: null,
       }
-    case 'CLEAR_EXCEPT_TRAY':
-      return {
-        ...state,
-        query: {
-          size: "",
-          collection: "",
-          positions_free: "",
-          shelf: "",
-          tray: state.query.tray,
-        },
-      }
     default:
       throw new Error();
   }
@@ -173,10 +166,6 @@ const SearchShelves = () => {
     e.preventDefault();
     dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
 
-    if (state.query.tray) {
-      dispatch({ type: "CLEAR_EXCEPT_TRAY" });
-    }
-
     const response = await ContentSearch.shelves(
         padShelfBarcode(state.query.shelf),
         state.query.tray,
@@ -194,21 +183,14 @@ const SearchShelves = () => {
           shelves: response.results,
         }
       });
-      if (response.resultCount > response.results.length) {
-        success(<>{response.resultCount} shelves found<br />(showing first {response.results.length})</>);
-      }
-      else if (!state.query.tray) {
-        success("Tray found");
-      }
+      success(<>
+        {response.resultCount} {response.resultCount == 1 ? "result" : "results"}<br />
+        {response.resultCount > response.results.length ? `(showing first ${response.results.length})` : null}
+      </>);
     }
     else {
       dispatch({ type: "UPDATE_RESULTS", payload: { shelves: [] } });
-      if (state.query.tray) {
-        warning(`Tray ${state.query.tray} not found`);
-      }
-      else {
-        warning('No results found');
-      }
+      warning(`No results`);
     }
   };
 
@@ -335,7 +317,7 @@ const SearchForm = props => {
           }
         </Input>
         <Label for="positions_free" style={{marginRight: "10px"}}>
-          Free space
+          Shelf space available
         </Label>
         <Input
           type="select"
@@ -345,12 +327,13 @@ const SearchForm = props => {
           onChange={(e) => props.handleQueryChange(e)}
         >
           <option value="">{ANY_SHELF_FULNESS}</option>
-          <option value="0">Shelf full</option>
-          <option value="-1">Shelf empty</option>
+          <option value={SHELF_FULL}>Shelf full</option>
+          <option value={SHELF_EMPTY}>Shelf empty</option>
           { Array.from({length: 15}, (_, i) => (
               <option value={i+1} key={i+1}>Room for {i+1}+ trays</option>
             ))
           }
+          <option value={UNSHELVED}>Unshelved</option>
         </Input>
       </FormGroup>
       <FormGroup style={{display: "flex", alignItems: "baseline"}}>
@@ -360,7 +343,8 @@ const SearchForm = props => {
         <Input
           type="text"
           name="shelf"
-          placeholder="09R--1-"
+          placeholder={props.query.positions_free == UNSHELVED ? "" : "09R--1-"}
+          disabled={props.query.positions_free == UNSHELVED}
           value={props.query.shelf}
           maxLength={7}
           style={{width: "8em", marginRight: "20px"}}
@@ -372,7 +356,8 @@ const SearchForm = props => {
         <Input
           type="text"
           name="tray"
-          placeholder="10001234"
+          placeholder={props.query.positions_free == SHELF_EMPTY ? "" : "10001234"}
+          disabled={props.query.positions_free == SHELF_EMPTY}
           value={props.query.tray}
           style={{width: "10em", marginRight: "20px"}}
           onChange={(e) => props.handleQueryChange(e)}
@@ -400,10 +385,14 @@ const ResultDisplay = (props) => {
               </dd>
               { props.currentTray.flag ? <><dt className="text-danger">Flagged</dt><dd></dd></> : null}
               <dt>Location</dt>
-              <dd>{`${props.data.barcode} • ${props.currentTray.depth} • ${props.currentTray.position}`}</dd>
+              <dd>{`${props.data.barcode} ${props.currentTray.depth ? "• " + props.currentTray.depth : ""} ${props.currentTray.position ? "• " + props.currentTray.position : ""}`}</dd>
               <dt>Trayer</dt>
               <dd>{props.currentTray.trayer ?? '-'}</dd>
-              <dt>Items { props?.currentTray?.items?.length ? `(${props?.currentTray?.items?.length}/${props?.currentTray?.freeSpace !== null ? props?.currentTray.items.length + props.currentTray.freeSpace : "?" })` : "" }</dt>
+              <dt>Items {
+                  props?.currentTray?.items?.length
+                  ? `(${props?.currentTray?.items?.length}${props?.currentTray?.freeSpace != null ? "/" + props?.currentTray.items.length + props.currentTray.freeSpace : "" })`
+                : ""
+              }</dt>
               <dd>
                 {props.currentTray.items && props.currentTray.items.length > 0 ? displayItemList(props.currentTray.items) : "-"}
               </dd>
