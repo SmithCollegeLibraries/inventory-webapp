@@ -251,7 +251,7 @@ const ReportFillRate = () => {
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
     <div>
-      <Row style={{"paddingTop": "20px", "paddingRight": "15px", "paddingBottom": "10px"}}>
+      <Row style={{"paddingTop": "20px", "paddingBottom": "10px"}}>
         <Col md="2">
           <CollectionSelector
             selectedCollections={useView((state) => state.selectedCollections)}
@@ -265,7 +265,8 @@ const ReportFillRate = () => {
             position: "absolute",
             top: 0,
             right: 0,
-            zIndex: 2
+            zIndex: 2,
+            paddingRight: "15px",
           }}>
             <Button
               color={"success"}

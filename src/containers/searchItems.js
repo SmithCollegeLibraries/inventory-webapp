@@ -13,7 +13,6 @@ const reducer = (state, action) => {
     case 'UPDATE_RESULTS':
       return {
         ...state,
-        // fields: action.payload.data,
         search_results: action.payload.search_results,
       };
     case 'RESET_RESULTS':
@@ -61,23 +60,7 @@ const SearchItems = (props) => {
     }
     else {
       dispatch({
-        type: 'UPDATE_RESULTS',
-        payload: {
-          search_results: [],
-          fields: {
-            new_item: false,
-            item_barcode: '',
-            new_item_barcode: '',
-            title: '',
-            call_number: '',
-            collection: '',
-            status: '',
-            tray: '',
-            shelf: '',
-            depth: '',
-            position: 0,
-          },
-        }
+        type: 'RESET_RESULTS',
       });
       warning('No results');
     }
@@ -92,6 +75,9 @@ const SearchItems = (props) => {
     dispatch({
       type: 'QUERY_CHANGE',
       payload: '',
+    });
+    dispatch({
+      type: 'RESET_RESULTS',
     });
   }
 
