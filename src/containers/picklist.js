@@ -640,7 +640,7 @@ const PicklistLeftPane = (props) => {
     props.picklist.length > 0
     ? <BootstrapTable
         keyField='id'
-        classes="align-middle table-hover"
+        classes="align-middle table-hover table-striped"
         data={ props.picklist }
         columns={ leftPaneColumns }
         defaultSorted={[
@@ -794,7 +794,7 @@ const PicklistRightPane = (props) => {
     props.picklist.length > 0
     ? <BootstrapTable
         keyField='id'
-        classes="align-middle table-hover"
+        classes="align-middle table-hover table-striped"
         data={ props.picklist.map((item) => {
           return {
             id: item.id,
