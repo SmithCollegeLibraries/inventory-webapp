@@ -22,10 +22,10 @@ const LABEL_SHELVES = "Shelves";
 const LABEL_PARTIAL = "Partial/full";
 const LABEL_FULL = "Full";
 // These are calculated on the fly
-const SHELVES_TOTAL = "Shelves (total)";
+const SHELVES_TOTAL = "Shelves (in facility)";
 const SHELVES_SELECTED = "Shelves (selected)"; // This is just an alias for LABEL_SHELVES
-const SPACE_USED = "Space used (of selected)";
-const SPACE_USED_ALL = "Space used (of total)";
+const SPACE_USED = "Space used (of selected)";
+const SPACE_USED_ALL = "Space used (of facility)";
 
 const useSpaceUsage = create((set, get) => {
   return {
