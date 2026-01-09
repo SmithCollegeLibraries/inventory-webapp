@@ -278,6 +278,22 @@ const ReportFillRate = () => {
               Download CSV
             </Button>
           </div>
+
+          <h1 style={{
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            top: 0,
+            margin: 0,
+            padding: 0,
+            fontSize: "1.75rem",
+            lineHeight: "2.25rem",
+            zIndex: 1,
+            pointerEvents: "none"
+          }}>
+            Fill rate
+          </h1>
+
           <div style={{marginBottom:'10px'}}>
             {allViews.map((view) => (
               <Button

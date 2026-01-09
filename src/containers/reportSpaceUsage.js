@@ -322,7 +322,7 @@ const ReportSpaceUsage = () => {
             of free space.
           </p>
         </Col>
-        <Col md="10" inline style={{"float": "left", "width": "100%", "position": "relative"}}>
+        <Col md="10" inline="true" style={{"float": "left", "width": "100%", "position": "relative"}}>
           <Row style={{height: "50px"}}>
             <div style={{
               position: "absolute",
@@ -340,6 +340,21 @@ const ReportSpaceUsage = () => {
                 Download CSV
               </Button>
             </div>
+
+            <h1 style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              top: 0,
+              margin: 0,
+              padding: 0,
+              fontSize: "1.75rem",
+              lineHeight: "2.25rem",
+              zIndex: 1,
+              pointerEvents: "none"
+            }}>
+              Space usage
+            </h1>
           </Row>
           {(currentView === SHELVES && JSON.stringify(state.shelfSubtotals) === "{}")
             || (currentView === TRAYS && JSON.stringify(state.traySubtotals) === "{}")

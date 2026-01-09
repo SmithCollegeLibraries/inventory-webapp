@@ -193,26 +193,8 @@ const ReportRequestHistory = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div inline style={{"float": "left", "width": "100%", "position": "relative"}}>
-      <div style={{
-        position: "absolute",
-        top: "20px",
-        right: 0,
-        zIndex: 2
-      }}>
-        <Button
-          color={"success"}
-          style={{
-            margin: "0",
-          }}
-          onClick={handleCsvDownload}
-        >
-          Download CSV
-        </Button>
-      </div>
-      <Row style={{"paddingTop": "10px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
-      </Row>
-      <Row>
+    <div inline="true" style={{"float": "left", "width": "100%", "position": "relative"}}>
+      <Row style={{marginTop: "20px", justifyContent: "center"}}>
         <Col md="2">
           <CollectionSelector
             selectedCollections={useView((state) => state.selectedCollections)}
@@ -221,7 +203,19 @@ const ReportRequestHistory = () => {
             clearSelectedCollections={useView((state) => state.clearSelectedCollections)}
           />
         </Col>
-        <Col md="10">
+        <Col md="8" style={{ paddingTop: "3rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <h1 style={{
+            position: "absolute",
+            top: 0,
+            margin: 0,
+            padding: "0",
+            fontSize: "1.75rem",
+            lineHeight: "2.25rem",
+            textAlign: "center",
+            pointerEvents: "none"
+          }}>
+            Request history
+          </h1>
           {JSON.stringify(state.requestCounts) === "{}"
           ? "Loading..."
           : <RequestHistory
@@ -230,6 +224,24 @@ const ReportRequestHistory = () => {
               requestCounts={state.requestCounts}
             />
           }
+        </Col>
+        <Col md="2">
+          <div style={{
+            position: "absolute",
+            top: "0",
+            right: "15px",
+            zIndex: 2
+          }}>
+            <Button
+              color={"success"}
+              style={{
+                margin: "0",
+              }}
+              onClick={handleCsvDownload}
+            >
+              Download CSV
+            </Button>
+          </div>
         </Col>
       </Row>
     </div>
@@ -272,22 +284,27 @@ const RequestHistory = (props) => {
 const CollectionSelector = (props) => {
   return (
     <div>
-      <Button color="primary" onClick={props.selectAllCollections} style={{ marginBottom: '10px' }}>Select all</Button>
-      <Button onClick={props.clearSelectedCollections} style={{ marginBottom: '10px', marginLeft: '10px' }}>Clear</Button>
-      {Object.keys(props.selectedCollections).map((collectionIndex) => (
-        <div key={`checkbox-${collectionIndex}`} className="form-check">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            id={`checkbox-${collectionIndex}`}
-            checked={props.selectedCollections[collectionIndex] || false}
-            onChange={() => props.setCollection(collectionIndex, !props.selectedCollections[collectionIndex])}
-          />
-          <label className="form-check-label" htmlFor={`checkbox-${collectionIndex}`}>
-            {collectionIndex}
-          </label>
-        </div>
-      ))}
+      <div style={{ display: "inline-flex", whiteSpace: "nowrap", gap: "10px", overflow: "visible", position: "relative", zIndex: 2 }}>
+        <Button color="primary" onClick={props.selectAllCollections} style={{ marginBottom: '10px', flexShrink: 0 }}>Select all</Button>
+        <Button onClick={props.clearSelectedCollections} style={{ marginBottom: '10px', marginLeft: '0', flexShrink: 0 }}>Clear</Button>
+      </div>
+
+      <div style={{ marginTop: '10px' }}>
+        {Object.keys(props.selectedCollections).map((collectionIndex) => (
+          <div key={`checkbox-${collectionIndex}`} className="form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id={`checkbox-${collectionIndex}`}
+              checked={props.selectedCollections[collectionIndex] || false}
+              onChange={() => props.setCollection(collectionIndex, !props.selectedCollections[collectionIndex])}
+            />
+            <label className="form-check-label" htmlFor={`checkbox-${collectionIndex}`}>
+              {collectionIndex}
+            </label>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
