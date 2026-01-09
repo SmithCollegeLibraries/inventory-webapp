@@ -524,7 +524,7 @@ const ManageTrays = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline="true" style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <Input
         type="text"
         style={{"marginRight": "10px"}}

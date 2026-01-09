@@ -22,10 +22,10 @@ const LABEL_SHELVES = "Shelves";
 const LABEL_PARTIAL = "Partial/full";
 const LABEL_FULL = "Full";
 // These are calculated on the fly
-const SHELVES_TOTAL = "Shelves (total)";
+const SHELVES_TOTAL = "Shelves (in facility)";
 const SHELVES_SELECTED = "Shelves (selected)"; // This is just an alias for LABEL_SHELVES
-const SPACE_USED = "Space used (of selected)";
-const SPACE_USED_ALL = "Space used (of total)";
+const SPACE_USED = "Space used (of selected)";
+const SPACE_USED_ALL = "Space used (of facility)";
 
 const useSpaceUsage = create((set, get) => {
   return {
@@ -77,7 +77,7 @@ const useView = create(
       }),
     }),
     {
-      name: 'report-spaceusage-view',
+      name: 'report-space-usage',
       storage: createJSONStorage(() => localStorage),
     }
   )
@@ -322,7 +322,7 @@ const ReportSpaceUsage = () => {
             of free space.
           </p>
         </Col>
-        <Col md="10" inline style={{"float": "left", "width": "100%", "position": "relative"}}>
+        <Col md="10" inline="true" style={{"float": "left", "width": "100%", "position": "relative"}}>
           <Row style={{height: "50px"}}>
             <div style={{
               position: "absolute",
@@ -340,6 +340,21 @@ const ReportSpaceUsage = () => {
                 Download CSV
               </Button>
             </div>
+
+            <h1 style={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              top: 0,
+              margin: 0,
+              padding: 0,
+              fontSize: "1.75rem",
+              lineHeight: "2.25rem",
+              zIndex: 1,
+              pointerEvents: "none"
+            }}>
+              Space usage
+            </h1>
           </Row>
           {(currentView === SHELVES && JSON.stringify(state.shelfSubtotals) === "{}")
             || (currentView === TRAYS && JSON.stringify(state.traySubtotals) === "{}")

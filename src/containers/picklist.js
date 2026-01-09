@@ -529,7 +529,7 @@ const Picklist = () => {
 
 const AddForm = (props) => {
   return (
-    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
+    <Form inline="true" style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input
         type="textarea"
         style={{"marginRight": "10px", "width": "20em", "height": "4em"}}

@@ -2,15 +2,25 @@ import { Button, Form, Input, Table } from 'reactstrap';
 import Load from '../util/load';
 import { success, warning } from '../components/toastAlerts';
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { useEffect } from 'react';
 
 const useCircCounts = create((set, get) => {
   return {
-    min: 1,
     results: [],
-    sortColumn: null,
-    sortOrder: 'asc', // 'asc' or 'desc'
   };
 });
+
+const useCircCountSettings = create(persist((set, get) => {
+  return {
+    circCountMin: 1,
+    sortColumn: 'loans',
+    sortOrder: 'desc',
+  };
+}, {
+  name: 'report-circ-counts',
+  storage: createJSONStorage(() => localStorage),
+}));
 
 const handleCsvDownload = async () => {
   const state = useCircCounts.getState();
@@ -50,16 +60,18 @@ const handleCsvDownload = async () => {
 };
 
 const ReportCircCounts = (props) => {
-  const state = useCircCounts();
+
+  const resultState = useCircCounts();
+  const settingState = useCircCountSettings();
 
   const handleQueryChange = (e) => {
     e.preventDefault();
-    let min = e.target.value;
-    useCircCounts.setState({ min });
+    let circCountMin = e.target.value;
+    useCircCountSettings.setState({ circCountMin });
   };
 
   const handleSearch = async () => {
-    const results = await Load.itemCircCounts(state.min);
+    const results = await Load.itemCircCounts(settingState.circCountMin);
     if (results) {
       useCircCounts.setState({ results });
       success(`${results.length} results`);
@@ -76,34 +88,35 @@ const ReportCircCounts = (props) => {
   };
 
   const handleSort = (column) => {
-    const { sortColumn, sortOrder, results } = state;
+    const { sortColumn, sortOrder } = settingState;
+    const results = resultState.results || [];
     const newSortOrder = sortColumn === column && sortOrder === 'asc' ? 'desc' : 'asc';
 
     const sortedResults = [...results].sort((a, b) => {
-      if (a[column] < b[column]) return newSortOrder === 'asc' ? -1 : 1;
-      if (a[column] > b[column]) return newSortOrder === 'asc' ? 1 : -1;
+      const va = a[column] ?? '';
+      const vb = b[column] ?? '';
+      if (va < vb) return newSortOrder === 'asc' ? -1 : 1;
+      if (va > vb) return newSortOrder === 'asc' ? 1 : -1;
       return 0;
     });
 
-    useCircCounts.setState({
-      results: sortedResults,
-      sortColumn: column,
-      sortOrder: newSortOrder,
-    });
+    useCircCounts.setState({ results: sortedResults });
+    useCircCountSettings.setState({ sortColumn: column, sortOrder: newSortOrder });
   };
 
   return (
     <div>
-      <div style={{ marginTop: '20px' }}>
+      <div style={{ marginTop: 0 }}>
         <SearchForm
-          min={state.min}
+          circCountMin={settingState.circCountMin}
+          resultsCount={resultState.results.length}
           handleSearchButton={handleSearchButton}
           handleQueryChange={handleQueryChange}
         />
         <ResultDisplay
-          data={state.results}
-          sortColumn={state.sortColumn}
-          sortOrder={state.sortOrder}
+          data={resultState.results}
+          sortColumn={settingState.sortColumn}
+          sortOrder={settingState.sortOrder}
           handleSort={handleSort}
         />
       </div>
@@ -112,11 +125,28 @@ const ReportCircCounts = (props) => {
 };
 
 const SearchForm = (props) => {
+  useEffect(() => {
+    let cancelled = false;
+    const fetchResults = async () => {
+      const results = await Load.itemCircCounts(props.circCountMin);
+      if (cancelled) return;
+      if (results) {
+        useCircCounts.setState({ results });
+        // success(`${results.length} results`);
+      } else {
+        useCircCounts.setState({ results: [] });
+        warning('No results');
+      }
+    };
+    fetchResults();
+    return () => { cancelled = true; };
+  }, [props.circCountMin]);
+
   return (
-    <Form inline style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={(e) => { e.preventDefault(); props.handleSearchButton(e); }}>
+    <div style={{ float: "left", width: "100%", position: "relative", whiteSpace: "normal", overflowWrap: "break-word" }} autoComplete="off">
       <div style={{
         position: "absolute",
-        top: "0px",
+        top: "20px",
         right: 0,
         zIndex: 2
       }}>
@@ -130,23 +160,37 @@ const SearchForm = (props) => {
           Download CSV
         </Button>
       </div>
-      <div>
-        Look for items with at least
+
+      <h1 style={{
+        position: "absolute",
+        left: "50%",
+        transform: "translateX(-50%)",
+        top: 0,
+        margin: 0,
+        padding: 0,
+        fontSize: "1.75rem",
+        lineHeight: "4.75rem",
+        zIndex: 1,
+        pointerEvents: "none"
+      }}>
+        Circ counts
+      </h1>
+
+      <div style={{ display: 'block', marginTop: "20px", paddingTop: 0, marginBottom: '10px', width: '40vw', minWidth: '200px' }}>
+        At least
         <Input
           type="number"
           name="query"
           placeholder="1"
           min="1"
-          value={props.min}
+          value={props.circCountMin}
           style={{ display: 'inline', width: '4em', marginLeft: '10px', marginRight: '10px' }}
           onChange={(e) => props.handleQueryChange(e)}
         />
-        {props.min > 1 ? 'loans ' : 'loan '}
-        since being added or retrayed in the Annex
-        <br />
-        <Button color="primary" style={{ marginTop: '10px', marginBottom: '20px' }}>Search</Button>
+        {props.circCountMin == 1 ? 'loan ' : 'loans '}
+        since being added to SIS: <strong>{ props.resultsCount }&nbsp;items</strong>
       </div>
-    </Form>
+    </div>
   );
 };
 

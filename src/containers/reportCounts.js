@@ -67,7 +67,7 @@ const useViews = create(
       changeView: (view) => set({ currentView: view }),
     }),
     {
-      name: 'report-counts-view',
+      name: 'report-counts',
       storage: createJSONStorage(() => localStorage),
     }
   )
@@ -249,7 +249,7 @@ const ReportCounts = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div inline style={{"float": "left", "width": "100%", "position": "relative"}}>
+    <div inline="true" style={{"float": "left", "width": "100%", "position": "relative" }}>
       <div style={{
         position: "absolute",
         top: "20px",
@@ -266,6 +266,22 @@ const ReportCounts = () => {
           Download CSV
         </Button>
       </div>
+
+      <h1 style={{
+        position: "absolute",
+        left: "50%",
+        transform: "translateX(-50%)",
+        top: 0,
+        margin: 0,
+        padding: 0,
+        fontSize: "1.75rem",
+        lineHeight: "4.75rem",
+        zIndex: 1,
+        pointerEvents: "none"
+      }}>
+        Counts
+      </h1>
+
       <Row style={{"paddingTop": "20px", "paddingLeft": "15px", "paddingRight": "15px", "paddingBottom": "10px"}}>
         {allViews.map((view) => (
           <Button
