@@ -141,7 +141,7 @@ const ItemLogs = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline="true" style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <div style={{
         position: "absolute",
         top: 0,
