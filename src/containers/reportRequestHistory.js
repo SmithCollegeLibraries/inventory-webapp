@@ -58,7 +58,7 @@ const useView = create(
       }),
     }),
     {
-      name: 'report-requesthistory-view',
+      name: 'report-request-history',
       storage: createJSONStorage(() => localStorage),
     }
   )

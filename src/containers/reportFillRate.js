@@ -77,7 +77,7 @@ const useView = create(
       }),
     }),
     {
-      name: 'report-fillrates-view',
+      name: 'report-fill-rates',
       storage: createJSONStorage(() => localStorage),
     }
   )

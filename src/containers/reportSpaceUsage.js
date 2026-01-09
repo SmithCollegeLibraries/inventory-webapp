@@ -77,7 +77,7 @@ const useView = create(
       }),
     }),
     {
-      name: 'report-spaceusage-view',
+      name: 'report-space-usage',
       storage: createJSONStorage(() => localStorage),
     }
   )

@@ -67,7 +67,7 @@ const useViews = create(
       changeView: (view) => set({ currentView: view }),
     }),
     {
-      name: 'report-counts-view',
+      name: 'report-counts',
       storage: createJSONStorage(() => localStorage),
     }
   )
