@@ -32,6 +32,7 @@ const usePicklist = create((set) => {
     hideCirculating: true,
     hideNotMyCollection: false,
     folioWaiting: false,  // The "Add all from FOLIO" button is disabled while we're waiting for the results from FOLIO so that there is some visual feedback
+    servicePoints: {},
 
     setShowingAll: (showingAll) => set({ showingAll }),
     setNewBarcode: (newBarcode) => set({ newBarcode }),
@@ -60,6 +61,7 @@ const usePicklist = create((set) => {
     clearOldSystem: () => set({ notInNewSystem: [], oldSystemCopied: false }),
     setOldSystemCopied: (oldSystemCopied) => set({ oldSystemCopied }),
     updateNameList: (nameList) => set({ nameList }),
+    updateServicePoints: (servicePoints) => set({ servicePoints }),
   }
 });
 
@@ -152,6 +154,11 @@ const Picklist = () => {
   // Get list of user names
   useEffect(() => {
     Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get servicePoints from settings
+  useEffect(() => {
+    Load.getAllSettings().then((settings) => {settings?.['servicePoints'] && state.updateServicePoints(JSON.parse(settings['servicePoints']))});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBarcodeChange = (e) => {
@@ -361,24 +368,20 @@ const Picklist = () => {
             <p style={{marginLeft: "auto"}}>
               Add from FOLIO:
             </p>
-            <Button
-                color="info"
-                value="SC_ANNEX"
-                disabled={state.folioWaiting}
-                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
-                onClick={handleAddFromFolio}
-            >
-              SC Annex
-            </Button>
-            <Button
-                color="info"
-                value="FC_ANNEX"
-                disabled={state.folioWaiting}
-                style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
-                onClick={handleAddFromFolio}
-            >
-              FC Annex
-            </Button>
+            { state.servicePoints && Object.keys(state.servicePoints).length > 0 &&
+              Object.keys(state.servicePoints).map((locationKey) => (
+                <Button
+                    key={locationKey}
+                    color="info"
+                    value={locationKey}
+                    disabled={state.folioWaiting}
+                    style={{marginLeft: "10px", cursor: state.folioWaiting ? "wait" : "pointer"}}
+                    onClick={handleAddFromFolio}
+                >
+                  {locationKey}
+                </Button>
+              ))
+            }
         </Row>
       </div>
       <div style={{display: "block", marginTop: "20px"}}>
@@ -529,7 +532,7 @@ const Picklist = () => {
 
 const AddForm = (props) => {
   return (
-    <Form inline="true" style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
+    <Form inline style={{"float": "left"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleAddToPicklist(e)}}>
       <Input
         type="textarea"
         style={{"marginRight": "10px", "width": "20em", "height": "4em"}}
