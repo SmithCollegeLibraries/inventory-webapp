@@ -66,8 +66,8 @@ class Load {
     return get;
   };
 
-  getNameList = async () => {
-    const get = await this.handleUpdate(`${account}name-list/`, 'GET');
+  getNameList = async (objectType) => {
+    const get = await this.handleUpdate(`${account}name-list/?objectType=${objectType}`, 'GET');
     return get;
   };
 

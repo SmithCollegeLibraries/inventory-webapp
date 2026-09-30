@@ -87,7 +87,7 @@ const SettingLogs = () => {
 
   // Get list of user names
   useEffect(() => {
-    Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
+    Load.getNameList('setting').then((nameList) => {state.updateNameList(nameList)});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
