@@ -4,6 +4,9 @@ build/
 node_modules/
 src/config/endpoints.js
 src/.DS_Store
-.env*
+.env-local
+.env-dev
+.env-beta
+.env-prod
 reports/
 
