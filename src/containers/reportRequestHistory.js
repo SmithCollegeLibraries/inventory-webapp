@@ -193,7 +193,7 @@ const ReportRequestHistory = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div inline="true" style={{"float": "left", "width": "100%", "position": "relative"}}>
+    <div inline style={{"float": "left", "width": "100%", "position": "relative"}}>
       <Row style={{marginTop: "20px", justifyContent: "center"}}>
         <Col md="2">
           <CollectionSelector

@@ -110,7 +110,7 @@ const TrayLogs = () => {
 
   // Get list of user names
   useEffect(() => {
-    Load.getNameList().then((nameList) => {state.updateNameList(nameList)});
+    Load.getNameList('tray').then((nameList) => {state.updateNameList(nameList)});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -142,7 +142,7 @@ const TrayLogs = () => {
 
 const SearchForm = props => {
   return (
-    <Form inline="true" style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
+    <Form inline style={{"float": "left", "width": "100%", "position": "relative"}} autoComplete="off" onSubmit={e => {e.preventDefault(); props.handleSearch(e)}}>
       <div style={{
         position: "absolute",
         top: 0,

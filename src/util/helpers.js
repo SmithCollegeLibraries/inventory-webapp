@@ -1,7 +1,12 @@
 export function firstName(str, allNames=null) {
   const strTrim = str ? str.trim() : "";
   const allFirstNames = allNames ? allNames.map((n) => n.split(' ')[0]) : null;
-  const allFirstNamesWithLastInitial = allNames ? allNames.map((n) => `${n.split(' ')[0]} ${n.split(' ')[1].charAt(0)}.`) : null;
+  const allFirstNamesWithLastInitial = allNames ? allNames.map((n) => {
+    const nameParts = n.trim().split(/\s+/);
+    const first = nameParts[0] || "";
+    const lastInitial = nameParts[1] ? `${nameParts[1].charAt(0)}.` : "";
+    return lastInitial ? `${first} ${lastInitial}` : first;
+  }) : null;
 
   if (!strTrim.includes(' ')) {
     return strTrim;
@@ -11,9 +16,18 @@ export function firstName(str, allNames=null) {
   }
   else if (!allFirstNamesWithLastInitial ||
       allFirstNamesWithLastInitial.filter(
-        n => n === `${strTrim.split(' ')[0]} ${strTrim.split(' ')[1].charAt(0)}.`).length <= 1
+        n => {
+          const strParts = strTrim.split(/\s+/);
+          const first = strParts[0] || "";
+          const lastInitial = strParts[1] ? `${strParts[1].charAt(0)}.` : "";
+          const formatted = lastInitial ? `${first} ${lastInitial}` : first;
+          return n === formatted;
+        }).length <= 1
       ) {
-    return `${strTrim.split(' ')[0]} ${strTrim.split(' ')[1].charAt(0)}.`;
+    const strParts = strTrim.split(/\s+/);
+    const first = strParts[0] || "";
+    const lastInitial = strParts[1] ? `${strParts[1].charAt(0)}.` : "";
+    return lastInitial ? `${first} ${lastInitial}` : first;
   }
   else {
     return strTrim;
