@@ -249,7 +249,7 @@ const ReportCounts = () => {
   return (
     // Top bar of buttons that allow user to switch between views,
     // with the count of the current view in the upper right
-    <div inline="true" style={{"float": "left", "width": "100%", "position": "relative" }}>
+    <div inline style={{"float": "left", "width": "100%", "position": "relative" }}>
       <div style={{
         position: "absolute",
         top: "20px",

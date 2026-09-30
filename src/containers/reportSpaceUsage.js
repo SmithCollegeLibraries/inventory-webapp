@@ -322,7 +322,7 @@ const ReportSpaceUsage = () => {
             of free space.
           </p>
         </Col>
-        <Col md="10" inline="true" style={{"float": "left", "width": "100%", "position": "relative"}}>
+        <Col md="10" inline style={{"float": "left", "width": "100%", "position": "relative"}}>
           <Row style={{height: "50px"}}>
             <div style={{
               position: "absolute",
